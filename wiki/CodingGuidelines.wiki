@@ -1,0 +1,31 @@
+#summary Politicas para tener un codigo mas legible
+#labels Phase-Implementation
+
+= Coding Guidelines =
+
+_Seria bueno que todos utilicemos la misma politica para que el codigo sea vea uniforme y sea mas legible._
+
+
+*Formatos de archivos*
+
+Todos los archivos de codigo deben tener formato *unix*.
+Tener esto en cuenta antes de comitear!
+
+
+*Formato de nombres*
+
+Las clases comienzan en mayusculas, y muchas palabras se unen sin espacios con mayuscula en la primer letra de cada palabra. 
+ej. MiClaseConMuchasPalabras
+
+Las funciones miembro siguen la misma politica pero la primera letra va en minuscula (camelCase)
+ej. getNombre()
+
+Las variables miembro comienzan con guion bajo.
+ej. _nVariables
+
+Las variables que designan una cantidad comienzan con 'n'.
+ej. nCiclos
+
+
+
+
