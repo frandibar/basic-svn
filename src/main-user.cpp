@@ -84,18 +84,15 @@ int main(int argc, char** argv)
 
 void add(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
 {
-    //cout << "add " << a_Username << " " << a_Password << " " << a_Reposit << " " << a_Filename << endl;    
-
     Almacen almacen;
-    Repositorio* rep = almacen.getReposit(a_Reposit);
-    if (!rep) {
+    if (!almacen.repositoryExists(a_Reposit)) {
         cout << "El repositorio " << a_Reposit << " no existe." << endl;
         return;
     }
     if (!validateUser(a_Reposit, a_Username, a_Password))
         return;
 
-    if (!rep->addFile(a_Filename, a_Username, a_Password)) {
+    if (!almacen.addFile(a_Reposit, a_Filename, a_Username, a_Password)) {
         cout << "El archivo " << a_Filename << " no pudo ser agregado." << endl;
         return;
     }
@@ -117,18 +114,17 @@ void getFile(const string& user, const string& pass, const string& reposit, cons
 bool validateUser(const string& a_Reposit, const string& a_Username, const string& a_Password)
 {
     Almacen almacen;
-    Repositorio* rep = almacen.getReposit(a_Reposit);
-    if (!rep) {
+    if (!almacen.repositoryExists(a_Reposit)) {
         cout << "El repositorio " << a_Reposit << " no existe." << endl;
         return false;
     }
 
-    if (!rep->userExists(a_Username)) {
+    if (!almacen.userExists(a_Reposit, a_Username)) {
         cout << "El usuario " << a_Username << " no pertenece al repositorio " << a_Reposit << "." << endl;
         return false;
     }
 
-    if (!rep->validatePassword(a_Username, a_Password)) {
+    if (!almacen.validatePassword(a_Reposit, a_Username, a_Password)) {
         cout << "Contraseña invalida." << endl;
         return false;
     }

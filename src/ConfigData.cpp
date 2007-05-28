@@ -1,8 +1,8 @@
 // ConfigData.cpp
 
 #include "ConfigData.h"
+#include "debug.h"
 
-#include <iostream>
 #include <fstream>
 #include <string>
 
@@ -28,7 +28,7 @@ void removeBlankLines(const string& a_Filename)
     while (!is.eof()) {
         std::string line;
         getline(is, line);
-        if (line.find_first_not_of(' ') != string::npos)
+        if (line.find_first_not_of(' ') != std::string::npos)
             os << line << std::endl;
     }
     is.close();
@@ -73,7 +73,7 @@ void XMLConfigData::handleElement(const DOMElement* a_Element)
             DOMElement* elementReposit = dynamic_cast<DOMElement*>(repositNode);
             StringManager sm;
             string repositName = sm.convert(elementReposit->getAttribute(_finder._ATTR_NAME.asXMLString()));
-            addReposit(repositName);
+            addRepository(repositName);
            
             // get a list of <user> elements
             DOMNodeList* userNodes = elementReposit->getElementsByTagName(_finder._TAG_USER.asXMLString());
@@ -104,7 +104,7 @@ void XMLConfigData::updateXMLTree()
         DOMNode* repositNode = repositNodes->item(0);
         DOMElement* elementReposit = dynamic_cast<DOMElement*>(repositNode);
         root->removeChild(elementReposit);
-        elementReposit->release();
+        //elementReposit->release();
     }
 
     // add repositories
@@ -140,6 +140,12 @@ void XMLConfigData::load() throw(std::runtime_error)
     // _parser.setIncludeIgnorableWhitespace(false);
 
     try {
+        // check if file exists, this hack is because _parser.parse does not throw exception in this case
+        std::ifstream is(_xmlFile.c_str());
+        if (!is)
+            throw(std::runtime_error("inexistent XML document"));
+        else is.close();
+
         _parser.parse(_xmlFile.c_str());
 
         // there's no need to free this pointer -- it's
@@ -175,7 +181,7 @@ void XMLConfigData::commit() throw(std::runtime_error)
 {
     try {
         updateXMLTree();
-
+        debug("Committing almacen '" + getDirAlmacen() + "'\n");
         // other XMLFormatTarget impls: MemBufFormatTarget, StdOutFormatTarget
 
         // for good or ill, this ctor creates the file on the spot;
@@ -202,7 +208,7 @@ void XMLConfigData::commit() throw(std::runtime_error)
             writer->setFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true);
         }
 
-        xmlDoc->normalizeDocument();
+        //xmlDoc->normalizeDocument();
         writer->writeNode(outfile, *xmlDoc);
 
         delete (outfile);
@@ -228,7 +234,7 @@ void XMLConfigData::commit() throw(std::runtime_error)
 }
 
 
-bool XMLConfigData::addReposit(const std::string& a_Name)
+bool XMLConfigData::addRepository(const std::string& a_Name)
 {
     // check if repository already exists
     RepositoriosList::iterator repIt;
@@ -243,7 +249,7 @@ bool XMLConfigData::addReposit(const std::string& a_Name)
     return true;
 }
 
-bool XMLConfigData::removeReposit(const string& a_Name)
+bool XMLConfigData::removeRepository(const string& a_Name)
 {
     RepositoriosList::iterator repIt;
     RepositoriosList newRepositoriosList;
@@ -287,6 +293,16 @@ bool XMLConfigData::removeUser(const std::string& a_Reposit, const string& a_Use
     }
     return false; // repositorio not found
 }
+
+bool XMLConfigData::addUser(const string& a_Reposit, const string& a_Username, const string& a_Password, const string& a_Fullname)
+{
+    User u;
+    u.username = a_Username;
+    u.password = a_Password;
+    u.fullname = a_Fullname;
+    return addUser(a_Reposit, u);
+}
+
 
 bool XMLConfigData::addUser(const std::string& a_Reposit, const User& a_User)
 {
@@ -339,7 +355,7 @@ XMLConfigData::UsersList XMLConfigData::getUsersList(const string& a_Reposit)
 }
 
 
-bool XMLConfigData::repositExists(const string& a_Name)
+bool XMLConfigData::repositoryExists(const string& a_Name)
 {
     RepositoriosList::iterator repIt;
     for (repIt = _repositorios.begin(); repIt != _repositorios.end(); ++repIt) {
