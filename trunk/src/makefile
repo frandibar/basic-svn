@@ -24,7 +24,7 @@ all: 	$(TARGETS)
 .SECONDEXPANSION:
 $(TARGETS): 	$$(OBJS_$$@)
 	@echo				   
-	@echo Making $@.				  
+	@echo Making $@...
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $@ $^
 	@echo Target $@ completed.												   
 

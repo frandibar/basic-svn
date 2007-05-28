@@ -39,9 +39,9 @@ int filetype(const string& filename)
     return (nchars > nnonchars) ? 1 : 2;
 }
 
-Repositorio::Repositorio(const string& a_Path, const string& a_Name) : _path(a_Path), _name(a_Name)
+Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) : _path(a_Almacen), _name(a_Name)
 {
-    if (!_versionManager.open(a_Path, a_Name)) {
+    if (!_versionManager.open(a_Almacen, a_Name)) {
         ;
     }
 }
@@ -106,3 +106,18 @@ bool Repositorio::addUser(const string& a_Username, const string& a_Password, co
     return true;
 }
 
+bool Repositorio::removeUser(const string& a_Username)
+{
+    //User u;
+    //_lUsers.remove(u);
+    std::list<User>::iterator it;
+    for (it = _lUsers.begin(); it != _lUsers.end(); ++it) {
+        if (it->username == a_Username) {
+            //User u = *it;
+            //_lUsers.remove(u);
+            return true;
+        }
+    }
+
+    return false; // user not found
+}

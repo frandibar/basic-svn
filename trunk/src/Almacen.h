@@ -5,6 +5,7 @@
 
 #include "ConfigData.h"
 #include "Repositorio.h"
+#include "User.h"
 
 #include <xercesc/util/PlatformUtils.hpp>
 #include <list>
@@ -16,32 +17,30 @@ class Almacen
 public:
     static string CONFIG_FILE;
 
-    // constructor
-    Almacen() : _name(""), _exists(false) { 
-        _exists = load();
-    };
+    Almacen(); // constructor
+    ~Almacen();
 
-    ~Almacen() { 
-        delete _config;
-        std::list<Repositorio*>::iterator it;
-        for (it = _lReposit.begin(); it != _lReposit.end(); ++it)
-            delete *it;
-    }
-
-    bool addReposit   (const string& a_Name);
-    bool removeReposit(const string& a_Name);
-    bool create       (const string& a_Name);
+    bool addRepository   (const string& a_Name) throw();
+    bool removeRepository(const string& a_Name) throw();
+    bool repositoryExists(const string& a_Name) throw();
+    bool create          (const string& a_Name);
     bool remove();
-    bool exists() const { return (_name.length() > 0); }
+    bool exists() const { return _exists; }
+    bool addUser(const string& a_Reposit, const string& a_Username, const string& a_Password, const string& a_Fullname) throw();
+    bool removeUser(const string& a_Reposit, const string& a_Username) throw();
+    bool addFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const;
+    bool userExists(const string& a_Reposit, const string& a_Username) const;
+    std::list<User> getListOfUsers(const string& a_Reposit) const;
 
     // getters
-    Repositorio* getReposit(const string& a_Name) const;
     string getName() const { return _name; }
 
     bool createConfigFile(const string& a_Dir);
 
 private:
     bool load() throw(xercesc::XMLException&);
+    Repositorio* getRepository(const string& a_Name) const;
 
     // member variables
     string                  _name;

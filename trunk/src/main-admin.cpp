@@ -7,6 +7,7 @@
 
 #include "Almacen.h"
 #include "debug.h"
+#include "User.h"
 
 using std::cerr;
 using std::cin;
@@ -18,12 +19,12 @@ using std::string;
 string CONFIG_FILE;
 
 
-void addReposit(const string& a_Name);
+void addRepository(const string& a_Name);
 void addUser(const string& a_Username, const string& a_Pass, const string& a_Fullname, const string& a_Reposit);
 void createAlmacen(const string& a_Dir);
 bool fileExists(const string& a_Filename);
-void removeReposit(const string& a_Name);
-void removeUser(const string& a_User, const string& a_Reposit);
+void removeRepository(const string& a_Name);
+void removeUser(const string& a_Reposit, const string& a_Username);
 void showHelp(const char* progname);
 void showUsers(const string& a_Reposit);
 
@@ -42,7 +43,7 @@ int main(int argc, char** argv)
             case 'c': // agregar repositorio
                 // -c "nombre repositorio"
                 argsok = (argc == 3);
-                if (argsok) addReposit(optarg);
+                if (argsok) addRepository(optarg);
                 break;
 
             case 'e': // eliminar usuario
@@ -65,7 +66,7 @@ int main(int argc, char** argv)
             case 'r': // eliminar repositorio
                 // -r "nombre repositorio"
                 argsok = (argc == 3);
-                if (argsok) removeReposit(optarg);
+                if (argsok) removeRepository(optarg);
                 break;
 
             case 'u': // crear usuario
@@ -84,7 +85,7 @@ int main(int argc, char** argv)
 }
 
 
-void addReposit(const string& a_Name)
+void addRepository(const string& a_Name)
 {
     Almacen almacen;
     if (!almacen.exists()) {
@@ -93,7 +94,7 @@ void addReposit(const string& a_Name)
     }
     
     // agregar repositorio al archivo de configuracion
-    if (!almacen.addReposit(a_Name)) {
+    if (!almacen.addRepository(a_Name)) {
         cout << "No se ha creado el repositorio '" << a_Name << "'." << endl
              << "Verifique que no exista otro con el mismo nombre." << endl;
         return;
@@ -114,37 +115,37 @@ void createAlmacen(const string& a_Dir)
         } while (r != 'n' && r != 'N' && r != 's' && r != 'S');
         if (r == 'n' || r == 'n')
             return;
+        else
+            almacen.remove();
     }
 
     if (almacen.create(a_Dir))
-        cout << "El almacen " << a_Dir << " ha sido creado con exito." << endl;
+        cout << "El almacen '" << a_Dir << "' ha sido creado con exito." << endl;
     else
-        cout << "El almacen " << a_Dir << " no ha sido creado." << endl;
+        cout << "El almacen '" << a_Dir << "' no ha sido creado." << endl;
 }
 
 
-
-void addUser(const string& a_Username, const string& a_Pass, const string& a_Fullname, const string& a_Reposit)
+void addUser(const string& a_Username, const string& a_Password, const string& a_Fullname, const string& a_Reposit)
 {
-    // try to open file CONFIG_FILE
-    // fail if not exists
-    if (!fileExists(CONFIG_FILE)) {
-        cout << "No existe un almacen para alojar el repositorio." << endl;
+    Almacen almacen;
+    if (!almacen.exists()) {
+        cout << "No existe un almacen que contenga el repositorio '" << a_Reposit << "'" << endl;
         return;
     }
     
-	XMLConfigData config(CONFIG_FILE);
-    User u;
-    u.username = a_Username;
-    u.password = a_Pass;
-    u.fullname = a_Fullname;
-    if (!config.addUser(a_Reposit, u)) {
-        cout << "El usuario " << optarg << " no ha sido creado." << endl
-             << "Verifique que el repositorio '" << a_Reposit << "' exista y que dicho usuario no pertenezca ya a dicho repositorio." << endl;
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "No existe el repositorio '" << a_Reposit << "'" << endl;
         return;
     }
-	config.commit();
-    cout << "El usuario " << optarg << " ha sido creado exitosamente." << endl;
+    
+    if (!almacen.addUser(a_Reposit, a_Username, a_Password, a_Fullname)) {
+        cout << "El usuario '" << a_Username << "' no ha sido creado." << endl
+             << "Verifique que el usuario no pertenezca ya a dicho repositorio." << endl;
+        return;
+    }
+
+    cout << "El usuario " << a_Username << " ha sido creado exitosamente." << endl;
 }
 
 
@@ -155,30 +156,43 @@ bool fileExists(const string& a_Filename)
 }
 
 
-void removeReposit(const string& a_Name)
+void removeRepository(const string& a_Reposit)
 {
-	XMLConfigData config(CONFIG_FILE);
-    if (!config.removeReposit(a_Name)) {
-        cout << "El repositorio '" << a_Name << "' no ha sido eliminado." << endl
-             << "Verifique que el mismo exista." << endl;
+    Almacen almacen;
+    if (!almacen.exists()) {
+        cout << "No existe un almacen que contenga el repositorio '" << a_Reposit << "'" << endl;
         return;
     }
-	config.commit();
-    remove(string(config.getDirAlmacen() + "//" + a_Name).c_str());
-    cout << "El repositorio '" << a_Name << "' ha sido eliminado exitosamente." << endl;
+    
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "No existe el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+
+    if (almacen.removeRepository(a_Reposit))
+        cout << "El repositorio '" << a_Reposit << "' ha sido eliminado exitosamente." << endl;
+    else
+        cout << "El repositorio '" << a_Reposit << "' no ha sido eliminado." << endl;
 }
 
 
-void removeUser(const string& a_Reposit, const string& a_User)
+void removeUser(const string& a_Reposit, const string& a_Username)
 {
-	XMLConfigData config(CONFIG_FILE);
-    if (!config.removeUser(a_Reposit, a_User)) {
-        cout << "El usuario " << a_User << " no ha sido eliminado del repositorio '" << a_Reposit << "'." << endl
-             << "Verifique que el mismo exista, al igual que el repositorio." << endl;
+    Almacen almacen;
+    if (!almacen.exists()) {
+        cout << "No existe un almacen que contenga el repositorio '" << a_Reposit << "'" << endl;
         return;
     }
-	config.commit();
-    cout << "El usuario " << a_User << " ha sido eliminado del repositorio '" << a_Reposit << "' exitosamente." << endl;
+    
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "No existe el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+    
+    if (almacen.removeUser(a_Reposit, a_Username))
+        cout << "El usuario " << a_Username << " ha sido eliminado del repositorio '" << a_Reposit << "' exitosamente." << endl;
+    else
+        cout << "El usuario " << a_Username << " ha sido eliminado del repositorio '" << a_Reposit << "'." << endl;
 }
 
 
@@ -202,16 +216,21 @@ void showHelp(const char* progname)
 
 void showUsers(const string& a_Reposit)
 {
-	XMLConfigData config(CONFIG_FILE);
-    if (!config.repositExists(a_Reposit)) {
-        cout << "No se ha podido obtener la lista de usuarios del repositorio '" << a_Reposit << "'." << endl
-             << "Dicho repositorio no existe." << endl;
+    Almacen almacen;
+    if (!almacen.exists()) {
+        cout << "No existe un almacen que contenga el repositorio '" << a_Reposit << "'" << endl;
         return;
     }
-    XMLConfigData::UsersList users = config.getUsersList(a_Reposit);
+    
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "No existe el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+
+    std::list<User> users = almacen.getListOfUsers(a_Reposit);
     cout << "Lista de usuarios del repositorio '" << a_Reposit << "':" << endl
          << "[usuario] [nombre completo]" << endl;
-    for (XMLConfigData::UsersList::iterator it = users.begin(); it != users.end(); ++it) {
+    for (std::list<User>::iterator it = users.begin(); it != users.end(); ++it) {
         cout << it->username << " '" << it->fullname << "'" << endl;
     }
 }

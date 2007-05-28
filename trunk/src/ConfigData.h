@@ -3,12 +3,13 @@
 #ifndef CONFIGDATA_H_INCLUDED
 #define CONFIGDATA_H_INCLUDED
 
+#include "helper-classes.h"
+#include "User.h"
+
 #include <stdexcept>
 #include <sstream>
 #include <string>
 #include <vector>
-
-#include "helper-classes.h"
 
 // xerces includes
 #include <xercesc/dom/DOM.hpp>
@@ -108,14 +109,6 @@ private:
 };
 
 
-struct User
-{
-    string username,
-           password,
-           fullname;
-};
-
-
 class XMLConfigData
 {
 public:
@@ -137,10 +130,10 @@ public:
 	void load() throw(std::runtime_error);
 	void commit() throw(std::runtime_error);
 
-	bool addReposit   (const string& a_Name);
-	bool removeReposit(const string& a_Name);
-	bool repositExists(const string& a_Name);
-    bool addUser   (const string& a_Reposit, const User& a_User);
+	bool addRepository   (const string& a_Name);
+	bool removeRepository(const string& a_Name);
+	bool repositoryExists(const string& a_Name);
+    bool addUser   (const string& a_Reposit, const string& a_Username, const string& a_Password, const string& a_Fullname);
     bool removeUser(const string& a_Reposit, const string& a_Username);
     bool userExists(const string& a_Reposit, const string& a_Username);
     bool isPasswordValid(const string& a_Reposit, const string& a_Username, const string& a_Password);
@@ -150,6 +143,7 @@ public:
 
 private:
 
+    bool addUser(const string& a_Reposit, const User& a_User);
 	void handleElement(const DOMElement* element);
 	void updateXMLTree();
 
