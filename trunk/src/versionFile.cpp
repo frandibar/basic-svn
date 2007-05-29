@@ -93,7 +93,7 @@ bool VersionFile::crearBloque(int Anterior, int Siguiente){
 	return false;
 }
 
-bool VersionFile::create(char* fileName){
+bool VersionFile::create(const char* fileName){
     _filestr.open(fileName, ios::out | ios::in | ios::binary);
 
 	if (!_filestr) {
@@ -111,7 +111,7 @@ bool VersionFile::create(char* fileName){
     return writeHeader();
 }
 
-bool VersionFile::open(char* fileName){
+bool VersionFile::open(const char* fileName){
     _filestr.open(fileName, ios::in | ios::out | ios::binary);
 
 	if(_filestr.is_open()){
@@ -141,7 +141,7 @@ bool VersionFile::close(){
 	return false;
 }
 
-void VersionFile::insertVersion(Version* version,int* nroBloqueNuevo){
+void VersionFile::insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int* nroBloqueNuevo){
 	
 	writeBloque(); // escribo el bloque actual
 
@@ -153,22 +153,37 @@ void VersionFile::insertVersion(Version* version,int* nroBloqueNuevo){
 
 	_cantBloques++;	// incremento la cantidad de bloques del archivo
 
+	//creo la version nueva
+	Version* version = new Version(nroVersion,nroVersion,Fecha,User,Offset,Tipo);
+
 	_bloqueActual->insertVersion(version); // inserto la version
+
+	delete version;
 
 	return;
 }
 
-int VersionFile::insertVersion(Version* version,int bloque,int* nroBloqueNuevo){
+int VersionFile::insertVersion(int nroVersion,const char* User,long int Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo){
 
 	readBloque(bloque); // obtengo el bloque
 
-	if(_bloqueActual->hayLugar(version)){
+	Version* ultimaVersion = _bloqueActual->getLastVersion();
 
-		if( !_bloqueActual->searchVersion(version->getNroVersion()) ){
-			_bloqueActual->insertVersion(version);
+	int ultimoOriginal = ultimaVersion->getOriginal();
+
+	delete ultimaVersion;
+
+	Version* nuevaVersion = new Version(nroVersion,ultimoOriginal,Fecha,User,Offset,Tipo);
+
+	if(_bloqueActual->hayLugar(nuevaVersion)){
+
+		if( !_bloqueActual->searchVersion(nuevaVersion->getNroVersion()) ){
+			_bloqueActual->insertVersion(nuevaVersion);
+			delete nuevaVersion;
 			return 1;
 		}
-
+		
+		delete nuevaVersion;
 		return 0;
 	}
 	
@@ -184,7 +199,9 @@ int VersionFile::insertVersion(Version* version,int bloque,int* nroBloqueNuevo){
 
 	_bloqueActual = bloqueNuevo;	// seteo el bloque actual como el nuevo
 
-	_bloqueActual->insertVersion(version);
+	_bloqueActual->insertVersion(nuevaVersion);
+
+	delete nuevaVersion;
 
 	*nroBloqueNuevo = _bloqueActual->getNumero();
 

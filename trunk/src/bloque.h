@@ -27,6 +27,8 @@ public:
 
 	void read(char* buffer);
 
+	Version* getLastVersion();
+
 	int getSiguiente()			{		return _siguiente;		}
 	int getAnterior()			{		return _anterior;		}
 	int getNumero()				{		return _numero;			}

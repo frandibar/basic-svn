@@ -19,7 +19,7 @@ public:
     bool close();
 
     int searchFile(const char* key);
-	int searchFileAndVersion(const char* fileName,int version);
+    int searchFileAndVersion(const char* fileName,int version);
     bool insert(const char* key,int reference);
     void list();
 

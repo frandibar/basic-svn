@@ -5,6 +5,7 @@
 
 #include <sys/stat.h>
 #include <fstream>
+#include <ctime>
 
 
 int filetype(const string& filename)
@@ -39,9 +40,10 @@ int filetype(const string& filename)
     return (nchars > nnonchars) ? 1 : 2;
 }
 
-Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) : _path(a_Almacen), _name(a_Name)
+// constructor
+Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) : _version(0), _name(a_Name), _almacen(a_Almacen)
 {
-    if (!_versionManager.open(a_Almacen, a_Name)) {
+    if (!_versionManager.open()) {
         ;
     }
 }
@@ -82,11 +84,15 @@ bool Repositorio::addFile(const string& a_Filename, const string& a_Username, co
     if (!validateUser(a_Username, a_Password)) return false;
 
     int ft = filetype(a_Filename);
-    // TODO
-    if (ft == -1) return false; // file not found
-    if (ft == 0) ; // directory
+
+    if (ft == -1) 
+        return false; // file not found
+
+    if (ft == 0) ; // directory   // TODO
     
-    if (!_versionManager.insert(a_Filename))
+    time_t date;
+    time(&date);
+    //if (!_versionManager.addFile(_version, a_Filename.c_str(), a_Username.c_str()), date, (ft == 1 ? 't' : 'b'))
         return false;
             
     return true;
@@ -120,4 +126,13 @@ bool Repositorio::removeUser(const string& a_Username)
     }
 
     return false; // user not found
+}
+bool Repositorio::create()
+{
+    return _versionManager.create();
+}
+
+bool Repositorio::open()
+{
+    return _versionManager.open();
 }
