@@ -13,9 +13,9 @@ public:
 	~VersionFile();
 
 	// crea el archivo
-	bool create(char* fileName);
+	bool create(const char* fileName);
 
-	bool open(char* fileName);
+	bool open(const char* fileName);
 
 	bool close();
 	
@@ -24,12 +24,12 @@ public:
 	// - si lo inserta en otro bloque porque el bloque cuyo nro se recibe 
 	//	 como referencia se desborda -> devuelve 2
 	// - si no lo inserta porque esa version ya estaba en el bloque -> devuelve 0
-	int insertVersion(Version* version, int bloque,int* nroBloqueNuevo);
+	int insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int bloque,int* nroBloqueNuevo);
 
-	// crea un nuevo bloque para insertar la version, es la 1º version de un archivo nuevo
+	// crea un nuevo bloque para insertar la version, es la 1ï¿½ version de un archivo nuevo
 	// en la variable nroBloqueNuevo se devuelve el nro del bloque que se creo para poder
 	// ingresarlo en el indice
-	void insertVersion(Version* version,int* nroBloqueNuevo);
+	void insertVersion(int nroVersion,const char* User, time_t Fecha, long int Offset, char Tipo, int* nroBloqueNuevo);
 
 	bool searchVersion(Version** version, int nroVersion,int bloque);
 

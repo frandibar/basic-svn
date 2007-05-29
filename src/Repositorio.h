@@ -16,10 +16,12 @@ public:
     Repositorio(const string& a_Almacen, const string& a_Name);
     ~Repositorio() {};
 
+    bool create();
+    bool open();
     bool addFile(const string& a_Filename, const string& a_Username, const string& a_Password);
     bool userExists(const string& a_Username) const;
     bool validatePassword(const string& a_Username, const string& a_Password) const;
-    bool validateUser(const string& a_Username, const string& a_Password) const;
+    bool validateUser    (const string& a_Username, const string& a_Password) const;
     bool addUser(const string& a_Username, const string& a_Password, const string& a_Fullname);
     bool removeUser(const string& a_Username);
 
@@ -31,8 +33,9 @@ private:
     Repositorio();
 
     // member variables
-    string          _path;
+    int             _version;
     string          _name;
+    string          _almacen;
     std::list<User> _lUsers;
     VersionManager  _versionManager;
 };

@@ -141,3 +141,19 @@ bool Bloque::searchVersion(int nro){
 	delete version;
 	return false;
 }
+
+Version* Bloque::getLastVersion()
+{
+	Version* ret = new Version();
+
+	char* nextByte = _versiones;
+
+	int i = 0;
+
+	while(i < _cantVersiones)
+	{
+		ret->read(nextByte);
+	}
+	
+	return ret;
+}

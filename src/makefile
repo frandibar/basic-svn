@@ -7,7 +7,7 @@ LIBS     = -lxerces-c
 
 TARGETS  = svnadmin svnuser 
 
-SRCS_common = Almacen.cpp arbolbmas.cpp bloque.cpp ConfigData.cpp helper-classes.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp version.cpp versionFile.cpp VersionManager.cpp
+SRCS_common = Almacen.cpp arbolbmas.cpp bloque.cpp ConfigData.cpp helper-classes.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp version.cpp versionFile.cpp VersionManager.cpp Container.cpp
 SRCS_svnadmin = $(SRCS_common) main-admin.cpp
 SRCS_svnuser  = $(SRCS_common) main-user.cpp
 
@@ -26,7 +26,9 @@ $(TARGETS): 	$$(OBJS_$$@)
 	@echo				   
 	@echo Making $@...
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $@ $^
+	@echo				   
 	@echo Target $@ completed.												   
+	@echo				   
 
 .objects/%.o: 	%.cpp
 	@@if [ ! -d $(@D) ]; then mkdir -p $(@D); fi
