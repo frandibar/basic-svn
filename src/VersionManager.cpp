@@ -1,7 +1,9 @@
 // VersionManager.cpp
 
 #include "VersionManager.h"
+#include "helpers.h"
 
+#include <fstream>
 
 const string VersionManager::TX_INDEX_FILENAME   = "tx_index.ndx";
 const string VersionManager::TX_VERSION_FILENAME = "tx_versions.ndx";
@@ -10,6 +12,8 @@ const string VersionManager::TX_DIFFS_FILENAME   = "tx_diffs.dat";
 const string VersionManager::BIN_INDEX_FILENAME   = "bin_index.ndx";
 const string VersionManager::BIN_VERSION_FILENAME = "bin_versions.ndx";
 const string VersionManager::BIN_DIFFS_FILENAME   = "bin_diffs.dat";
+
+const int VersionManager::VERSION_DIGITS = 5;
 
 VersionManager::VersionManager(const string& a_Almacen, const string& a_Repository) 
                                 : _almacen(a_Almacen), _repository(a_Repository)
@@ -20,12 +24,12 @@ VersionManager::VersionManager(const string& a_Almacen, const string& a_Reposito
 bool VersionManager::open()
 {
     string path = _almacen + "//" + _repository + "//";
-    bool ret = (_textIndex     .open((path + TX_INDEX_FILENAME)   .c_str()) &&
-	            _textVersions  .open((path + TX_VERSION_FILENAME) .c_str()) &&
-//	            _textDiffs     .open((path + TX_DIFFS_FILENAME)   .c_str()) &&
-                _binaryIndex   .open((path + BIN_INDEX_FILENAME)  .c_str()) &&
-                _binaryVersions.open((path + BIN_VERSION_FILENAME).c_str())// &&
-//	            _binaryDiffs   .open((path + BIN_DIFFS_FILENAME)  .c_str())
+    bool ret = (_textIndex      .open((path + TX_INDEX_FILENAME)   .c_str()) &&
+	            _textVersions   .open((path + TX_VERSION_FILENAME) .c_str()) &&
+                _textContainer  .open((path + TX_DIFFS_FILENAME)   .c_str()) &&
+                _binaryIndex    .open((path + BIN_INDEX_FILENAME)  .c_str()) &&
+                _binaryVersions .open((path + BIN_VERSION_FILENAME).c_str()) &&
+                _binaryContainer.open((path + BIN_DIFFS_FILENAME)  .c_str())
                 );
 
     _isOpen = ret;
@@ -34,12 +38,12 @@ bool VersionManager::open()
 
 void VersionManager::close()
 {
-  _textIndex.close();
-  _textVersions.close();
-//  _textDiffs.close();
-  _binaryIndex.close();
-  _binaryVersions.close();
-//  _binaryDiffs.close();
+  _textIndex      .close();
+  _textVersions   .close();
+  _textContainer  .close();
+  _binaryIndex    .close();
+  _binaryVersions .close();
+  _binaryContainer.close();
 
   return;
 }
@@ -52,7 +56,7 @@ void compare(const string& a_FilenameA, const string& a_FilenameB)
 }
 
     
-bool VersionManager::addFile(int repositoryVersion, const char* a_Filename, const char* a_User, time_t a_Date, char a_Type)
+bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type)
 {
     if (!_isOpen)
         return false;
@@ -60,50 +64,59 @@ bool VersionManager::addFile(int repositoryVersion, const char* a_Filename, cons
     int bloque;
     int nroNuevoBloque;
     long int offset;
-    char* key;
-    if(a_Type == 't'){
+    string key;
+    if (a_Type == 't') {
         // busco en el indice a ver si esta el archivo
-        bloque = _textIndex.searchFile(a_Filename);
+        bloque = _textIndex.searchFile(a_Filename.c_str());
 
-        if(bloque >= 0){ // el archivo esta en el indice
+        if (bloque >= 0) { // el archivo esta en el indice
             //debo insertar el diff si el archivo ya existe o el original si no,
             //al insertar voy a obtener el valor del offset
-            switch(_textVersions.insertVersion(repositoryVersion,a_User,a_Date,offset,a_Type,bloque,&nroNuevoBloque)){
-                case 1:
+            VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, bloque, &nroNuevoBloque);
+            switch (status) {
+                case VersionFile::OK :
                     return true;
                     break;
-                case 2:
+                case VersionFile::OVERFLOW :
                     //tengo que generar la clave a partir de a_File y repositoryVersion
-                    return _textIndex.insert(key,nroNuevoBloque);
+                    return _textIndex.insert(key.c_str(), nroNuevoBloque);
                 default:
                     return false;
             }
         }
         else{
-            //debo insertar el archivo completo.	
+            // debo insertar el archivo completo.	
         }
     }
 
-    if(a_Type == 'b'){
-        // busco en el indice a ver si esta el archivo
-        bloque = _binaryIndex.searchFile(a_Filename);
+    if (a_Type == 'b') {
+        std::ifstream is(a_Filename.c_str());
+        if (!is) return false;
+        offset = _binaryContainer.append(is);
+        if (offset == -1) return false;
 
-        if(bloque >= 0){ // el archivo esta en el indice
-            //debo insertar el diff si el archivo ya existe o el original si no,
-            //al insertar voy a obtener el valor del offset
-            switch(_binaryVersions.insertVersion(repositoryVersion,a_User,a_Date,offset,a_Type,bloque,&nroNuevoBloque)){
-                case 1:
+        // busco en el indice a ver si esta el archivo
+        bloque = _binaryIndex.searchFile(a_Filename.c_str());
+
+        if (bloque >= 0) { // el archivo esta en el indice
+            VersionFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, bloque, &nroNuevoBloque);
+            switch (status) {
+                case VersionFile::OK :
                     return true;
                     break;
-                case 2:
-                    //tengo que generar la clave a partir de a_File y repositoryVersion
-                    return _binaryIndex.insert(key,nroNuevoBloque);
+                case VersionFile::OVERFLOW :
+                    // tengo que generar la clave a partir de a_File y repositoryVersion
+                    key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+                    return _binaryIndex.insert(key.c_str(), nroNuevoBloque);
                 default:
                     return false;
             }
         }
-        else{
-            //debo insertar el archivo completo.	
+        else {
+            // debo insertar el archivo completo.	
+            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, &nroNuevoBloque);
+            key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+            _binaryIndex.insert(key.c_str(), nroNuevoBloque);
         }
     }
     return false;
@@ -112,12 +125,12 @@ bool VersionManager::addFile(int repositoryVersion, const char* a_Filename, cons
 bool VersionManager::create()
 {
     string path = _almacen + "//" + _repository + "//";
-    bool ret = (_textIndex     .create((path + TX_INDEX_FILENAME)   .c_str()) &&
-	            _textVersions  .create((path + TX_VERSION_FILENAME) .c_str()) &&
-//	            _textDiffs     .create((path + TX_DIFFS_FILENAME)   .c_str()) &&
-                _binaryIndex   .create((path + BIN_INDEX_FILENAME)  .c_str()) &&
-                _binaryVersions.create((path + BIN_VERSION_FILENAME).c_str())// &&
-//	            _binaryDiffs   .create((path + BIN_DIFFS_FILENAME)  .c_str())
+    bool ret = (_textIndex      .create((path + TX_INDEX_FILENAME)   .c_str()) &&
+	            _textVersions   .create((path + TX_VERSION_FILENAME) .c_str()) &&
+                _textContainer  .create((path + TX_DIFFS_FILENAME)   .c_str()) &&
+                _binaryIndex    .create((path + BIN_INDEX_FILENAME)  .c_str()) &&
+                _binaryVersions .create((path + BIN_VERSION_FILENAME).c_str()) &&
+                _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str())
                 );
 
     _isOpen = ret;
