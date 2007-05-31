@@ -2,7 +2,7 @@
 #define VERSIONFILE_H_INCLUDED
 
 #include <fstream>
-
+#include <list>
 #include "version.h"
 #include "bloque.h"
 
@@ -30,8 +30,11 @@ public:
 	// en la variable nroBloqueNuevo se devuelve el nro del bloque que se creo para poder
 	// ingresarlo en el indice
 	void insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int* nroBloqueNuevo);
-
+	
 	bool searchVersion(Version** version, int nroVersion,int bloque);
+	
+	std::list<Version> getVersionFrom(int original, int final, int bloque);
+	
 
 protected:
 	// file descriptor

@@ -72,7 +72,10 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         if (bloque >= 0) { // el archivo esta en el indice
             //debo insertar el diff si el archivo ya existe o el original si no,
             //al insertar voy a obtener el valor del offset
-            VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, bloque, &nroNuevoBloque);
+				
+			
+            VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, 							
+				a_Type, bloque, &nroNuevoBloque);
             switch (status) {
                 case VersionFile::OK :
                     return true;
@@ -85,14 +88,26 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
             }
         }
         else{
-            // debo insertar el archivo completo.	
-        }
-    }
+           // debo insertar el archivo completo
+		   std::ifstream is(a_Filename.c_str());
+	   	if (!is) return false;	
+	   	
+			offset =  _textContainer.append(is);
+	   	
+			is.close();
+	   	
+			if (offset == -1) return false;
+         _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, &nroNuevoBloque);
+         key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+         _textIndex.insert(key.c_str(), nroNuevoBloque);	   
+        }   
+}
 
     if (a_Type == 'b') {
         std::ifstream is(a_Filename.c_str());
         if (!is) return false;
         offset = _binaryContainer.append(is);
+	is.close();
         if (offset == -1) return false;
 
         // busco en el indice a ver si esta el archivo

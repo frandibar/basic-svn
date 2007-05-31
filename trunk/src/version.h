@@ -29,6 +29,10 @@ public:
 
     int tamanioEnDisco();
 
+	 Version &operator=(const Version &version);
+    int operator==(const Version &version) const;
+    int operator<(const Version &version) const;	 
+
 protected:
     
     int         _nroVersion; // numero de la version        
