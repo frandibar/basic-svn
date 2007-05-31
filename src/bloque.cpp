@@ -17,7 +17,9 @@ Bloque::Bloque(int Numero,int Anterior,int Siguiente)
 
 	_siguiente = Siguiente;
 
-	_offset = TAMANIOARREGLOBLOQUE - _espacioLibre;
+	_used = TAMANIOARREGLOBLOQUE - _espacioLibre;
+
+	_actualOffset = 0;
 }
 
 Bloque::~Bloque(){
@@ -25,7 +27,7 @@ Bloque::~Bloque(){
 
 void Bloque::insertVersion(Version* version){
 
-	char* nextByte = _versiones + _offset;
+	char* nextByte = _versiones + _used;
 
 	version->write(nextByte);
 
@@ -33,7 +35,7 @@ void Bloque::insertVersion(Version* version){
 
 	_espacioLibre -= version->tamanioEnDisco();
 
-	_offset = TAMANIOARREGLOBLOQUE - _espacioLibre;
+	_used = TAMANIOARREGLOBLOQUE - _espacioLibre;
 
 	return;
 }
@@ -57,7 +59,7 @@ void Bloque::read(char* buffer){
 	memcpy(&_espacioLibre,buffer + offset,sizeof(int));
 	offset += sizeof(int);
 
-	_offset = TAMANIOARREGLOBLOQUE - _espacioLibre;
+	_used = TAMANIOARREGLOBLOQUE - _espacioLibre;
 
 	//cantidad de versiones
 	memcpy(&_cantVersiones,buffer + offset,sizeof(int));
@@ -114,8 +116,12 @@ bool Bloque::searchVersion(int nro,Version** version){
 		
 		(*version) ->read(nextByte);
 
+		_actualOffset = nextByte - _versiones;
+
 		if((*version)->getNroVersion() == nro)
 			return true;
+
+		delete (*version);
 	}
 
 	delete (*version);
@@ -156,4 +162,43 @@ Version* Bloque::getLastVersion()
 	}
 	
 	return ret;
+}
+
+int Bloque::getFirstVersionNumber(){
+
+	Version* version = new Version();
+
+	char* nextByte = _versiones;	
+
+	version->read(nextByte);
+
+	int ret = version->getNroVersion();
+
+	delete version;
+
+	return ret;
+}
+
+void Bloque::move_First(){
+	_actualOffset = 0;
+	
+	return;
+}
+
+Version* Bloque::get_Next(){
+	
+	Version* ret = new Version();
+
+	char* nextByte = _versiones + _actualOffset;
+
+	ret->read(nextByte);
+
+	_actualOffset = nextByte - _versiones;
+
+	return ret;
+}
+
+bool Bloque::has_Next(){
+	
+	return _actualOffset < _used;
 }

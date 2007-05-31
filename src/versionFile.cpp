@@ -1,6 +1,7 @@
 #include "versionFile.h"
 
 using std::ios;
+using std::list;
 
 VersionFile::VersionFile(){
 	_buffer = new char[Bloque::TAMANIOBLOQUE];
@@ -213,4 +214,44 @@ bool VersionFile::searchVersion(Version** version,int nroVersion,int bloque){
 	readBloque(bloque);
 
 	return _bloqueActual->searchVersion(nroVersion,version);
+}
+
+list<Version> VersionFile::getVersionFrom(int original, int final, int bloque){
+	// levanto el bloque a partir del que voy a empezar a buscar la original y armar la lista de versiones.
+	// podre moverme hacia bloques anteriores o posteriores.
+	
+	readBloque(bloque);
+
+	bool found = _bloqueActual->searchVersion(original);
+ 	bool finish  = false;
+
+	while( (!found) && (!finish) ){
+		
+		int next = -1;
+
+		int first = _bloqueActual->getFirstVersionNumber();
+
+		if (original < first)
+			next = _bloqueActual->getAnterior();
+		else
+			next = _bloqueActual->getSiguiente();
+
+		if(next < 0) finish = true;
+
+		else{
+			readBloque(next);
+			found = _bloqueActual->searchVersion(original);
+		}
+	}
+
+	list<Version> ret;
+
+	Version* auxVersion;
+
+	_bloqueActual->searchVersion(original,&auxVersion);
+	
+	ret.insert(*auxVersion);
+
+	return ret;
+
 }

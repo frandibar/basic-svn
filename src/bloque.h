@@ -33,17 +33,25 @@ public:
 	int getAnterior()			{		return _anterior;		}
 	int getNumero()				{		return _numero;			}
 	int getCantidadVersiones()	{		return _cantVersiones;	}
+	
+	int getFirstVersionNumber();
 
 	void setSiguiente(int Siguiente){	_siguiente = Siguiente;	}
 	void setAnterior(int Anterior)	{	_anterior = Anterior;	}
 
 	bool hayLugar(Version* version);
+
+	void move_First();
+	Version* get_Next();
+	bool has_Next();
+	
 protected:
 	int _siguiente;
 	int _anterior;
 	int _espacioLibre;
 	int _cantVersiones;
-	int _offset;
+	int _used;
+	int _actualOffset;
 	int _numero;
 
 	char _versiones[TAMANIOARREGLOBLOQUE];

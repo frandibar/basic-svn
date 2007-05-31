@@ -117,6 +117,37 @@ int Version::tamanioEnDisco(){
     return tamanio;
 }
 
+Version& Version::operator=(const Version &version)
+{
+    _nroVersion = version._nroVersion;
+    _original = version._original;
+    _fecha = version._fecha;
+    _offset = version._offset;
+    _tipo = version._tipo;
+
+	int tamanio = strlen(version._user);
+
+	if(_user) delete _user;
+
+	_user = new char[(tamanio + 1) * sizeof(char)];
+
+	strcpy(_user,version._user);
+   
+	return *this;
+}
+
+int Version::operator==(const Version &version) const
+{
+   if( this->_nroVersion != version._nroVersion) return 0;
+   return 1;
+}
+
+
+int Version::operator<(const Version &version) const
+{
+   if( this->_nroVersion < version._nroVersion ) return 1;
+   return 0;
+}
 
 
 
