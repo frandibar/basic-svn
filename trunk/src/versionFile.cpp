@@ -163,7 +163,7 @@ void VersionFile::insertVersion(int nroVersion, const char* User, time_t Fecha, 
 	return;
 }
 
-int VersionFile::insertVersion(int nroVersion,const char* User,long int Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo){
+VersionFile::t_status VersionFile::insertVersion(int nroVersion,const char* User,long int Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo){
 
 	readBloque(bloque); // obtengo el bloque
 
@@ -180,11 +180,11 @@ int VersionFile::insertVersion(int nroVersion,const char* User,long int Fecha,lo
 		if( !_bloqueActual->searchVersion(nuevaVersion->getNroVersion()) ){
 			_bloqueActual->insertVersion(nuevaVersion);
 			delete nuevaVersion;
-			return 1;
+			return VersionFile::OK;
 		}
 		
 		delete nuevaVersion;
-		return 0;
+		return VersionFile::ERROR;
 	}
 	
 	Bloque* bloqueNuevo = new Bloque(_cantBloques,_bloqueActual->getNumero());
@@ -205,7 +205,7 @@ int VersionFile::insertVersion(int nroVersion,const char* User,long int Fecha,lo
 
 	*nroBloqueNuevo = _bloqueActual->getNumero();
 
-	return 2;
+	return VersionFile::OVERFLOW;
 }
 
 bool VersionFile::searchVersion(Version** version,int nroVersion,int bloque){

@@ -23,11 +23,13 @@ public:
     static const string BIN_VERSION_FILENAME;
     static const string BIN_DIFFS_FILENAME;
 
+    static const int VERSION_DIGITS;
+
     VersionManager() {};
     VersionManager(const string& a_Almacen, const string& a_Repository);
 
     bool open();
-    bool addFile(int repositoryVersion, const char* a_Filename, const char* a_User, time_t a_Date, char a_Type);    
+    bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
     bool create();
     void close();  
     bool isOpen() const { return _isOpen; }
