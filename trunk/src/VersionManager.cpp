@@ -4,6 +4,9 @@
 #include "helpers.h"
 
 #include <fstream>
+#include <list>
+
+using std::list;
 
 const string VersionManager::TX_INDEX_FILENAME   = "tx_index.ndx";
 const string VersionManager::TX_VERSION_FILENAME = "tx_versions.ndx";
@@ -70,45 +73,80 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         bloque = _textIndex.searchFile(a_Filename.c_str());
 
         if (bloque >= 0) { // el archivo esta en el indice
-            //debo insertar el diff si el archivo ya existe o el original si no,
-            //al insertar voy a obtener el valor del offset
-				
+            // debo insertar el diff si el archivo ya existe o el original si no,
+            // al insertar voy a obtener el valor del offset
+            int original = _textVersions.getLastOriginalVersionNumber(bloque);
+            int last = _textVersions.getLastVersionNumber(bloque);
 			
+            list<Version> lstVersions;
+            if (!_textVersions.getVersionFrom(original, last, bloque, lstVersions)) {
+                // debo insertar el archivo completo
+                std::ifstream is(a_Filename.c_str());
+                if (!is) 
+                    return false;	
+
+                offset = _textContainer.append(is);
+                is.close();
+
+                if (offset == -1) 
+                    return false;
+            }
+            else {
+                // TODO: generar el archivo con la version final a partir de la lista
+                // fstream fsVersion;
+                // obtenerVersionFinal(lstVersiones, fsVersion)
+                //ifstream is(a_Filename);
+                //fstream fsdiff;
+                //generarDiff(is, fsVersion, fsdiff);
+                //offset = _textContainer.append(is);
+                //is.close();
+                ;
+            }
+
+            // TODO: falta ver si la ultima version es la de borrado
+
             VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, 							
-				a_Type, bloque, &nroNuevoBloque);
+                                                                       a_Type, bloque, &nroNuevoBloque);
+            
             switch (status) {
                 case VersionFile::OK :
                     return true;
                     break;
+
                 case VersionFile::OVERFLOW :
-                    //tengo que generar la clave a partir de a_File y repositoryVersion
+                    // tengo que generar la clave a partir de a_File y repositoryVersion
                     return _textIndex.insert(key.c_str(), nroNuevoBloque);
+
                 default:
                     return false;
             }
         }
-        else{
+        else {
            // debo insertar el archivo completo
 		   std::ifstream is(a_Filename.c_str());
-	   	if (!is) return false;	
+            if (!is) 
+                return false;	
 	   	
-			offset =  _textContainer.append(is);
-	   	
+			offset = _textContainer.append(is);
 			is.close();
 	   	
-			if (offset == -1) return false;
-         _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, &nroNuevoBloque);
-         key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
-         _textIndex.insert(key.c_str(), nroNuevoBloque);	   
+			if (offset == -1) 
+                return false;
+
+            _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, &nroNuevoBloque);
+            key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+            _textIndex.insert(key.c_str(), nroNuevoBloque);	   
         }   
 }
 
     if (a_Type == 'b') {
         std::ifstream is(a_Filename.c_str());
-        if (!is) return false;
+        if (!is) 
+            return false;
         offset = _binaryContainer.append(is);
-	is.close();
-        if (offset == -1) return false;
+        is.close();
+        if (offset == -1) 
+            return false;
 
         // busco en el indice a ver si esta el archivo
         bloque = _binaryIndex.searchFile(a_Filename.c_str());

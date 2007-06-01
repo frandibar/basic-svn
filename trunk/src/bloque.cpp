@@ -151,54 +151,40 @@ bool Bloque::searchVersion(int nro){
 Version* Bloque::getLastVersion()
 {
 	Version* ret = new Version();
-
 	char* nextByte = _versiones;
-
 	int i = 0;
-
-	while(i < _cantVersiones)
-	{
+	while (i < _cantVersiones)
 		ret->read(nextByte);
-	}
 	
 	return ret;
 }
 
-int Bloque::getFirstVersionNumber(){
-
+int Bloque::getFirstVersionNumber()
+{
 	Version* version = new Version();
-
 	char* nextByte = _versiones;	
-
 	version->read(nextByte);
-
 	int ret = version->getNroVersion();
-
 	delete version;
-
 	return ret;
 }
 
-void Bloque::move_First(){
+void Bloque::moveFirst()
+{
 	_actualOffset = 0;
-	
 	return;
 }
 
-Version* Bloque::get_Next(){
-	
+Version* Bloque::getNext()
+{
 	Version* ret = new Version();
-
 	char* nextByte = _versiones + _actualOffset;
-
 	ret->read(nextByte);
-
 	_actualOffset = nextByte - _versiones;
-
 	return ret;
 }
 
-bool Bloque::has_Next(){
-	
+bool Bloque::hasNext()
+{
 	return _actualOffset < _used;
 }
