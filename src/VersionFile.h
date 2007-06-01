@@ -1,10 +1,10 @@
-// versionFile.h
+// VersionFile.h
 
 #ifndef VERSIONFILE_H_INCLUDED
 #define VERSIONFILE_H_INCLUDED
 
-#include "version.h"
-#include "bloque.h"
+#include "Version.h"
+#include "Bloque.h"
 
 #include <fstream>
 #include <list>

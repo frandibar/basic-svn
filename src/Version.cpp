@@ -1,17 +1,19 @@
-#include "version.h"
+// Version.cpp
+
+#include "Version.h"
 
 Version::Version()
 {
     _nroVersion = -1;
-    _original = -1;
-    _fecha = -1;
-    _tipo = 0;
-    _offset = -1;
-
-    _user = 0;
+    _original   = -1;
+    _fecha      = -1;
+    _tipo       = 0;
+    _offset     = -1;
+    _user       = 0;
 }
 
-Version::Version(int NroVersion, int Original, time_t Fecha, const char* User, long int Offset, char Tipo){
+Version::Version(int NroVersion, int Original, time_t Fecha, const char* User, long int Offset, char Tipo)
+{
     _nroVersion = NroVersion;
     _original = Original;
     _fecha = Fecha;
@@ -22,7 +24,7 @@ Version::Version(int NroVersion, int Original, time_t Fecha, const char* User, l
 
     _user = new char[(tamanio + 1) * sizeof(char)];
 
-    memcpy(_user,User,tamanio*sizeof(char));
+    memcpy(_user, User, tamanio * sizeof(char));
     _user[tamanio] = 0;
 }
 
@@ -89,7 +91,6 @@ void Version::read(char* buffer)
     memcpy(&tamanioUsuario,buffer,sizeof(int));
     buffer += sizeof(int);
 
-    
     if(_user != 0){
         delete _user;
         _user = 0;
@@ -107,12 +108,12 @@ void Version::read(char* buffer)
 }
 
 int Version::tamanioEnDisco(){
-    int tamanio =   sizeof(int) +                   //nro de version 
-                    sizeof(int) +                   //nro del original
-                    sizeof(long int) +              //fecha
-                    sizeof(int) +                   //longitud del atributo nombre usuario
-                    strlen(_user) * sizeof(char) +  //usuario
-                    sizeof(char);                   //tipo
+    int tamanio = sizeof(int) +                   //nro de version 
+                  sizeof(int) +                   //nro del original
+                  sizeof(long int) +              //fecha
+                  sizeof(int) +                   //longitud del atributo nombre usuario
+                  strlen(_user) * sizeof(char) +  //usuario
+                  sizeof(char);                   //tipo
 
     return tamanio;
 }
@@ -120,33 +121,27 @@ int Version::tamanioEnDisco(){
 Version& Version::operator=(const Version &version)
 {
     _nroVersion = version._nroVersion;
-    _original = version._original;
-    _fecha = version._fecha;
-    _offset = version._offset;
-    _tipo = version._tipo;
+    _original   = version._original;
+    _fecha      = version._fecha;
+    _offset     = version._offset;
+    _tipo       = version._tipo;
 
 	int tamanio = strlen(version._user);
-
-	if(_user) delete _user;
-
+    delete _user;
 	_user = new char[(tamanio + 1) * sizeof(char)];
-
-	strcpy(_user,version._user);
-   
+	strcpy(_user, version._user);
 	return *this;
 }
 
 int Version::operator==(const Version &version) const
 {
-   if( this->_nroVersion != version._nroVersion) return 0;
-   return 1;
+   return ((this->_nroVersion != version._nroVersion) ? 0 : 1);
 }
 
 
 int Version::operator<(const Version &version) const
 {
-   if( this->_nroVersion < version._nroVersion ) return 1;
-   return 0;
+   return ((this->_nroVersion < version._nroVersion) ? 1 : 0);
 }
 
 

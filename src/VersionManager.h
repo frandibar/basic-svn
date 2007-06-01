@@ -1,9 +1,8 @@
 // VersionManager.h
 
 #include "arbolbmas.h"
-#include "version.h"
-#include "versionFile.h"
-#include "version.h"
+#include "Version.h"
+#include "VersionFile.h"
 #include "Container.h"
 
 #include <string>
