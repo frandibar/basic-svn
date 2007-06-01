@@ -1,10 +1,13 @@
+// versionFile.h
+
 #ifndef VERSIONFILE_H_INCLUDED
 #define VERSIONFILE_H_INCLUDED
 
-#include <fstream>
-#include <list>
 #include "version.h"
 #include "bloque.h"
+
+#include <fstream>
+#include <list>
 
 class VersionFile
 {
@@ -14,8 +17,7 @@ public:
 	VersionFile();
 	~VersionFile();
 
-	// crea el archivo
-	bool create(const char* fileName);
+	bool create(const char* fileName); // crea el archivo
 	bool open(const char* fileName);
 	bool close();
 	
@@ -32,18 +34,16 @@ public:
 	void insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int* nroBloqueNuevo);
 	
 	bool searchVersion(Version** version, int nroVersion,int bloque);
-	
-	std::list<Version> getVersionFrom(int original, int final, int bloque);
+	bool getVersionFrom(int original, int final, int bloque, std::list<Version>& lstVersions);
+	int getLastOriginalVersionNumber(int bloque);
+	int getLastVersionNumber(int bloque);
 	
 
 protected:
 	// file descriptor
 	std::fstream _filestr;
 	
-	// cantidad de bloques
 	int _cantBloques;
-
-	// el bloque actual
 	Bloque* _bloqueActual;
 
 	// buffer de lectura-escritura

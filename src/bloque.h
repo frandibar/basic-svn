@@ -18,15 +18,10 @@ public:
 	~Bloque();
 
 	void insertVersion(Version* version);
-
 	bool searchVersion(int nro,Version** version);
-
 	bool searchVersion(int nro);
-
 	void write(char* buffer);
-
 	void read(char* buffer);
-
 	Version* getLastVersion();
 
 	int getSiguiente()			{		return _siguiente;		}
@@ -41,9 +36,9 @@ public:
 
 	bool hayLugar(Version* version);
 
-	void move_First();
-	Version* get_Next();
-	bool has_Next();
+	void moveFirst();
+	Version* getNext();
+	bool hasNext();
 	
 protected:
 	int _siguiente;
