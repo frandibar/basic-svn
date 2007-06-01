@@ -1,18 +1,20 @@
+// Bloque.h
+
 #ifndef BLOCK_H_INCLUDED
 #define BLOCK_H_INCLUDED
+
+#include "Version.h"
 
 #include <cstdlib>
 #include <string>
 #include <iostream>
 
-#include "version.h"
-
-#define TAMANIOARREGLOBLOQUE 1004
+#define TAMANIO_ARREGLO_BLOQUE 1004
 
 class Bloque 
 {
 public:
-    static const int TAMANIOBLOQUE;
+    static const int TAMANIO_BLOQUE;
 
 	Bloque(int Numero = -1,int Anterior = -1 ,int Siguiente = -1);
 	~Bloque();
@@ -49,7 +51,7 @@ protected:
 	int _actualOffset;
 	int _numero;
 
-	char _versiones[TAMANIOARREGLOBLOQUE];
+	char _versiones[TAMANIO_ARREGLO_BLOQUE];
 };
 
 #endif
