@@ -12,17 +12,17 @@ class Version
 {
 public:
     Version();
-    Version(int NroVersion, int Original, time_t Fecha, const char* User, long int Offset, char Tipo);
+    Version(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo);
     ~Version();
 
     //empaquetadores y desempaquetadores
-    void read (char* buffer);
+    void read (char** buffer);
     void write(char* buffer);
 
     //getters - no hay setters porque no hay modificacion de la info de las versiones
     int      getNroVersion()  const { return _nroVersion; }
     int      getOriginal()    const { return _original;   }
-    time_t   getFecha()       const { return _fecha;      }
+    tm		 getFecha()       const { return _fecha;      }
     char*    getUser()        const { return _user;       }
     long int getOffset()      const { return _offset;     }
     char     getTipo()        const { return _tipo;       }
@@ -37,7 +37,7 @@ protected:
     
     int         _nroVersion; // numero de la version        
     int         _original;   // numero de la version que es el ultimo original de este archivo
-    time_t      _fecha;      // fecha en que se establecio la version
+    tm			_fecha;      // fecha en que se establecio la version
     char*       _user;       // el usuario que establecio la version
     long int    _offset;     // offset donde se encuentra la version en el archivo que contiene originales y diffs
     char        _tipo;       // tipo de archivo del que se trata la version "b" = binario, "t" = texto
