@@ -233,7 +233,7 @@ bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Versi
 	lstVersions.push_back(*auxVersion);
     //delete auxVersion;
 
-    bool end = false;
+    bool end = (auxVersion->getNroVersion() == final);
 
     // copio las restantes versiones del 1er bloque
     while (_bloqueActual->hasNext() && !end) {
@@ -241,25 +241,37 @@ bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Versi
         auxVersion = _bloqueActual->getNext();
 
         lstVersions.push_back(*auxVersion);
-        if (auxVersion->getNroVersion() == final)
-            end = true;
+
+        if (auxVersion->getNroVersion() <= final)
+		{
+			if(auxVersion->getNroVersion() == final)
+				end = true;
+		}
+
+		else
+			end = true;
 
         //delete auxVersion;
     }
 
-    int next = -1;
-    while (!end) {
-        next = _bloqueActual->getSiguiente();
-        readBloque(next);
-        _bloqueActual->moveFirst();
+    int next = _bloqueActual->getSiguiente();
+    while ( (!end)&&(next >= 0)) {
+		
+		readBloque(next);
+        	
+		_bloqueActual->moveFirst();
+
         while (_bloqueActual->hasNext() && !end) {
             auxVersion = _bloqueActual->getNext();
-            if (auxVersion->getNroVersion() == final)
+            if (auxVersion->getNroVersion() >= final)
                 end = true;
 
-            lstVersions.push_back(*auxVersion);
+            if(auxVersion->getNroVersion() <= final)
+				lstVersions.push_back(*auxVersion);
             //delete auxVersion;
         }
+		
+		next = _bloqueActual->getSiguiente();
     }
 
 	return true;
