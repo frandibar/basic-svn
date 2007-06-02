@@ -26,12 +26,12 @@ public:
 	// - si lo inserta en otro bloque porque el bloque cuyo nro se recibe 
 	//	 como referencia se desborda -> devuelve OVERFLOW
 	// - si no lo inserta porque esa version ya estaba en el bloque -> devuelve ERROR
-	t_status insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int bloque, int* nroBloqueNuevo);
+	t_status insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, int bloque, int* nroBloqueNuevo);
 
 	// crea un nuevo bloque para insertar la version, es la 1� version de un archivo nuevo
 	// en la variable nroBloqueNuevo se devuelve el nro del bloque que se creo para poder
 	// ingresarlo en el indice
-	void insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int* nroBloqueNuevo);
+	void insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, int* nroBloqueNuevo);
 	
 	bool searchVersion(Version** version, int nroVersion,int bloque);
 	bool getVersionFrom(int original, int final, int bloque, std::list<Version>& lstVersions);

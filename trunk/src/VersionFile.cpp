@@ -51,7 +51,12 @@ bool VersionFile::writeHeader()
 bool VersionFile::readBloque(int nroBloque)
 {
 	if (_filestr.is_open()) {
-		writeBloque(); // escribo el bloque actual;
+		if(_bloqueActual != 0){
+			writeBloque(); // escribo el bloque actual;
+			delete _bloqueActual;
+		}
+
+		_bloqueActual = new Bloque();
 
 		_filestr.seekg((nroBloque + 1) * Bloque::TAMANIO_BLOQUE,ios::beg);
 		_filestr.seekp((nroBloque + 1) * Bloque::TAMANIO_BLOQUE,ios::beg);
@@ -142,7 +147,7 @@ bool VersionFile::close()
 	return false;
 }
 
-void VersionFile::insertVersion(int nroVersion, const char* User, time_t Fecha, long int Offset, char Tipo, int* nroBloqueNuevo){
+void VersionFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, int* nroBloqueNuevo){
 	
 	writeBloque(); // escribo el bloque actual
 	delete _bloqueActual;
@@ -156,7 +161,7 @@ void VersionFile::insertVersion(int nroVersion, const char* User, time_t Fecha, 
 	delete version;
 }
 
-VersionFile::t_status VersionFile::insertVersion(int nroVersion,const char* User,long int Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo)
+VersionFile::t_status VersionFile::insertVersion(int nroVersion,const char* User,tm Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo)
 {
 	readBloque(bloque); // obtengo el bloque
 	Version* ultimaVersion = _bloqueActual->getLastVersion();
@@ -221,24 +226,25 @@ bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Versi
 		}
 	}
 
-    // en este punto, _bloqueActual contiene la version original
-    
+    // en este punto, _bloqueActual contiene la version original    
 	Version* auxVersion;
 	_bloqueActual->searchVersion(original, &auxVersion);
-	lstVersions.push_front(*auxVersion);
-    delete auxVersion;
+	
+	lstVersions.push_back(*auxVersion);
+    //delete auxVersion;
 
     bool end = false;
 
     // copio las restantes versiones del 1er bloque
     while (_bloqueActual->hasNext() && !end) {
+		
+        auxVersion = _bloqueActual->getNext();
 
-        _bloqueActual->searchVersion(original, &auxVersion);
         lstVersions.push_back(*auxVersion);
         if (auxVersion->getNroVersion() == final)
             end = true;
 
-        delete auxVersion;
+        //delete auxVersion;
     }
 
     int next = -1;
@@ -250,8 +256,9 @@ bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Versi
             auxVersion = _bloqueActual->getNext();
             if (auxVersion->getNroVersion() == final)
                 end = true;
+
             lstVersions.push_back(*auxVersion);
-            delete auxVersion;
+            //delete auxVersion;
         }
     }
 

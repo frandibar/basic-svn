@@ -22,10 +22,17 @@ Bloque::~Bloque()
 void Bloque::insertVersion(Version* version)
 {
 	char* nextByte = _versiones + _used;
-	version->write(nextByte);
-	_cantVersiones++;
+
 	_espacioLibre -= version->tamanioEnDisco();
-	_used = TAMANIO_ARREGLO_BLOQUE - _espacioLibre;
+		
+	version->write(nextByte);
+
+	_cantVersiones++;
+
+	_used = (TAMANIO_ARREGLO_BLOQUE - _espacioLibre);
+
+	_actualOffset = _used;
+
 	return;
 }
 
@@ -101,32 +108,42 @@ bool Bloque::hayLugar(Version* version)
 bool Bloque::searchVersion(int nro,Version** version)
 {
 	char* nextByte = _versiones;
-	*version = new Version();
+
 	for (int i = 0;i < _cantVersiones; ++i) {
-		(*version) ->read(nextByte);
+		*version = new Version();
+		
+		(*version) ->read(&nextByte);
 		_actualOffset = nextByte - _versiones;
-		if ((*version)->getNroVersion() == nro)
+		
+		if ((*version)->getNroVersion() == nro){
 			return true;
-		delete *version;
+		}
+
+		delete (*version);
 	}
 
-	delete *version;
 	return false;
 }
 
 bool Bloque::searchVersion(int nro)
 {
 	char* nextByte = _versiones;
-	Version* version = new Version();
+
 	for (int i = 0;i < _cantVersiones; ++i) {
-		version->read(nextByte);
+		
+		Version* version = new Version();
+		version->read(&nextByte);
+
+		_actualOffset = nextByte - _versiones;
+		
 		if(version->getNroVersion() == nro) {
 			delete version;
 			return true;
 		}
+
+		delete version;
 	}
 
-	delete version;
 	return false;
 }
 
@@ -136,7 +153,11 @@ Version* Bloque::getLastVersion()
 	char* nextByte = _versiones;
 	int i = 0;
 	while (i < _cantVersiones)
-		ret->read(nextByte);
+	{
+		ret->read(&nextByte);
+		_actualOffset = nextByte - _versiones;
+		i++;
+	}
 	
 	return ret;
 }
@@ -145,7 +166,8 @@ int Bloque::getFirstVersionNumber()
 {
 	Version* version = new Version();
 	char* nextByte = _versiones;	
-	version->read(nextByte);
+	version->read(&nextByte);
+	_actualOffset = nextByte - _versiones;
 	int ret = version->getNroVersion();
 	delete version;
 	return ret;
@@ -161,7 +183,7 @@ Version* Bloque::getNext()
 {
 	Version* ret = new Version();
 	char* nextByte = _versiones + _actualOffset;
-	ret->read(nextByte);
+	ret->read(&nextByte);
 	_actualOffset = nextByte - _versiones;
 	return ret;
 }
