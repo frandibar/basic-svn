@@ -68,6 +68,8 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
     int nroNuevoBloque;
     long int offset;
     string key;
+
+    tm* date = localtime(&a_Date);
     if (a_Type == 't') {
         // busco en el indice a ver si esta el archivo
         bloque = _textIndex.searchFile(a_Filename.c_str());
@@ -105,9 +107,8 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
             // TODO: falta ver si la ultima version es la de borrado
 
-            VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, 							
+            VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, 							
                                                                        a_Type, bloque, &nroNuevoBloque);
-            
             switch (status) {
                 case VersionFile::OK :
                     return true;
@@ -133,11 +134,11 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 			if (offset == -1) 
                 return false;
 
-            _textVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, &nroNuevoBloque);
+            _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, &nroNuevoBloque);
             key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
             _textIndex.insert(key.c_str(), nroNuevoBloque);	   
         }   
-}
+    }
 
     if (a_Type == 'b') {
         std::ifstream is(a_Filename.c_str());
@@ -152,7 +153,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         bloque = _binaryIndex.searchFile(a_Filename.c_str());
 
         if (bloque >= 0) { // el archivo esta en el indice
-            VersionFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, bloque, &nroNuevoBloque);
+            VersionFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, bloque, &nroNuevoBloque);
             switch (status) {
                 case VersionFile::OK :
                     return true;
@@ -167,7 +168,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         }
         else {
             // debo insertar el archivo completo.	
-            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), a_Date, offset, a_Type, &nroNuevoBloque);
+            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, &nroNuevoBloque);
             key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
             _binaryIndex.insert(key.c_str(), nroNuevoBloque);
         }

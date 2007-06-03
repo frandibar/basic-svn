@@ -35,7 +35,6 @@ Version::~Version()
 
 void Version::write(char* buffer)
 {
-	int writeen = 0;
     int tamanioUsuario;
     //copio el nro de version
     memcpy(buffer,&_nroVersion,sizeof(int));

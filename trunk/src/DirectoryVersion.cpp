@@ -1,8 +1,8 @@
+// DirectoryVersion.cpp
+
 #include "DirectoryVersion.h"
 
 using std::list;
-
-using namespace std;
 
 DirectoryVersion::DirectoryVersion()
 {

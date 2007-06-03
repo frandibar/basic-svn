@@ -1,14 +1,18 @@
-#ifndef DIRECTORYVERSION_H_INCLUDED
-#define DIRECTORYVERSION_H_INCLUDED
+// DirectoryVersion.h
+
+#ifndef DIRECTORY_VERSION_H_INCLUDED
+#define DIRECTORY_VERSION_H_INCLUDED
+
+#include "File.h"
 
 #include <list>
 #include <string>
 #include <ctime>
-#include <stdlib.h>
+#include <cstdlib>
 #include <iostream>
-#include "file.h"
 
-class DirectoryVersion{
+class DirectoryVersion
+{
 public:
 	DirectoryVersion();
 	DirectoryVersion(int NroVersion,const char* User,tm Date);
@@ -30,9 +34,9 @@ public:
 	long int tamanioEnDisco();
 
 private:
-	int					_nroVersion;	//version number
-	char*				_user;			//user
-	tm					_date;			//date
+	int					_nroVersion;	// version number
+	char*				_user;			// user
+	tm					_date;			// date
 	std::list<File>		_fileLst;		// list of filenames
 };
 

@@ -20,7 +20,7 @@ void testBloque()
 	
 	time(&Time);
 	Timetm = localtime(&Time);
-	Version* version = new Version(1,1,*Timetm,Rodrigo.c_str(),0,'t');
+    Version* version = new Version(1,1,*Timetm,Rodrigo.c_str(),0,'t');
 
 	bloque->insertVersion(version);
 
