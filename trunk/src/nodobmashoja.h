@@ -1,3 +1,5 @@
+// nodobmashoja.h
+
 #ifndef NODOBMASHOJA_H_INCLUDED
 #define NODOBMASHOJA_H_INCLUDED
 

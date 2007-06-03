@@ -24,31 +24,55 @@ VersionManager::VersionManager(const string& a_Almacen, const string& a_Reposito
 {
 }
 
-bool VersionManager::open()
+bool VersionManager::destroy()
 {
-    string path = _almacen + "//" + _repository + "//";
-    bool ret = (_textIndex      .open((path + TXT_INDEX_FILENAME)  .c_str()) &&
-	            _textVersions   .open((path + TXT_VERSION_FILENAME).c_str()) &&
-                _textContainer  .open((path + TXT_DIFFS_FILENAME)  .c_str()) &&
-                _binaryIndex    .open((path + BIN_INDEX_FILENAME)  .c_str()) &&
-                _binaryVersions .open((path + BIN_VERSION_FILENAME).c_str()) &&
-                _binaryContainer.open((path + BIN_DIFFS_FILENAME)  .c_str())
-                );
+    debug("destroying VersionManager\n");
+    bool ret = close();
+    ret = ret && _textIndex      .destroy() &&
+                 _textVersions   .destroy() &&
+                 _textContainer  .destroy() &&
+                 _binaryIndex    .destroy() &&
+                 _binaryVersions .destroy() &&
+                 _binaryContainer.destroy();
 
-    _isOpen = ret;
+    debug("VersionManager destroy " + string((ret) ? "successfull" : "failed") + "\n");
     return ret;
 }
 
-void VersionManager::close()
+bool VersionManager::open()
 {
-    _textIndex      .close();
-    _textVersions   .close();
-    _textContainer  .close();
-    _binaryIndex    .close();
-    _binaryVersions .close();
-    _binaryContainer.close();
+    debug("opening VersionManager\n");
+    string path = _almacen + "//" + _repository + "//";
+    bool ret = (_textIndex      .open((path + TXT_INDEX_FILENAME)  .c_str()) &&
+            _textVersions   .open((path + TXT_VERSION_FILENAME).c_str()) &&
+            _textContainer  .open((path + TXT_DIFFS_FILENAME)  .c_str()) &&
+            _binaryIndex    .open((path + BIN_INDEX_FILENAME)  .c_str()) &&
+            _binaryVersions .open((path + BIN_VERSION_FILENAME).c_str()) &&
+            _binaryContainer.open((path + BIN_DIFFS_FILENAME)  .c_str())
+            );
 
-    return;
+    //bool ret = _textIndex.open((path + TXT_INDEX_FILENAME).c_str());
+    //debug((ret) ? "OK\n" : "NOOO\n");
+    //ret = ret && _textVersions.open((path + TXT_VERSION_FILENAME).c_str());
+    //debug((ret) ? "OK\n" : "NOOO\n");
+
+    _isOpen = ret;
+    debug("VersionManager open " + string((ret) ? "successfull" : "failed") + "\n");
+    return ret;
+}
+
+bool VersionManager::close()
+{
+    debug("closing VersionManager\n");
+    bool ret = _textIndex      .close() &&
+               _textVersions   .close() &&
+               _textContainer  .close() &&
+               _binaryIndex    .close() &&
+               _binaryVersions .close() &&
+               _binaryContainer.close();
+    debug("VersionManager close " + string((ret) ? "successfull" : "failed") + "\n");
+
+    return ret;
 }
 
 bool VersionManager::buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename)
@@ -121,8 +145,8 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
             // TODO: falta ver si la ultima version es la de borrado
 
-            FileVersionsFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, 							
-                                                                       a_Type,FileVersion::t_versionType::MODIFICACION, bloque, &nroNuevoBloque);
+            FileVersionsFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset,
+                                                           a_Type, FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
             switch (status) {
                 case FileVersionsFile::OK :
                     return true;
@@ -148,7 +172,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
            if (offset == -1) 
                return false;
 
-           _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::t_versionType::MODIFICACION, &nroNuevoBloque);
+           _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::MODIFICACION, &nroNuevoBloque);
            key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
            _textIndex.insert(key.c_str(), nroNuevoBloque);	   
         }   
@@ -167,7 +191,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         bloque = _binaryIndex.searchFile(a_Filename.c_str());
 
         if (bloque >= 0) { // el archivo esta en el indice
-            FileVersionsFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::t_versionType::MODIFICACION, bloque, &nroNuevoBloque);
+            FileVersionsFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
             switch (status) {
                 case FileVersionsFile::OK :
                     return true;
@@ -182,7 +206,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         }
         else {
             // debo insertar el archivo completo.	
-            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::t_versionType::MODIFICACION, &nroNuevoBloque);
+            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::MODIFICACION, &nroNuevoBloque);
             key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
             _binaryIndex.insert(key.c_str(), nroNuevoBloque);
         }
@@ -202,6 +226,6 @@ bool VersionManager::create()
                _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str())
               );
 
-    debug("VersionManager creation " + string((_isOpen) ? "successfull" : "unsuccessfull") + "\n");
+    debug("VersionManager creation " + string((_isOpen) ? "successfull" : "failed") + "\n");
     return _isOpen;
 }

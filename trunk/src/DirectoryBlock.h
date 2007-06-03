@@ -1,3 +1,5 @@
+// DirectoryBlock.h
+
 #ifndef DIRECTORY_BLOCK_INCLUDED
 #define DIRECTORY_BLOKC_INCLUDED
 
@@ -9,7 +11,8 @@
 
 #define TAMANIO_ARREGLO_BLOQUE_DIRECTORIOS 1004
 
-class DirectoryBlock{
+class DirectoryBlock
+{
 public:
 	static const int TAMANIO_BLOQUE_DIRECTORIOS;
 	

@@ -46,6 +46,8 @@ bool Almacen::load() throw(xercesc::XMLException&)
 {
     // load from xml file
 
+    debug("loading Almacen\n");
+    bool ret = true;
     try {
         // initialize xerces
         xercesc::XMLPlatformUtils::Initialize();
@@ -53,7 +55,6 @@ bool Almacen::load() throw(xercesc::XMLException&)
         CONFIG_FILE = "//home//" + string(getenv("USER")) + "//.svn_grupo_config";
         _config = new XMLConfigData(CONFIG_FILE);
         _name = _config->getDirAlmacen();
-        debug("Loading Almacen '" + _name + "'\n");
 
         // typedef vector<pair<string, UsersList> > RepositoriosList;
         XMLConfigData::RepositoriosList replist = _config->getRepositories();
@@ -63,28 +64,30 @@ bool Almacen::load() throw(xercesc::XMLException&)
             Repositorio* rep = new Repositorio(_name, repIt->first);
             XMLConfigData::UsersList::iterator usIt;
             for (usIt = repIt->second.begin(); usIt != repIt->second.end(); ++usIt) {
-                rep->addUser(usIt->username, usIt->password, usIt->fullname);
+                ret = ret && rep->addUser(usIt->username, usIt->password, usIt->fullname);
             }
-            _lReposit.push_back(rep);
+            if (ret)
+                _lReposit.push_back(rep);
         }
-
        
         // terminate xerces
         xercesc::XMLPlatformUtils::Terminate();
     }
     catch (...) {
-        return false;
+        debug("catched exception!\n");
+        ret = false;
     }
 
-    return true;
+    debug("Almacen load " + string(ret ? "successfull" : "failed") + "\n");
+    return ret;
 }
 
-bool Almacen::remove()
+bool Almacen::destroy()
 {
     _exists = false;
     string cmd = "rm -rf " + _name;
     int ret = system(cmd.c_str());
-    _name   = "";
+    _name = "";
     return (ret != -1);
 }
 
@@ -148,6 +151,9 @@ bool Almacen::removeRepository(const string& a_Name) throw()
     
     Repositorio* rep = getRepository(a_Name);
     if (rep == NULL)
+        return false;
+
+    if (!rep->destroy())
         return false;
 
     _lReposit.remove(rep);
@@ -228,6 +234,14 @@ bool Almacen::addFile(const string& a_Reposit, const string& a_Filename, const s
     if (rep == NULL)
         return false;
     return rep->addFile(a_Filename, a_Username, a_Password);
+}
+
+bool Almacen::removeFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password)
+{
+    Repositorio* rep = getRepository(a_Reposit);
+    if (rep == NULL)
+        return false;
+    return rep->removeFile(a_Filename, a_Username, a_Password);
 }
 
 bool Almacen::validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const

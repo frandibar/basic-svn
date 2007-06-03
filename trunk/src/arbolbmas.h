@@ -2,11 +2,13 @@
 #define ARBOLBMAS_H_INCLUDED
 
 #include <fstream>
+#include <string>
 
 #include "nodobmas.h"
 #include "nodobmashoja.h"
 #include "nodobmasindice.h"
 
+using std::string;
 
 class ArbolBMas
 {
@@ -14,8 +16,10 @@ public:
     ArbolBMas();    // constructor
     ~ArbolBMas();   // destructor
     
-    bool create(const char* fileName);
-    bool open(const char* fileName);
+    bool create(const string& a_Filename);
+    bool destroy();
+
+    bool open(const string& a_Filename);
     bool close();
 
     int searchFile(const char* key);
@@ -51,7 +55,7 @@ private:
     int          _nNodos;       // cantidad de nodos del archivo
     char*        _buffer;
     std::fstream _filestr;      // file stream para poder ir leyendo de archivo los nodos
-    
+    string       _filename;     // filename storing the tree    
 };
 
 #endif

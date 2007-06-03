@@ -1,6 +1,7 @@
-// VersionFile.cpp
+// FileVersionsFile.cpp
 
 #include "FileVersionsFile.h"
+#include "debug.h"
 
 using std::ios;
 using std::list;
@@ -9,7 +10,7 @@ FileVersionsFile::FileVersionsFile()
 {
 	_buffer = new char[FileBlock::TAMANIO_BLOQUE_ARCHIVOS];
 	_bloqueActual = 0;
-	_cantBloques = 0;
+	_cantBloques  = 0;
 }	
 
 FileVersionsFile::~FileVersionsFile()
@@ -102,53 +103,69 @@ bool FileVersionsFile::crearBloque(int Anterior, int Siguiente)
 	return false;
 }
 
-bool FileVersionsFile::create(const char* fileName)
+bool FileVersionsFile::create(const string& a_Filename)
 {
-    _filestr.open(fileName, ios::out | ios::in | ios::binary);
+    debug("creating FileVersionsFile in '" + a_Filename + "'\n");
+    _filestr.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
-	if (!_filestr) {
-		_filestr.open(fileName, ios::out | ios::binary);
+	if (!_filestr.is_open()) {
+		_filestr.open(a_Filename.c_str(), ios::out | ios::binary);
 		
 		_filestr.close();
 
-		_filestr.open(fileName, ios::in | ios::out | ios::binary);
-		if (!_filestr)
+		_filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
+		if (!_filestr.is_open())
 			return false;
 	}
 
     _cantBloques = 0;
 
-    return writeHeader();
+    bool ret = writeHeader();
+    if (ret) _filename = a_Filename;
+    debug("FileVersionsFile creation " + string((ret) ? "successfull" : "failed") + "\n");
+    return ret;
 }
 
-bool FileVersionsFile::open(const char* fileName)
+bool FileVersionsFile::destroy()
 {
-    _filestr.open(fileName, ios::in | ios::out | ios::binary);
+    int ret = remove(_filename.c_str());
+    return ret != -1;
+}
 
-	if(_filestr.is_open()){
+bool FileVersionsFile::open(const string& a_Filename)
+{
+    debug("opening FileVersionsFile '" + a_Filename + "'\n");
+    bool ret = false;
+    _filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
+
+	if (_filestr.is_open()) {
 		if (readHeader())
-				return true;
-		return false;
+            ret = true;
 	}    
-	return false;
+    if (ret) _filename = a_Filename;
+    debug("FileVersionsFile open " + string((ret) ? "successfull" : "failed") + "\n");
+    return ret;
 }
 
 bool FileVersionsFile::close()
 {
+    debug("closing FileVersionsFile '" + _filename + "'\n");
+    bool ret = false;
 	if (_filestr.is_open()) {
 		if (writeHeader()) {
 			if (writeBloque()) {
 				_filestr.close();
-				return true;
+				ret = !_filestr.is_open();
 			}
 		}
-		return false;
 	}
-	return false;
+    if (ret) _filename = "";
+    debug("FileVersionsFile close " + string((ret) ? "successfull" : "failed") + "\n");
+    return ret;
 }
 
-void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo,FileVersion::t_versionType VersionType, int* nroBloqueNuevo){
-	
+void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int* nroBloqueNuevo)
+{
 	writeBloque(); // escribo el bloque actual
 	delete _bloqueActual;
 	_bloqueActual = new FileBlock(_cantBloques); // creo el nuevo bloque apuntado por el actual
@@ -156,18 +173,18 @@ void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha,
 	_cantBloques++;	// incremento la cantidad de bloques del archivo
     
 	//creo la version nueva
-	FileVersion* version = new FileVersion(nroVersion,nroVersion,Fecha,User,Offset,Tipo,VersionType);
+	FileVersion* version = new FileVersion(nroVersion, nroVersion, Fecha, User, Offset, Tipo, VersionType);
 	_bloqueActual->insertVersion(version); // inserto la version
 	delete version;
 }
 
-FileVersionsFile::t_status FileVersionsFile::insertVersion(int nroVersion,const char* User,tm Fecha,long int Offset,char Tipo,FileVersion::t_versionType VersionType,int bloque,int* nroBloqueNuevo)
+FileVersionsFile::t_status FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int bloque, int* nroBloqueNuevo)
 {
 	readBloque(bloque); // obtengo el bloque
 	FileVersion* ultimaVersion = _bloqueActual->getLastVersion();
 	int ultimoOriginal = ultimaVersion->getOriginal();
 	delete ultimaVersion;
-	FileVersion* nuevaVersion = new FileVersion(nroVersion,ultimoOriginal,Fecha,User,Offset,Tipo,VersionType);
+	FileVersion* nuevaVersion = new FileVersion(nroVersion, ultimoOriginal, Fecha, User, Offset, Tipo, VersionType);
 	if (_bloqueActual->hayLugar(nuevaVersion)) {
 		if (!_bloqueActual->searchVersion(nuevaVersion->getNroVersion())) {
 			_bloqueActual->insertVersion(nuevaVersion);

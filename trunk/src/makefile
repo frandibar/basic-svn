@@ -7,7 +7,7 @@ LIBS     = -lxerces-c
 
 TARGETS  = svnadmin svnuser 
 
-SRCS_common = Almacen.cpp arbolbmas.cpp FileBlock.cpp ConfigData.cpp helper-classes.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp FileVersion.cpp FileVersionsFile.cpp VersionManager.cpp Container.cpp helpers.cpp DirectoryVersion.cpp File.cpp
+SRCS_common   = Almacen.cpp arbolbmas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp Version.cpp VersionManager.cpp
 SRCS_svnadmin = $(SRCS_common) main-admin.cpp
 SRCS_svnuser  = $(SRCS_common) main-user.cpp
 

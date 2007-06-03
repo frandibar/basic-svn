@@ -5,8 +5,9 @@
 
 #include "arbolbmas.h"
 #include "ConfigData.h"
-#include "VersionManager.h"
+#include "SVNException.h"
 #include "User.h"
+#include "VersionManager.h"
 
 #include <list>
 
@@ -15,17 +16,19 @@ class Repositorio
 public:
     enum t_filetype { INVALID = -1, DIRECTORY = 0, TEXT, BINARY };
 
-    Repositorio(const string& a_Almacen, const string& a_Name);
+    Repositorio(const string& a_Almacen, const string& a_Name) throw(SVNException); 
     ~Repositorio() {};
 
     bool create();
+    bool destroy();
     bool open();
-    bool addFile(const string& a_Filename, const string& a_Username, const string& a_Password);
-    bool userExists(const string& a_Username) const;
-    bool validatePassword(const string& a_Username, const string& a_Password) const;
-    bool validateUser    (const string& a_Username, const string& a_Password) const;
-    bool addUser(const string& a_Username, const string& a_Password, const string& a_Fullname);
+    bool addFile   (const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool removeFile(const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool addUser   (const string& a_Username, const string& a_Password, const string& a_Fullname);
     bool removeUser(const string& a_Username);
+    bool userExists(const string& a_Username) const;
+    bool validateUser    (const string& a_Username, const string& a_Password) const;
+    bool validatePassword(const string& a_Username, const string& a_Password) const;
 
     // getters
     string getName() const { return _name; }
