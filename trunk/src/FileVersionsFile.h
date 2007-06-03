@@ -22,6 +22,7 @@ public:
 
 	bool create(const string& a_Filename); // crea el archivo
 	bool destroy();
+
 	bool open(const string& a_Filename);
 	bool close();
 	
@@ -55,7 +56,7 @@ private:
 	FileBlock*   _bloqueActual;
 	char*        _buffer;        // buffer de lectura-escritura
     string       _filename;
-
+    bool         _isOpen;
 };	
 
 #endif

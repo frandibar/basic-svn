@@ -128,40 +128,42 @@ bool FileVersionsFile::create(const string& a_Filename)
 
 bool FileVersionsFile::destroy()
 {
+    if (_isOpen) 
+        return false;
+
+    debug("destroying FileVersionsFile '" + _filename + "'\n");
     int ret = remove(_filename.c_str());
-    return ret != -1;
+    debug("FileVersionsFile destroy " + string((ret == 0) ? "successfull" : "failed") + "\n");
+    return ret == 0;
 }
 
 bool FileVersionsFile::open(const string& a_Filename)
 {
+    if (_isOpen) 
+        return true;
+
     debug("opening FileVersionsFile '" + a_Filename + "'\n");
-    bool ret = false;
     _filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
 
-	if (_filestr.is_open()) {
-		if (readHeader())
-            ret = true;
-	}    
-    if (ret) _filename = a_Filename;
-    debug("FileVersionsFile open " + string((ret) ? "successfull" : "failed") + "\n");
-    return ret;
+	_isOpen = _filestr.is_open() && readHeader();
+    _filename = a_Filename;
+    debug("FileVersionsFile open " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
 }
 
 bool FileVersionsFile::close()
 {
+    if (!_isOpen)
+        return true;
+
     debug("closing FileVersionsFile '" + _filename + "'\n");
-    bool ret = false;
-	if (_filestr.is_open()) {
-		if (writeHeader()) {
-			if (writeBloque()) {
-				_filestr.close();
-				ret = !_filestr.is_open();
-			}
-		}
+	_isOpen = _filestr.is_open() && writeHeader() && writeBloque();
+    if (_isOpen) {
+        _filestr.close();
+        _isOpen = _filestr.is_open();
 	}
-    if (ret) _filename = "";
-    debug("FileVersionsFile close " + string((ret) ? "successfull" : "failed") + "\n");
-    return ret;
+    debug("FileVersionsFile close " + string(!_isOpen ? "successfull" : "failed") + "\n");
+    return !_isOpen;
 }
 
 void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int* nroBloqueNuevo)

@@ -7,6 +7,9 @@ using std::ios;
 
 bool Container::create(const string& a_Filename)
 {
+    if (_isOpen)
+        return false;
+
     debug("creating Container in '" + a_Filename + "'\n");
     _fstream.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
@@ -17,30 +20,39 @@ bool Container::create(const string& a_Filename)
 	}
 
     _isOpen = _fstream.is_open();
-    debug("Container creation " + string((_isOpen) ? "successfull" : "failed") + "\n");
+    debug("Container creation " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
 
 bool Container::destroy()
 {
+    debug("destroying Container in '" + _filename + "'\n");
     int ret = remove(_filename.c_str());
-    return ret != -1;
+    debug("Container destroy " + string((ret == 0) ? "successfull" : "failed") + "\n");
+    return ret == 0;
 }
 
 bool Container::open(const string& a_Filename)
 {
+    if (_isOpen)
+        return false;
+
+    debug("opening Container in '" + a_Filename + "'\n");
     _fstream.open(a_Filename.c_str(), ios::binary | ios::in | ios::out);
     _isOpen = _fstream.is_open();
-    if (_isOpen) _filename = a_Filename;
+    _filename = a_Filename;
+    debug("Container open " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
 
 bool Container::close()
 {
+    if (!_isOpen)
+        return true;
+
     _fstream.close();
     _isOpen = _fstream.is_open();
-    if (!_isOpen) _filename = "";
-    return (!_isOpen);
+    return !_isOpen;
 }
 
 long int Container::append(std::ifstream& is)
