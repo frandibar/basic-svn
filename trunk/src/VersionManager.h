@@ -29,8 +29,7 @@ public:
 
     static const int VERSION_DIGITS;
 
-    // constructors
-    VersionManager() {};
+    // constructor
     VersionManager(const string& a_Almacen, const string& a_Repository);
 
     bool open();

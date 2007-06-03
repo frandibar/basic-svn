@@ -1,11 +1,13 @@
 // Container.cpp
 
 #include "Container.h"
+#include "debug.h"
 
 using std::ios;
 
 bool Container::create(const string& a_Name)
 {
+    debug("creating Container\n");
     _fstream.open(a_Name.c_str(), ios::out | ios::in | ios::binary);
 
 	if (!_fstream) {
@@ -15,6 +17,7 @@ bool Container::create(const string& a_Name)
 	}
 
     _isOpen = _fstream.is_open();
+    debug("Container creation " + string((_isOpen) ? "successfull" : "unsuccessfull") + "\n");
     return _isOpen;
 }
 

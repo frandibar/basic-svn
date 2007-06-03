@@ -1,6 +1,7 @@
 // VersionManager.cpp
 
 #include "VersionManager.h"
+#include "debug.h"
 #include "helpers.h"
 
 #include <fstream>
@@ -8,9 +9,9 @@
 
 using std::list;
 
-const string VersionManager::TXT_INDEX_FILENAME   = "TXT_index.ndx";
-const string VersionManager::TXT_VERSION_FILENAME = "TXT_versions.ndx";
-const string VersionManager::TXT_DIFFS_FILENAME   = "TXT_diffs.dat";
+const string VersionManager::TXT_INDEX_FILENAME   = "txt_index.ndx";
+const string VersionManager::TXT_VERSION_FILENAME = "txt_versions.ndx";
+const string VersionManager::TXT_DIFFS_FILENAME   = "txt_diffs.dat";
 
 const string VersionManager::BIN_INDEX_FILENAME   = "bin_index.ndx";
 const string VersionManager::BIN_VERSION_FILENAME = "bin_versions.ndx";
@@ -191,15 +192,16 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
 bool VersionManager::create()
 {
+    debug("creating VersionManager for Repositorio '" + _repository + "' in Almacen '" + _almacen + "'\n");
     string path = _almacen + "//" + _repository + "//";
-    bool ret = (_textIndex      .create((path + TXT_INDEX_FILENAME)  .c_str()) &&
-	            _textVersions   .create((path + TXT_VERSION_FILENAME).c_str()) &&
-                _textContainer  .create((path + TXT_DIFFS_FILENAME)  .c_str()) &&
-                _binaryIndex    .create((path + BIN_INDEX_FILENAME)  .c_str()) &&
-                _binaryVersions .create((path + BIN_VERSION_FILENAME).c_str()) &&
-                _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str())
-                );
+    _isOpen = (_textIndex      .create((path + TXT_INDEX_FILENAME)  .c_str()) &&
+	           _textVersions   .create((path + TXT_VERSION_FILENAME).c_str()) &&
+               _textContainer  .create((path + TXT_DIFFS_FILENAME)  .c_str()) &&
+               _binaryIndex    .create((path + BIN_INDEX_FILENAME)  .c_str()) &&
+               _binaryVersions .create((path + BIN_VERSION_FILENAME).c_str()) &&
+               _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str())
+              );
 
-    _isOpen = ret;
-    return ret;
+    debug("VersionManager creation " + string((_isOpen) ? "successfull" : "unsuccessfull") + "\n");
+    return _isOpen;
 }

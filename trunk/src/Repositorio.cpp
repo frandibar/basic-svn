@@ -8,25 +8,20 @@
 #include <ctime>
 
 
-int filetype(const string& filename)
-// returns:
-// -1 on error 
-//  0 if directory 
-//  1 if text
-//  2 if binary
+Repositorio::t_filetype Repositorio::getFiletype(const string& filename)
 {
     struct stat ss;
     if (stat(filename.c_str(), &ss) == -1)
-        return -1; // error, file does not exist
+        return INVALID; // error, file does not exist
 
     if ((ss.st_mode & S_IFMT) == S_IFDIR)
-        return 0; // directory
+        return DIRECTORY;
 
     // determine if filename is a text or binary file
     // by reading first 512 bytes and searching for chars < 30
     // text files have majority of bytes > 30 while binary files don't
     std::ifstream is(filename.c_str());
-    if (!is) return -1; // error, could not open file
+    if (!is) return INVALID; // error, could not open file
 
     int bytesRead = 0;
     int nchars    = 0;
@@ -37,15 +32,13 @@ int filetype(const string& filename)
         (c > 30) ? nchars++ : nnonchars++;
     }
     is.close();
-    return (nchars > nnonchars) ? 1 : 2;
+    return (nchars > nnonchars) ? TEXT : BINARY;
 }
 
 // constructor
-Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) : _version(0), _name(a_Name), _almacen(a_Almacen)
+Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) : 
+        _version(0), _name(a_Name), _almacen(a_Almacen), _versionManager(a_Almacen, a_Name)
 {
-    if (!_versionManager.open()) {
-        ;
-    }
 }
 
 bool Repositorio::validateUser(const string& a_Username, const string& a_Password) const
@@ -83,16 +76,19 @@ bool Repositorio::addFile(const string& a_Filename, const string& a_Username, co
 {
     if (!validateUser(a_Username, a_Password)) return false;
 
-    int ft = filetype(a_Filename);
+    int ft = getFiletype(a_Filename);
 
-    if (ft == -1) 
+    if (ft == INVALID) 
         return false; // file not found
 
-    if (ft == 0) ; // directory   // TODO
+    if (ft == DIRECTORY)
+        // TODO
+        ;
     
     time_t date;
     time(&date);
-    //if (!_versionManager.addFile(_version, a_Filename.c_str(), a_Username.c_str()), date, (ft == 1 ? 't' : 'b'))
+    _versionManager.open();
+    if (!_versionManager.addFile(_version, a_Filename, a_Username, date, (ft == TEXT ? 't' : 'b')))
         return false;
             
     return true;
@@ -114,6 +110,7 @@ bool Repositorio::addUser(const string& a_Username, const string& a_Password, co
 
 bool Repositorio::removeUser(const string& a_Username)
 {
+    // TODO
     //User u;
     //_lUsers.remove(u);
     std::list<User>::iterator it;
@@ -129,7 +126,14 @@ bool Repositorio::removeUser(const string& a_Username)
 }
 bool Repositorio::create()
 {
-    return _versionManager.create();
+    debug("creating Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
+    // create directory where files will be stored
+    mkdir((_almacen + "//" + _name).c_str(), 0755);
+    bool ret = _versionManager.create();
+    if (!ret)
+        remove(_name.c_str());
+    debug("Repositorio creation " + string((ret) ? "successfull" : "unsuccessfull") + "\n");
+    return ret;
 }
 
 bool Repositorio::open()

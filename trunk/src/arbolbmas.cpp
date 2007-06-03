@@ -1,4 +1,7 @@
+// arbolbmas.cpp
+
 #include "arbolbmas.h"
+#include "debug.h"
 
 using std::ios;
 
@@ -124,20 +127,24 @@ bool ArbolBMas::writeNode(NodoBMas* nodo)
 
 bool ArbolBMas::create(const char* fileName)
 {
+    debug("creating arbolbmas in " + string(fileName) + "\n");
     _filestr.open(fileName, ios::out | ios::in | ios::binary);
 
 	if (!_filestr) {
 		_filestr.open(fileName, ios::out | ios::binary);
-		
 		_filestr.close();
 
 		_filestr.open(fileName, ios::in | ios::out | ios::binary);
-		if (!_filestr)
+		if (!_filestr) {
+            debug("arbolbmas creation unsuccessfull\n");
 			return false;
+        }
 	}
 
     _nNodos = 0;
-    return writeHeader();
+    bool ret = writeHeader();
+    debug("arbolbmas creation " + string(ret ? "successfull" : "unsuccessfull") + "\n");
+    return ret;
 }
 
 bool ArbolBMas::open(const char* fileName)
