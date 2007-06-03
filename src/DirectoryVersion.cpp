@@ -9,9 +9,10 @@ DirectoryVersion::DirectoryVersion()
 	_fileLst.clear();
 	_user = 0;
 	_nroVersion = -1;
+	_type = MODIFICACION;
 }
 
-DirectoryVersion::DirectoryVersion(int NroVersion,const char* User,tm Date)
+DirectoryVersion::DirectoryVersion(int NroVersion,const char* User,tm Date,t_versionType Type)
 {
 	_fileLst.clear();
 	
@@ -23,7 +24,9 @@ DirectoryVersion::DirectoryVersion(int NroVersion,const char* User,tm Date)
 	memcpy(_user,User,tam);
 	_user[tam] = 0;
 
-	_date = Date;	
+	_date = Date;
+
+	_type = Type;
 }
 
 DirectoryVersion::~DirectoryVersion()
@@ -55,6 +58,9 @@ void DirectoryVersion::write(char* buffer)
 
 	memcpy(buffer,&_date,sizeof(tm));	//date
 	buffer += sizeof(tm);
+
+	memcpy(buffer,&_type,sizeof(t_versionType));	//type
+	buffer += sizeof(t_versionType);
 
 	int files = _fileLst.size();
 	memcpy(buffer,&files,sizeof(int));	//size of list
@@ -91,6 +97,9 @@ void DirectoryVersion::read(char** buffer)
 	memcpy(&_date,*buffer,sizeof(tm));				//date
 	*buffer += sizeof(tm);
 
+	memcpy(&_type,*buffer,sizeof(t_versionType));	//type
+	*buffer += sizeof(t_versionType);
+
 	_fileLst.clear();
 
 	int files;
@@ -111,10 +120,7 @@ long int DirectoryVersion::tamanioEnDisco()
 {
 	long int size = 0;
 
-	list<File>::iterator it;
-
-	for(it = _fileLst.begin();it != _fileLst.end();it++)
-		size += it->getTamanioEnDisco();		//tamanio de cada file
+	size += sizeof(int);	//_versionNumber
 
 	size += sizeof(int);	//el indicador de longitud del usuario
 
@@ -124,9 +130,14 @@ long int DirectoryVersion::tamanioEnDisco()
 
 	size += sizeof(tm);	//_date
 
-	size += sizeof(int);	//_versionNumber
+	size += sizeof(t_versionType);	//_type
 
-	size += sizeof(int);	//indicador de la cantidad de archivos
+	size += sizeof(int);	//list size
+	
+	list<File>::iterator it;
+
+	for(it = _fileLst.begin();it != _fileLst.end();it++)
+		size += it->getTamanioEnDisco();		//each element of the list
 
 	return size;
 }

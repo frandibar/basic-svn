@@ -147,7 +147,7 @@ bool FileVersionsFile::close()
 	return false;
 }
 
-void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, int* nroBloqueNuevo){
+void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo,FileVersion::t_versionType VersionType, int* nroBloqueNuevo){
 	
 	writeBloque(); // escribo el bloque actual
 	delete _bloqueActual;
@@ -156,18 +156,18 @@ void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha,
 	_cantBloques++;	// incremento la cantidad de bloques del archivo
     
 	//creo la version nueva
-	FileVersion* version = new FileVersion(nroVersion,nroVersion,Fecha,User,Offset,Tipo);
+	FileVersion* version = new FileVersion(nroVersion,nroVersion,Fecha,User,Offset,Tipo,VersionType);
 	_bloqueActual->insertVersion(version); // inserto la version
 	delete version;
 }
 
-FileVersionsFile::t_status FileVersionsFile::insertVersion(int nroVersion,const char* User,tm Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo)
+FileVersionsFile::t_status FileVersionsFile::insertVersion(int nroVersion,const char* User,tm Fecha,long int Offset,char Tipo,FileVersion::t_versionType VersionType,int bloque,int* nroBloqueNuevo)
 {
 	readBloque(bloque); // obtengo el bloque
 	FileVersion* ultimaVersion = _bloqueActual->getLastVersion();
 	int ultimoOriginal = ultimaVersion->getOriginal();
 	delete ultimaVersion;
-	FileVersion* nuevaVersion = new FileVersion(nroVersion,ultimoOriginal,Fecha,User,Offset,Tipo);
+	FileVersion* nuevaVersion = new FileVersion(nroVersion,ultimoOriginal,Fecha,User,Offset,Tipo,VersionType);
 	if (_bloqueActual->hayLugar(nuevaVersion)) {
 		if (!_bloqueActual->searchVersion(nuevaVersion->getNroVersion())) {
 			_bloqueActual->insertVersion(nuevaVersion);
