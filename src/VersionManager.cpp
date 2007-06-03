@@ -20,7 +20,7 @@ const string VersionManager::BIN_DIFFS_FILENAME   = "bin_diffs.dat";
 const int VersionManager::VERSION_DIGITS = 5;
 
 VersionManager::VersionManager(const string& a_Almacen, const string& a_Repository) 
-                                : _almacen(a_Almacen), _repository(a_Repository)
+                                : _isOpen(false), _almacen(a_Almacen), _repository(a_Repository)
 {
 }
 

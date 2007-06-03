@@ -104,6 +104,9 @@ bool FileVersionsFile::crearBloque(int Anterior, int Siguiente)
 
 bool FileVersionsFile::create(const string& a_Filename)
 {
+    if (_isOpen)
+        return false;
+
     debug("creating FileVersionsFile in '" + a_Filename + "'\n");
     _filestr.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
@@ -111,13 +114,12 @@ bool FileVersionsFile::create(const string& a_Filename)
 		_filestr.open(a_Filename.c_str(), ios::out | ios::binary);
 		_filestr.close();
 		_filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
-		if (!_filestr.is_open()) {
-            _isOpen = false;
-        }
+		_isOpen = _filestr.is_open();
 	}
 
     _cantBloques = 0;
     _isOpen = _isOpen && writeHeader();
+    _filename = a_Filename;
     debug("FileVersionsFile creation " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
