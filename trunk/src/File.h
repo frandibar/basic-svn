@@ -1,11 +1,13 @@
+// File.h
+
 #ifndef FILE_H_INCLUDED
 #define FILE_H_INCLUDED
 
-#include <stdlib.h>
 #include <string>
+#include <cstdlib>
 
-class File{
-
+class File
+{
 public:
 	File();
 	File(char* name,int versionNumber,char type);

@@ -1,12 +1,16 @@
 // VersionManager.h
 
+#ifndef VERSION_MANAGER_H_INCLUDED
+#define VERSION_MANAGER_H_INCLUDED
+
 #include "arbolbmas.h"
 #include "FileVersion.h"
 #include "FileVersionsFile.h"
 #include "Container.h"
 
-#include <string>
 #include <ctime>
+#include <string>
+#include <list>
 
 using std::string;
 
@@ -14,9 +18,10 @@ using std::string;
 class VersionManager
 {
 public:
-    static const string TX_INDEX_FILENAME;
-    static const string TX_VERSION_FILENAME;
-    static const string TX_DIFFS_FILENAME;
+    // static members
+    static const string TXT_INDEX_FILENAME;
+    static const string TXT_VERSION_FILENAME;
+    static const string TXT_DIFFS_FILENAME;
 
     static const string BIN_INDEX_FILENAME;
     static const string BIN_VERSION_FILENAME;
@@ -24,6 +29,7 @@ public:
 
     static const int VERSION_DIGITS;
 
+    // constructors
     VersionManager() {};
     VersionManager(const string& a_Almacen, const string& a_Repository);
 
@@ -32,6 +38,9 @@ public:
     bool create();
     void close();  
     bool isOpen() const { return _isOpen; }
+
+protected:
+    bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);
 
 private:
     // member variables
@@ -48,4 +57,5 @@ private:
     Container			_binaryContainer;   // aca va el archivo de diffs para los binarios
 };
 
+#endif
 

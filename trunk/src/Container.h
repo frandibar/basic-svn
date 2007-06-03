@@ -17,7 +17,7 @@ public:
     bool open  (const string& a_Name);
     bool close();
     long int append(std::ifstream& is);
-    bool get(long int offset, fstream& fs);
+    bool get(long int offset, std::ofstream& fs);
 
 private:
     bool    _isOpen;
