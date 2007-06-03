@@ -24,15 +24,15 @@ Repositorio::t_filetype Repositorio::getFiletype(const string& filename)
     if (!is) return INVALID; // error, could not open file
 
     int bytesRead = 0;
-    int nchars    = 0;
-    int nnonchars = 0;
+    int nChars    = 0;
+    int nNonchars = 0;
     while (!is.eof() && bytesRead++ < 512) {
         char c;
         is >> c;
-        (c > 30) ? nchars++ : nnonchars++;
+        (c > 30) ? nChars++ : nNonchars++;
     }
     is.close();
-    return (nchars > nnonchars) ? TEXT : BINARY;
+    return (nChars > nNonchars) ? TEXT : BINARY;
 }
 
 // constructor
@@ -152,9 +152,10 @@ bool Repositorio::destroy()
     if (!_isOpen)
         _isOpen = open();
 
-    _isOpen = _isOpen && _versionManager.destroy();
-    debug("Repositorio destroy " + string(_isOpen ? "successfully" : "failed") + "\n");
-    return _isOpen;
+    bool ret = _isOpen && _versionManager.destroy();
+    ret = ret && (remove((_almacen + "//" + _name).c_str()) == 0);
+    debug("Repositorio destroy " + string(ret ? "successfully" : "failed") + "\n");
+    return ret;
 }
 
 bool Repositorio::open()

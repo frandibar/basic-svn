@@ -28,19 +28,12 @@ bool VersionManager::destroy()
 {
     debug("destroying VersionManager\n");
     bool ret = close();
-    //ret = ret && _textIndex      .destroy() &&
-                 //_textVersions   .destroy() &&
-                 //_textContainer  .destroy() &&
-                 //_binaryIndex    .destroy() &&
-                 //_binaryVersions .destroy() &&
-                 //_binaryContainer.destroy();
-
-    ret = ret && _textIndex      .destroy();
-    ret = ret && _textVersions   .destroy();
-    ret = ret && _textContainer  .destroy();
-    ret = ret && _binaryIndex    .destroy();
-    ret = ret && _binaryVersions .destroy();
-    ret = ret && _binaryContainer.destroy();
+    ret = ret && _textIndex      .destroy() &&
+                 _textVersions   .destroy() &&
+                 _textContainer  .destroy() &&
+                 _binaryIndex    .destroy() &&
+                 _binaryVersions .destroy() &&
+                 _binaryContainer.destroy();
 
     debug("VersionManager destroy " + string(ret ? "successfull" : "failed") + "\n");
     return ret;
