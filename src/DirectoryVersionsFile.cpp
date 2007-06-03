@@ -10,6 +10,7 @@ DirectoryVersionsFile::DirectoryVersionsFile()
 	_buffer = new char[DirectoryBlock::TAMANIO_BLOQUE_DIRECTORIOS];
 	_bloqueActual = 0;
 	_cantBloques = 0;
+	_isOpen = false;
 }	
 
 DirectoryVersionsFile::~DirectoryVersionsFile()
@@ -102,49 +103,66 @@ bool DirectoryVersionsFile::crearBloque(int Anterior, int Siguiente)
 	return false;
 }
 
-bool DirectoryVersionsFile::create(const char* fileName)
+bool DirectoryVersionsFile::create(const string& a_Filename)
 {
-    _filestr.open(fileName, ios::out | ios::in | ios::binary);
+    if(_isOpen)
+		return false;
+	debug("creating DirectoryVersionsFile in '" + a_Filename + "'\n");
+    _filestr.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
-	if (!_filestr) {
-		_filestr.open(fileName, ios::out | ios::binary);
-		
+	if (!_filestr.is_open()) {
+		_filestr.open(a_Filename.c_str(), ios::out | ios::binary);
 		_filestr.close();
-
-		_filestr.open(fileName, ios::in | ios::out | ios::binary);
-		if (!_filestr)
-			return false;
-	}
+		_filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
+		_isOpen = _filestr.is_open();
+        }
 
     _cantBloques = 0;
-
-    return writeHeader();
+    _isOpen = _isOpen && writeHeader();
+	_filename = a_Filename;
+    debug("DirectoryVersionsFile creation " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
 }
 
-bool DirectoryVersionsFile::open(const char* fileName)
+bool DirectoryVersionsFile::open(const string& a_Filename)
 {
-    _filestr.open(fileName, ios::in | ios::out | ios::binary);
+    if (_isOpen) 
+        return true;
 
-	if(_filestr.is_open()){
-		if (readHeader())
-				return true;
-		return false;
-	}    
-	return false;
+    debug("opening DirectoryVersionsFile '" + a_Filename + "'\n");
+    _filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
+
+	_isOpen = _filestr.is_open() && readHeader();
+    _filename = a_Filename;
+    debug("DirectoryVersionsFile open " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
 }
+
 
 bool DirectoryVersionsFile::close()
 {
-	if (_filestr.is_open()) {
-		if (writeHeader()) {
-			if (writeBloque()) {
-				_filestr.close();
-				return true;
-			}
-		}
-		return false;
+    if (!_isOpen)
+        return true;
+
+    debug("closing DirectoryVersionsFile '" + _filename + "'\n");
+	_isOpen = _filestr.is_open() && writeHeader() && writeBloque();
+    if (_isOpen) {
+        _filestr.close();
+        _isOpen = _filestr.is_open();
 	}
-	return false;
+    debug("DirectoryVersionsFile close " + string(!_isOpen ? "successfull" : "failed") + "\n");
+    return !_isOpen;
+}
+
+bool DirectoryVersionsFile::destroy()
+{
+    if (_isOpen) 
+        return false;
+
+    debug("destroying DirectoryVersionsFile '" + _filename + "'\n");
+    int ret = remove(_filename.c_str());
+    debug("DirectoryVersionsFile destroy " + string((ret == 0) ? "successfull" : "failed") + "\n");
+    return ret == 0;
 }
 
 void DirectoryVersionsFile::insertVersion(DirectoryVersion* newVersion, int* nroBloqueNuevo){
