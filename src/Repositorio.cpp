@@ -1,7 +1,7 @@
 // Repositorio.cpp
 
-#include "debug.h"
 #include "Repositorio.h"
+#include "debug.h"
 
 #include <sys/stat.h>
 #include <fstream>
@@ -36,9 +36,11 @@ Repositorio::t_filetype Repositorio::getFiletype(const string& filename)
 }
 
 // constructor
-Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) : 
+Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) throw(SVNException) : 
         _version(0), _name(a_Name), _almacen(a_Almacen), _versionManager(a_Almacen, a_Name)
 {
+    if (!open())
+        throw SVNException();
 }
 
 bool Repositorio::validateUser(const string& a_Username, const string& a_Password) const
@@ -69,6 +71,12 @@ bool Repositorio::userExists(const string& a_Username) const
         if (it->username == a_Username)
             return true;
     }
+    return false;
+}
+
+bool Repositorio::removeFile(const string& a_Filename, const string& a_Username, const string& a_Password)
+{
+    // TODO
     return false;
 }
 
@@ -124,6 +132,7 @@ bool Repositorio::removeUser(const string& a_Username)
 
     return false; // user not found
 }
+
 bool Repositorio::create()
 {
     debug("creating Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
@@ -132,11 +141,23 @@ bool Repositorio::create()
     bool ret = _versionManager.create();
     if (!ret)
         remove(_name.c_str());
-    debug("Repositorio creation " + string((ret) ? "successfull" : "unsuccessfull") + "\n");
+    debug("Repositorio creation " + string((ret) ? "successfull" : "failed") + "\n");
+    return ret;
+}
+
+bool Repositorio::destroy()
+{
+    debug("destroying Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
+    bool ret = _versionManager.destroy();
+    debug("Repositorio destroy " + string((ret) ? "successfully" : "failed") + "\n");
     return ret;
 }
 
 bool Repositorio::open()
 {
-    return _versionManager.open();
+    debug("opening Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
+    bool ret = _versionManager.open();
+    debug("Repositorio open " + string((ret) ? "successfull" : "failed") + "\n");
+    return ret;
 }
+

@@ -1,3 +1,5 @@
+// DirectoryBlock.h
+
 #include "DirectoryBlock.h"
 
 const int DirectoryBlock::TAMANIO_BLOQUE_DIRECTORIOS = 1024;
@@ -22,13 +24,9 @@ void DirectoryBlock::insertVersion(DirectoryVersion* version)
 	char* nextByte = _versiones + _used;
 
 	_espacioLibre -= version->tamanioEnDisco();
-		
 	version->write(nextByte);
-
 	_cantVersiones++;
-
 	_used = (TAMANIO_ARREGLO_BLOQUE_DIRECTORIOS - _espacioLibre);
-
 	_actualOffset = _used;
 
 	return;
@@ -190,3 +188,4 @@ bool DirectoryBlock::hasNext()
 {
 	return (_actualOffset < _used);
 }
+

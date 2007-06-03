@@ -32,11 +32,14 @@ public:
     // constructor
     VersionManager(const string& a_Almacen, const string& a_Repository);
 
-    bool open();
-    bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
     bool create();
-    void close();  
+    bool destroy();  
+    
+    bool open();
+    bool close();  
+
     bool isOpen() const { return _isOpen; }
+    bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
 
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);

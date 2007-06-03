@@ -125,43 +125,60 @@ bool ArbolBMas::writeNode(NodoBMas* nodo)
     return false;
 }
 
-bool ArbolBMas::create(const char* fileName)
+bool ArbolBMas::create(const string& a_Filename)
 {
-    debug("creating arbolbmas in " + string(fileName) + "\n");
-    _filestr.open(fileName, ios::out | ios::in | ios::binary);
+    debug("creating arbolbmas in " + a_Filename + "\n");
+    _filestr.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
 	if (!_filestr) {
-		_filestr.open(fileName, ios::out | ios::binary);
+		_filestr.open(a_Filename.c_str(), ios::out | ios::binary);
 		_filestr.close();
 
-		_filestr.open(fileName, ios::in | ios::out | ios::binary);
+		_filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
 		if (!_filestr) {
-            debug("arbolbmas creation unsuccessfull\n");
+            debug("arbolbmas creation failed\n");
 			return false;
         }
 	}
 
     _nNodos = 0;
     bool ret = writeHeader();
-    debug("arbolbmas creation " + string(ret ? "successfull" : "unsuccessfull") + "\n");
+    if (ret) _filename = a_Filename;
+    debug("arbolbmas creation " + string(ret ? "successfull" : "failed") + "\n");
+
     return ret;
 }
 
-bool ArbolBMas::open(const char* fileName)
+bool ArbolBMas::destroy()
 {
-    _filestr.open(fileName, ios::in | ios::out | ios::binary);
+    debug("destroying arbolbmas '" + _filename + "'\n");
+    int ret = remove(_filename.c_str());
+    debug("arbolbmas destroy " + string((ret != -1) ? "successfull" : "failed") + "\n");
+    return (ret != -1);
+}
 
-    if (readHeader()) {
-        if (readRoot()) {
-            _nodoActual = _raiz;
-            return true;
+bool ArbolBMas::open(const string& a_Filename)
+{
+    debug("opening arbolbmas '" + a_Filename + "'\n");
+    bool ret = false;
+    _filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
+    ret = ret && _filestr.is_open();
+    if (ret) {
+        if (readHeader()) {
+            if (readRoot()) {
+                _nodoActual = _raiz;
+                _filename = a_Filename;
+                ret = true;
+            }
         }
     }
-    return false;   
+    debug("arbolbmas open " + string((ret != -1) ? "successfull" : "failed") + "\n");
+    return ret;
 }
 
 bool ArbolBMas::close()
 {
+    debug("closing arbolbmas " + _filename + "\n");
     bool ret = false;
     if (writeHeader()) {
         if (writeRoot()) {
@@ -172,6 +189,9 @@ bool ArbolBMas::close()
         }
     }
     _filestr.close();
+    ret = ret && !_filestr.is_open();
+    if (ret) _filename = "";
+    debug("arbolbmas close " + string(ret ? "successfull" : "failed") + "\n");
     return ret;
 }
 

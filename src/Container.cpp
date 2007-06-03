@@ -5,26 +5,33 @@
 
 using std::ios;
 
-bool Container::create(const string& a_Name)
+bool Container::create(const string& a_Filename)
 {
-    debug("creating Container\n");
-    _fstream.open(a_Name.c_str(), ios::out | ios::in | ios::binary);
+    debug("creating Container in '" + a_Filename + "'\n");
+    _fstream.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
 	if (!_fstream) {
-		_fstream.open(a_Name.c_str(), ios::out | ios::binary);
+		_fstream.open(a_Filename.c_str(), ios::out | ios::binary);
 		_fstream.close();
-		_fstream.open(a_Name.c_str(), ios::in | ios::out | ios::binary);
+		_fstream.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
 	}
 
     _isOpen = _fstream.is_open();
-    debug("Container creation " + string((_isOpen) ? "successfull" : "unsuccessfull") + "\n");
+    debug("Container creation " + string((_isOpen) ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
 
-bool Container::open(const string& a_Name)
+bool Container::destroy()
 {
-    _fstream.open(a_Name.c_str(), ios::binary | ios::in | ios::out);
+    int ret = remove(_filename.c_str());
+    return ret != -1;
+}
+
+bool Container::open(const string& a_Filename)
+{
+    _fstream.open(a_Filename.c_str(), ios::binary | ios::in | ios::out);
     _isOpen = _fstream.is_open();
+    if (_isOpen) _filename = a_Filename;
     return _isOpen;
 }
 
@@ -32,6 +39,7 @@ bool Container::close()
 {
     _fstream.close();
     _isOpen = _fstream.is_open();
+    if (!_isOpen) _filename = "";
     return (!_isOpen);
 }
 
@@ -47,9 +55,8 @@ long int Container::append(std::ifstream& is)
 	// get the offset where the archive is copied
     long int pos = _fstream.tellp();
 
-	if(pos < 0) pos = 0;
-   
-	is.seekg(0,ios::end);
+	if (pos < 0) pos = 0;
+	is.seekg(0, ios::end);
 
 	long int tamanio = is.tellg();
 

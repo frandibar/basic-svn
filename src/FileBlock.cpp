@@ -1,4 +1,4 @@
-// Bloque.cpp
+// FileBlock.cpp
 
 #include "FileBlock.h"
 
@@ -22,18 +22,11 @@ FileBlock::~FileBlock()
 void FileBlock::insertVersion(FileVersion* version)
 {
 	char* nextByte = _versiones + _used;
-
 	_espacioLibre -= version->tamanioEnDisco();
-		
 	version->write(nextByte);
-
 	_cantVersiones++;
-
 	_used = (TAMANIO_ARREGLO_BLOQUE_ARCHIVOS - _espacioLibre);
-
 	_actualOffset = _used;
-
-	return;
 }
 
 void FileBlock::read(char* buffer)

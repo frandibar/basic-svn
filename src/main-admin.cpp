@@ -116,7 +116,7 @@ void createAlmacen(const string& a_Dir)
         if (r == 'n' || r == 'n')
             return;
         else
-            almacen.remove();
+            almacen.destroy();
     }
 
     if (almacen.create(a_Dir))

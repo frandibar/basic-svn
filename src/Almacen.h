@@ -20,18 +20,22 @@ public:
     Almacen(); // constructor
     ~Almacen();
 
+    bool create          (const string& a_Name);
+    bool destroy();
+    bool exists() const { return _exists; }
+
     bool addRepository   (const string& a_Name) throw();
     bool removeRepository(const string& a_Name) throw();
     bool repositoryExists(const string& a_Name) throw();
-    bool create          (const string& a_Name);
-    bool remove();
-    bool exists() const { return _exists; }
+
     bool addUser(const string& a_Reposit, const string& a_Username, const string& a_Password, const string& a_Fullname) throw();
     bool removeUser(const string& a_Reposit, const string& a_Username) throw();
-    bool addFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
-    bool validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const;
     bool userExists(const string& a_Reposit, const string& a_Username) const;
+    bool validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const;
     std::list<User> getListOfUsers(const string& a_Reposit) const;
+
+    bool addFile   (const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool removeFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
 
     // getters
     string getName() const { return _name; }
