@@ -56,6 +56,7 @@ private:
     char*        _buffer;
     std::fstream _filestr;      // file stream para poder ir leyendo de archivo los nodos
     string       _filename;     // filename storing the tree    
+    bool         _isOpen;
 };
 
 #endif

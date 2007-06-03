@@ -36,11 +36,9 @@ Repositorio::t_filetype Repositorio::getFiletype(const string& filename)
 }
 
 // constructor
-Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) throw(SVNException) : 
-        _version(0), _name(a_Name), _almacen(a_Almacen), _versionManager(a_Almacen, a_Name)
+Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) :
+        _version(0), _name(a_Name), _almacen(a_Almacen), _versionManager(a_Almacen, a_Name), _isOpen(false)
 {
-    if (!open())
-        throw SVNException();
 }
 
 bool Repositorio::validateUser(const string& a_Username, const string& a_Password) const
@@ -135,29 +133,49 @@ bool Repositorio::removeUser(const string& a_Username)
 
 bool Repositorio::create()
 {
+    if (_isOpen)
+        return true;
+
     debug("creating Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
     // create directory where files will be stored
     mkdir((_almacen + "//" + _name).c_str(), 0755);
-    bool ret = _versionManager.create();
-    if (!ret)
+    _isOpen = _versionManager.create();
+    if (!_isOpen)
         remove(_name.c_str());
-    debug("Repositorio creation " + string((ret) ? "successfull" : "failed") + "\n");
-    return ret;
+    debug("Repositorio creation " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
 }
 
 bool Repositorio::destroy()
 {
     debug("destroying Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
-    bool ret = _versionManager.destroy();
-    debug("Repositorio destroy " + string((ret) ? "successfully" : "failed") + "\n");
-    return ret;
+    if (!_isOpen)
+        _isOpen = open();
+
+    _isOpen = _isOpen && _versionManager.destroy();
+    debug("Repositorio destroy " + string(_isOpen ? "successfully" : "failed") + "\n");
+    return _isOpen;
 }
 
 bool Repositorio::open()
 {
+    if (_isOpen)
+        return true;
+
     debug("opening Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
-    bool ret = _versionManager.open();
-    debug("Repositorio open " + string((ret) ? "successfull" : "failed") + "\n");
-    return ret;
+    _isOpen = _versionManager.open();
+    debug("Repositorio open " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
+}
+
+bool Repositorio::close()
+{
+    if (!_isOpen)
+        return true;
+
+    debug("closing Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
+    _isOpen = _versionManager.close();
+    debug("Repositorio close " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
 }
 
