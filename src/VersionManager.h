@@ -4,9 +4,10 @@
 #define VERSION_MANAGER_H_INCLUDED
 
 #include "arbolbmas.h"
+#include "Container.h"
 #include "FileVersion.h"
 #include "FileVersionsFile.h"
-#include "Container.h"
+#include "DirectoryVersionsFile.h"
 
 #include <ctime>
 #include <string>
@@ -26,6 +27,9 @@ public:
     static const string BIN_INDEX_FILENAME;
     static const string BIN_VERSION_FILENAME;
     static const string BIN_DIFFS_FILENAME;
+
+    static const string DIR_INDEX_FILENAME;
+    static const string DIR_VERSION_FILENAME;
 
     static const int VERSION_DIGITS;
 
@@ -50,13 +54,16 @@ private:
     string    _almacen;
     string    _repository;
 
-    ArbolBMas			_textIndex;     // index for text files
-    FileVersionsFile	_textVersions;  // version file for text files
-    Container			_textContainer; // aca va el archivo de diffs para los de texto
+    ArbolBMas             _textIndex;     // index for text files
+    FileVersionsFile      _textVersions;  // version file for text files
+    Container             _textContainer; // aca va el archivo de diffs para los de texto
     
-    ArbolBMas			_binaryIndex;       // index for binary files
-    FileVersionsFile	_binaryVersions;    // version file for binary files
-    Container			_binaryContainer;   // aca va el archivo de diffs para los binarios
+    ArbolBMas             _binaryIndex;       // index for binary files
+    FileVersionsFile      _binaryVersions;    // version file for binary files
+    Container             _binaryContainer;   // aca va el archivo de diffs para los binarios
+
+    ArbolBMas             _dirIndex;       // index for directories
+    DirectoryVersionsFile _dirVersions;    // version file for directories
 };
 
 #endif

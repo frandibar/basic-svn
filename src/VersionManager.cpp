@@ -17,6 +17,9 @@ const string VersionManager::BIN_INDEX_FILENAME   = "bin_index.ndx";
 const string VersionManager::BIN_VERSION_FILENAME = "bin_versions.ndx";
 const string VersionManager::BIN_DIFFS_FILENAME   = "bin_diffs.dat";
 
+const string VersionManager::DIR_INDEX_FILENAME   = "dir_index.ndx";
+const string VersionManager::DIR_VERSION_FILENAME = "dir_versions.ndx";
+
 const int VersionManager::VERSION_DIGITS = 5;
 
 VersionManager::VersionManager(const string& a_Almacen, const string& a_Repository) 
@@ -33,7 +36,9 @@ bool VersionManager::destroy()
                  _textContainer  .destroy() &&
                  _binaryIndex    .destroy() &&
                  _binaryVersions .destroy() &&
-                 _binaryContainer.destroy();
+                 _binaryContainer.destroy() &&
+                 _dirIndex       .destroy() &&
+                 _dirVersions    .destroy();
 
     debug("VersionManager destroy " + string(ret ? "successfull" : "failed") + "\n");
     return ret;
@@ -46,12 +51,14 @@ bool VersionManager::open()
 
     debug("opening VersionManager\n");
     string path = _almacen + "//" + _repository + "//";
-    _isOpen = (_textIndex      .open((path + TXT_INDEX_FILENAME)  .c_str()) &&
-               _textVersions   .open((path + TXT_VERSION_FILENAME).c_str()) &&
-               _textContainer  .open((path + TXT_DIFFS_FILENAME)  .c_str()) &&
-               _binaryIndex    .open((path + BIN_INDEX_FILENAME)  .c_str()) &&
-               _binaryVersions .open((path + BIN_VERSION_FILENAME).c_str()) &&
-               _binaryContainer.open((path + BIN_DIFFS_FILENAME)  .c_str())
+    _isOpen = (_textIndex      .open((path + TXT_INDEX_FILENAME)     .c_str()) &&
+               _textVersions   .open((path + TXT_VERSION_FILENAME)   .c_str()) &&
+               _textContainer  .open((path + TXT_DIFFS_FILENAME)     .c_str()) &&
+               _binaryIndex    .open((path + BIN_INDEX_FILENAME)     .c_str()) &&
+               _binaryVersions .open((path + BIN_VERSION_FILENAME)   .c_str()) &&
+               _binaryContainer.open((path + BIN_DIFFS_FILENAME)     .c_str()) &&
+               _dirIndex       .open((path + DIR_INDEX_FILENAME)     .c_str()) &&
+               _dirVersions    .open((path + DIR_VERSION_FILENAME)  .c_str())
               );
 
     debug("VersionManager open " + string(_isOpen ? "successfull" : "failed") + "\n");
@@ -69,7 +76,9 @@ bool VersionManager::close()
                _textContainer  .close() &&
                _binaryIndex    .close() &&
                _binaryVersions .close() &&
-               _binaryContainer.close();
+               _binaryContainer.close() &&
+               _dirIndex       .close() &&
+               _dirVersions    .close();
     debug("VersionManager close " + string((ret) ? "successfull" : "failed") + "\n");
 
     return ret;
@@ -226,7 +235,9 @@ bool VersionManager::create()
                _textContainer  .create((path + TXT_DIFFS_FILENAME)  .c_str()) &&
                _binaryIndex    .create((path + BIN_INDEX_FILENAME)  .c_str()) &&
                _binaryVersions .create((path + BIN_VERSION_FILENAME).c_str()) &&
-               _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str())
+               _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str()) &&
+               _dirIndex       .create((path + DIR_INDEX_FILENAME)  .c_str()) &&
+               _dirVersions    .create((path + DIR_VERSION_FILENAME).c_str())
               );
 
     debug("VersionManager creation " + string(_isOpen ? "successfull" : "failed") + "\n");
