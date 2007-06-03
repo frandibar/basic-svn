@@ -14,8 +14,11 @@
 class DirectoryVersion
 {
 public:
+
+	enum t_versionType { MODIFICACION = 0, BORRADO};
+
 	DirectoryVersion();
-	DirectoryVersion(int NroVersion,const char* User,tm Date);
+	DirectoryVersion(int NroVersion,const char* User,tm Date,t_versionType Type);
 
 	~DirectoryVersion();
 
@@ -27,7 +30,8 @@ public:
 	int					getNroVersion()	{	return	_nroVersion;	}
 	char*				getUser()		{	return	_user;			}
 	tm					getDate()		{	return	_date;			}
-	int					getCantFile()	{	return	_fileLst.size();}
+ 	size_t				getCantFile()	{	return	_fileLst.size();}
+	t_versionType		getType()		{	return _type;			}
 
 	void addFile(char* fileName,int versionNumber,char type);
 
@@ -38,6 +42,7 @@ private:
 	char*				_user;			// user
 	tm					_date;			// date
 	std::list<File>		_fileLst;		// list of filenames
+	t_versionType		_type;			// version type
 };
 
 #endif

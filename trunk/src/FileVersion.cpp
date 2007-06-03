@@ -4,21 +4,23 @@
 
 FileVersion::FileVersion()
 {
-    _nroVersion = -1;
-    _original   = -1;
-    _tipo       = 0;
-    _offset     = -1;
-    _user       = 0;
+    _nroVersion		= -1;
+    _original		= -1;
+    _tipo			= 0;
+    _offset			= -1;
+    _user			= 0;
+	_versionType	= MODIFICACION;
 }
 
-FileVersion::FileVersion(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo)
+FileVersion::FileVersion(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo,t_versionType VersionType)
 {
     _nroVersion = NroVersion;
     _original = Original;
     _fecha = Fecha;
     _offset = Offset;
     _tipo = Tipo;
-    
+	_versionType = VersionType;
+
     int tamanio = strlen(User);
 
     _user = new char[(tamanio + 1) * sizeof(char)];
@@ -65,6 +67,10 @@ void FileVersion::write(char* buffer)
     memcpy(buffer,&_tipo,sizeof(char));
     buffer += sizeof(char);
 
+	//tipo de version
+	memcpy(buffer,&_versionType,sizeof(t_versionType));
+	buffer += sizeof(t_versionType);
+
     return;
 }
 
@@ -104,6 +110,10 @@ void FileVersion::read(char** buffer)
     memcpy(&_tipo,*buffer,sizeof(char));
     *buffer += sizeof(char);
 
+	//leo el tipo de version
+	memcpy(&_versionType,*buffer,sizeof(t_versionType));
+	*buffer += sizeof(t_versionType);
+
     return;
 }
 
@@ -114,18 +124,20 @@ int FileVersion::tamanioEnDisco(){
 		tamanio+= sizeof(long int);				//offset				  
 		tamanio+= sizeof(int);					//longitud del atributo nombre usuario				  
         tamanio+= strlen(_user) * sizeof(char);	//usuario                   
-        tamanio+= sizeof(char);					//tipo                                     
+        tamanio+= sizeof(char);					//tipo
+		tamanio+= sizeof(t_versionType);		//tipo de version
 
     return tamanio;
 }
 
 FileVersion& FileVersion::operator=(const FileVersion &version)
 {
-    _nroVersion = version._nroVersion;
-    _original   = version._original;
-    _fecha      = version._fecha;
-    _offset     = version._offset;
-    _tipo       = version._tipo;
+    _nroVersion		= version._nroVersion;
+    _original		= version._original;
+    _fecha			= version._fecha;
+    _offset			= version._offset;
+    _tipo			= version._tipo;
+	_versionType	= version._versionType;
 
 	int tamanio = strlen(version._user);
     delete _user;

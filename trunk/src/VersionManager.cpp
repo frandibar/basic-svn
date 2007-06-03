@@ -122,7 +122,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
             // TODO: falta ver si la ultima version es la de borrado
 
             FileVersionsFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, 							
-                                                                       a_Type, bloque, &nroNuevoBloque);
+                                                                       a_Type,FileVersion::t_versionType::MODIFICACION, bloque, &nroNuevoBloque);
             switch (status) {
                 case FileVersionsFile::OK :
                     return true;
@@ -148,7 +148,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
            if (offset == -1) 
                return false;
 
-           _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, &nroNuevoBloque);
+           _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::t_versionType::MODIFICACION, &nroNuevoBloque);
            key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
            _textIndex.insert(key.c_str(), nroNuevoBloque);	   
         }   
@@ -167,7 +167,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         bloque = _binaryIndex.searchFile(a_Filename.c_str());
 
         if (bloque >= 0) { // el archivo esta en el indice
-            FileVersionsFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, bloque, &nroNuevoBloque);
+            FileVersionsFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::t_versionType::MODIFICACION, bloque, &nroNuevoBloque);
             switch (status) {
                 case FileVersionsFile::OK :
                     return true;
@@ -182,7 +182,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         }
         else {
             // debo insertar el archivo completo.	
-            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, &nroNuevoBloque);
+            _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::t_versionType::MODIFICACION, &nroNuevoBloque);
             key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
             _binaryIndex.insert(key.c_str(), nroNuevoBloque);
         }
