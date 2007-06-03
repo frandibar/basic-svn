@@ -20,7 +20,8 @@ DirectoryVersion::DirectoryVersion(int NroVersion,const char* User,tm Date)
 	_nroVersion = NroVersion;
 
 	_user = new char[(tam + 1) * sizeof(char)];
-	strcpy(_user,User);
+	memcpy(_user,User,tam);
+	_user[tam] = 0;
 
 	_date = Date;	
 }
@@ -40,29 +41,34 @@ void DirectoryVersion::addFile(char* fileName,int versionNumber,char type)
 	_fileLst.push_back(*newFile);
 }
 
-void DirectoryVersion::write(char** buffer)
+void DirectoryVersion::write(char* buffer)
 {
-	memcpy(*buffer,&_nroVersion,sizeof(int));	// version number
-	*buffer += sizeof(int);
+	memcpy(buffer,&_nroVersion,sizeof(int));	// version number
+	buffer += sizeof(int);
 
 	int length = strlen(_user);
-	memcpy(*buffer,&length,sizeof(int));		//length of user
-	*buffer += sizeof(int);
+	memcpy(buffer,&length,sizeof(int));		//length of user
+	buffer += sizeof(int);
 
-	memcpy(*buffer,_user,length * sizeof(char));	//user
-	*buffer += sizeof(char) * length;
+	memcpy(buffer,_user,length * sizeof(char));	//user
+	buffer += sizeof(char) * length;
 
-	memcpy(*buffer,&_date,sizeof(tm));	//date
-	*buffer += sizeof(tm);
+	memcpy(buffer,&_date,sizeof(tm));	//date
+	buffer += sizeof(tm);
 
 	int files = _fileLst.size();
-	memcpy(*buffer,&files,sizeof(int));	//size of list
-	*buffer += sizeof(int);
+	memcpy(buffer,&files,sizeof(int));	//size of list
+	buffer += sizeof(int);
 
 	list<File>::iterator it;
 
+	int offset = 0;
+
 	for(it = _fileLst.begin();it != _fileLst.end();it++)
-		it->write(buffer);	// each file
+	{
+		it->write(buffer + offset);	// each file
+		offset += it->getTamanioEnDisco();
+	}
 }
 
 void DirectoryVersion::read(char** buffer)
@@ -119,6 +125,8 @@ long int DirectoryVersion::tamanioEnDisco()
 	size += sizeof(tm);	//_date
 
 	size += sizeof(int);	//_versionNumber
+
+	size += sizeof(int);	//indicador de la cantidad de archivos
 
 	return size;
 }

@@ -289,7 +289,7 @@ void testFile()
 
 	char* nextByte = buffer;
 
-	file->write(&nextByte);
+	file->write(nextByte);
 
 	delete file;
 
@@ -337,7 +337,7 @@ void testDirectoryVersion()
 
 	char * nextByte = buffer;
 
-	dv->write(&nextByte);
+	dv->write(nextByte);
 
 	delete dv;
 
@@ -363,4 +363,76 @@ void testDirectoryVersion()
 	delete dv2;
 
 	//fl->clear();
+}
+
+void testDirectoryBlock()
+{
+	time_t Time;
+	tm* Timetm;
+	
+	time(&Time);
+	Timetm = localtime(&Time);
+	
+	DirectoryVersion* dv = new DirectoryVersion(1,"Rodrigo",*Timetm);
+
+	dv->addFile("c:\\Rodrigo",1,'t');
+
+	dv->addFile("c:\\Francisco",2,'t');
+
+	dv->addFile("c:\\Fernando",3,'t');
+
+	dv->addFile("c:\\Andres",4,'t');
+
+	DirectoryBlock* db = new DirectoryBlock(0);
+
+	db->insertVersion(dv);
+
+	delete dv;
+
+	time(&Time);
+	Timetm = localtime(&Time);
+	dv = new DirectoryVersion(2,"Fran",*Timetm);
+
+	dv->addFile("c:\\Francisco",5,'t');
+
+	dv->addFile("c:\\Juan",6,'t');
+
+	dv->addFile("c:\\Andres",7,'t');
+
+	db->insertVersion(dv);
+
+	delete dv;
+
+	dv = db->getLastVersion();
+
+	delete dv;
+
+	bool found = db->searchVersion(1);
+
+	found = db->searchVersion(2);
+
+	found = db->searchVersion(5);
+
+	int cantVersiones = db->getCantidadVersiones();
+
+	db->moveFirst();
+
+	while(db->hasNext())
+	{
+		dv = db->getNext();
+		delete dv;
+	}
+
+	char* buffer = new char[DirectoryBlock::TAMANIO_BLOQUE_DIRECTORIOS * sizeof(char)];
+
+	db->write(buffer);
+
+	delete db;
+
+	DirectoryBlock* db2 = new DirectoryBlock();
+
+	db2->read(buffer);
+
+	delete buffer;
+	delete db2;
 }

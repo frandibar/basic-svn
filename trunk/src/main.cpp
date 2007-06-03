@@ -12,7 +12,9 @@ int main(int argc, char** argv)
 
 	//testFile();
 
-	testDirectoryVersion();
+	//testDirectoryVersion();
+
+	testDirectoryBlock();
 
 	return 0;
 }

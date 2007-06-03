@@ -4,6 +4,7 @@
 #include "FileVersionsFile.h"
 #include "file.h"
 #include "DirectoryVersion.h"
+#include "DirectoryBlock.h"
 #include <string>
 #include <list>
 #include <fstream>
@@ -17,5 +18,10 @@ void testList();
 void testContainer();
 
 void testFile();
+
+void testDirectoryVersion();
+
+void testDirectoryBlock();
+
 
 void testDirectoryVersion();

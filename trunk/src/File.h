@@ -21,7 +21,7 @@ public:
 	int		getTamanioEnDisco();
 
 	void	read(char** buffer);
-	void	write(char** buffer);
+	void	write(char* buffer);
 
 private:
 
