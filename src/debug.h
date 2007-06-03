@@ -7,9 +7,11 @@
 
 #ifdef DEBUG
 #   include <iostream>
+#   include <string>
     using std::cout;
     using std::endl;
     using std::cerr;
+    using std::string;
 #   define debug(x) cout << "DEBUG: " << x;
 #else
 #   define debug(x)

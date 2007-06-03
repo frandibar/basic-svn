@@ -13,6 +13,8 @@
 class Repositorio
 {
 public:
+    enum t_filetype { INVALID = -1, DIRECTORY = 0, TEXT, BINARY };
+
     Repositorio(const string& a_Almacen, const string& a_Name);
     ~Repositorio() {};
 
@@ -28,6 +30,9 @@ public:
     // getters
     string getName() const { return _name; }
     std::list<User> getListOfUsers() const { return _lUsers; }
+
+protected:
+    t_filetype getFiletype(const string& filename);
 
 private:
     Repositorio();

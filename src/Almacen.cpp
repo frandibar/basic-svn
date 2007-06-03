@@ -94,13 +94,18 @@ bool Almacen::addRepository(const string& a_Name) throw()
         return false;
     
     try {
+        Repositorio* rep = new Repositorio(_name, a_Name);
+        if (!rep->create())
+            return false;
+        _lReposit.push_back(rep);
+        
+        // add to config file
         // initialize xerces
         xercesc::XMLPlatformUtils::Initialize();
         
         if (!_config->addRepository(a_Name)) 
             return false;
         _config->commit();
-        _lReposit.push_back(new Repositorio(_name, a_Name));
 
         // terminate xerces
         xercesc::XMLPlatformUtils::Terminate();
