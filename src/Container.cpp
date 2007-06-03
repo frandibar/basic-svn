@@ -72,7 +72,7 @@ long int Container::append(std::ifstream& is)
 }
 
 
-bool Container::get(long int offset, fstream& fs) 
+bool Container::get(long int offset, std::ofstream& fs) 
 // offset points to a long int containing the length of the block of text
 // read that block and return it     
 {

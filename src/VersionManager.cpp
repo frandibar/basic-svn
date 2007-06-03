@@ -8,9 +8,9 @@
 
 using std::list;
 
-const string VersionManager::TX_INDEX_FILENAME   = "tx_index.ndx";
-const string VersionManager::TX_VERSION_FILENAME = "tx_versions.ndx";
-const string VersionManager::TX_DIFFS_FILENAME   = "tx_diffs.dat";
+const string VersionManager::TXT_INDEX_FILENAME   = "TXT_index.ndx";
+const string VersionManager::TXT_VERSION_FILENAME = "TXT_versions.ndx";
+const string VersionManager::TXT_DIFFS_FILENAME   = "TXT_diffs.dat";
 
 const string VersionManager::BIN_INDEX_FILENAME   = "bin_index.ndx";
 const string VersionManager::BIN_VERSION_FILENAME = "bin_versions.ndx";
@@ -21,15 +21,14 @@ const int VersionManager::VERSION_DIGITS = 5;
 VersionManager::VersionManager(const string& a_Almacen, const string& a_Repository) 
                                 : _almacen(a_Almacen), _repository(a_Repository)
 {
-
 }
 
 bool VersionManager::open()
 {
     string path = _almacen + "//" + _repository + "//";
-    bool ret = (_textIndex      .open((path + TX_INDEX_FILENAME)   .c_str()) &&
-	            _textVersions   .open((path + TX_VERSION_FILENAME) .c_str()) &&
-                _textContainer  .open((path + TX_DIFFS_FILENAME)   .c_str()) &&
+    bool ret = (_textIndex      .open((path + TXT_INDEX_FILENAME)  .c_str()) &&
+	            _textVersions   .open((path + TXT_VERSION_FILENAME).c_str()) &&
+                _textContainer  .open((path + TXT_DIFFS_FILENAME)  .c_str()) &&
                 _binaryIndex    .open((path + BIN_INDEX_FILENAME)  .c_str()) &&
                 _binaryVersions .open((path + BIN_VERSION_FILENAME).c_str()) &&
                 _binaryContainer.open((path + BIN_DIFFS_FILENAME)  .c_str())
@@ -41,21 +40,27 @@ bool VersionManager::open()
 
 void VersionManager::close()
 {
-  _textIndex      .close();
-  _textVersions   .close();
-  _textContainer  .close();
-  _binaryIndex    .close();
-  _binaryVersions .close();
-  _binaryContainer.close();
+    _textIndex      .close();
+    _textVersions   .close();
+    _textContainer  .close();
+    _binaryIndex    .close();
+    _binaryVersions .close();
+    _binaryContainer.close();
 
-  return;
+    return;
 }
 
-void compare(const string& a_FilenameA, const string& a_FilenameB)
+bool VersionManager::buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename)
 {
-    string cmd = "diff -e " + a_FilenameA + " " + a_FilenameB + " > tmp";
-    system(cmd.c_str());
-    remove("tmp");
+    std::ofstream os(a_Filename.c_str());
+    if (!os.is_open())
+        return false;
+
+    std::list<FileVersion>::const_iterator it;
+    for (it = lstVersions.begin(); it != lstVersions.end(); ++it) {
+        _textContainer.get(it->getOffset(), os);
+    }
+    return true;
 }
 
     
@@ -70,15 +75,16 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
     string key;
 
     tm* date = localtime(&a_Date);
+
     if (a_Type == 't') {
         // busco en el indice a ver si esta el archivo
         bloque = _textIndex.searchFile(a_Filename.c_str());
 
         if (bloque >= 0) { // el archivo esta en el indice
-            // debo insertar el diff si el archivo ya existe o el original si no,
+            // debo insertar el diff si el archivo ya existe o el original sino,
             // al insertar voy a obtener el valor del offset
             int original = _textVersions.getLastOriginalVersionNumber(bloque);
-            int last = _textVersions.getLastVersionNumber(bloque);
+            int last     = _textVersions.getLastVersionNumber(bloque);
 			
             list<FileVersion> lstVersions;
             if (!_textVersions.getVersionFrom(original, last, bloque, lstVersions)) {
@@ -94,15 +100,22 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
                     return false;
             }
             else {
-                // TODO: generar el archivo con la version final a partir de la lista
-                // fstream fsVersion;
-                // obtenerVersionFinal(lstVersiones, fsVersion)
-                //ifstream is(a_Filename);
-                //fstream fsdiff;
-                //generarDiff(is, fsVersion, fsdiff);
-                //offset = _textContainer.append(is);
-                //is.close();
-                ;
+                string tmpVersionFilename = randomFilename("tmp_");
+                buildVersion(lstVersions, tmpVersionFilename);
+                // fsVersion contains the file up to version
+                // now we need to generate a diff between the file being commited and the last version
+
+                string tmpDiffFilename = randomFilename("tmp_");
+                string cmd = "diff -e " + tmpVersionFilename + " " + a_Filename + " > " + tmpDiffFilename;
+                system(cmd.c_str());
+
+                std::ifstream is(tmpDiffFilename.c_str());
+                offset = _textContainer.append(is);
+                is.close();
+
+                // remove temporary files
+                remove(tmpVersionFilename.c_str());
+                remove(tmpDiffFilename.c_str());
             }
 
             // TODO: falta ver si la ultima version es la de borrado
@@ -125,18 +138,18 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         else {
            // debo insertar el archivo completo
 		   std::ifstream is(a_Filename.c_str());
-            if (!is) 
-                return false;	
+           if (!is) 
+               return false;	
 	   	
-			offset = _textContainer.append(is);
-			is.close();
-	   	
-			if (offset == -1) 
-                return false;
+           offset = _textContainer.append(is);
+           is.close();
 
-            _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, &nroNuevoBloque);
-            key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
-            _textIndex.insert(key.c_str(), nroNuevoBloque);	   
+           if (offset == -1) 
+               return false;
+
+           _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, &nroNuevoBloque);
+           key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+           _textIndex.insert(key.c_str(), nroNuevoBloque);	   
         }   
     }
 
@@ -179,9 +192,9 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 bool VersionManager::create()
 {
     string path = _almacen + "//" + _repository + "//";
-    bool ret = (_textIndex      .create((path + TX_INDEX_FILENAME)   .c_str()) &&
-	            _textVersions   .create((path + TX_VERSION_FILENAME) .c_str()) &&
-                _textContainer  .create((path + TX_DIFFS_FILENAME)   .c_str()) &&
+    bool ret = (_textIndex      .create((path + TXT_INDEX_FILENAME)  .c_str()) &&
+	            _textVersions   .create((path + TXT_VERSION_FILENAME).c_str()) &&
+                _textContainer  .create((path + TXT_DIFFS_FILENAME)  .c_str()) &&
                 _binaryIndex    .create((path + BIN_INDEX_FILENAME)  .c_str()) &&
                 _binaryVersions .create((path + BIN_VERSION_FILENAME).c_str()) &&
                 _binaryContainer.create((path + BIN_DIFFS_FILENAME)  .c_str())

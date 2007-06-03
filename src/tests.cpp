@@ -238,37 +238,27 @@ void testContainer()
 	Container cont;
 
 	cont.create("containerTest.bin");
-
 	cont.close();
 
 	cont.open("containerTest.bin");
-
 	ifstream is("helpers.cpp");
-	
 	int offset = cont.append(is);
-
 	is.close();
 
 	is.open("Version.h");
-
 	int offset2 = cont.append(is);
-
 	is.close();
 
 	is.open("Bloque.cpp");
-
 	int offset3 = cont.append(is);
-
 	is.close();
 
 	cont.close();
 
 	Container cont2;
-
 	cont2.open("containerTest.bin");
 
 	fstream fs;
-
 	fs.open("temp.txt",ios::out);
 
 	if(cont2.get(offset,fs))
