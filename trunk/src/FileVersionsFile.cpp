@@ -1,29 +1,29 @@
 // VersionFile.cpp
 
-#include "VersionFile.h"
+#include "FileVersionsFile.h"
 
 using std::ios;
 using std::list;
 
-VersionFile::VersionFile()
+FileVersionsFile::FileVersionsFile()
 {
-	_buffer = new char[Bloque::TAMANIO_BLOQUE];
+	_buffer = new char[FileBlock::TAMANIO_BLOQUE_ARCHIVOS];
 	_bloqueActual = 0;
 	_cantBloques = 0;
 }	
 
-VersionFile::~VersionFile()
+FileVersionsFile::~FileVersionsFile()
 {
 	delete _bloqueActual;
 	delete _buffer;
 }
 
-bool VersionFile::readHeader()
+bool FileVersionsFile::readHeader()
 {
     if (_filestr.is_open()) {
         char* nextByte = _buffer;
         _filestr.seekg(0, ios::beg);
-        _filestr.read(_buffer, Bloque::TAMANIO_BLOQUE);
+        _filestr.read(_buffer, FileBlock::TAMANIO_BLOQUE_ARCHIVOS);
         // leo la cantidad de nodos
         memcpy(&_cantBloques, nextByte, sizeof(int));
         nextByte += sizeof(int);
@@ -33,7 +33,7 @@ bool VersionFile::readHeader()
     return false;
 }
 
-bool VersionFile::writeHeader()
+bool FileVersionsFile::writeHeader()
 {
     if (_filestr.is_open()) {
         char* nextByte = _buffer;
@@ -42,13 +42,13 @@ bool VersionFile::writeHeader()
         nextByte += sizeof(int);
         // volcar al archivo
         _filestr.seekp(0, ios::beg);
-        _filestr.write(_buffer, Bloque::TAMANIO_BLOQUE);
+        _filestr.write(_buffer, FileBlock::TAMANIO_BLOQUE_ARCHIVOS);
         return true;
     }
     return false;
 }
 
-bool VersionFile::readBloque(int nroBloque)
+bool FileVersionsFile::readBloque(int nroBloque)
 {
 	if (_filestr.is_open()) {
 		if(_bloqueActual != 0){
@@ -56,12 +56,12 @@ bool VersionFile::readBloque(int nroBloque)
 			delete _bloqueActual;
 		}
 
-		_bloqueActual = new Bloque();
+		_bloqueActual = new FileBlock();
 
-		_filestr.seekg((nroBloque + 1) * Bloque::TAMANIO_BLOQUE,ios::beg);
-		_filestr.seekp((nroBloque + 1) * Bloque::TAMANIO_BLOQUE,ios::beg);
+		_filestr.seekg((nroBloque + 1) * FileBlock::TAMANIO_BLOQUE_ARCHIVOS,ios::beg);
+		_filestr.seekp((nroBloque + 1) * FileBlock::TAMANIO_BLOQUE_ARCHIVOS,ios::beg);
 
-		_filestr.read(_buffer,Bloque::TAMANIO_BLOQUE);
+		_filestr.read(_buffer,FileBlock::TAMANIO_BLOQUE_ARCHIVOS);
 		_bloqueActual->read(_buffer);
 
 		return true;
@@ -70,17 +70,17 @@ bool VersionFile::readBloque(int nroBloque)
 	return false;
 }
 
-bool VersionFile::writeBloque()
+bool FileVersionsFile::writeBloque()
 {
 	if (_filestr.is_open()) {
 		
 		if(_bloqueActual != 0){
 			_bloqueActual->write(_buffer);	//escribo el bloque en el buffer
 
-			_filestr.seekg((_bloqueActual->getNumero() + 1) * Bloque::TAMANIO_BLOQUE,ios::beg);
-			_filestr.seekp((_bloqueActual->getNumero() + 1) * Bloque::TAMANIO_BLOQUE,ios::beg);
+			_filestr.seekg((_bloqueActual->getNumero() + 1) * FileBlock::TAMANIO_BLOQUE_ARCHIVOS,ios::beg);
+			_filestr.seekp((_bloqueActual->getNumero() + 1) * FileBlock::TAMANIO_BLOQUE_ARCHIVOS,ios::beg);
 
-			_filestr.write(_buffer,Bloque::TAMANIO_BLOQUE);
+			_filestr.write(_buffer,FileBlock::TAMANIO_BLOQUE_ARCHIVOS);
 
 			return true;
 		}
@@ -90,19 +90,19 @@ bool VersionFile::writeBloque()
 	return false;
 }
 
-bool VersionFile::crearBloque(int Anterior, int Siguiente)
+bool FileVersionsFile::crearBloque(int Anterior, int Siguiente)
 {
 
 	if (_filestr.is_open()) {
 		writeBloque(); // escribo el bloque actual;
-		_bloqueActual = new Bloque(_cantBloques,Anterior,Siguiente);
+		_bloqueActual = new FileBlock(_cantBloques,Anterior,Siguiente);
 		return true;
 	}
 
 	return false;
 }
 
-bool VersionFile::create(const char* fileName)
+bool FileVersionsFile::create(const char* fileName)
 {
     _filestr.open(fileName, ios::out | ios::in | ios::binary);
 
@@ -121,7 +121,7 @@ bool VersionFile::create(const char* fileName)
     return writeHeader();
 }
 
-bool VersionFile::open(const char* fileName)
+bool FileVersionsFile::open(const char* fileName)
 {
     _filestr.open(fileName, ios::in | ios::out | ios::binary);
 
@@ -133,7 +133,7 @@ bool VersionFile::open(const char* fileName)
 	return false;
 }
 
-bool VersionFile::close()
+bool FileVersionsFile::close()
 {
 	if (_filestr.is_open()) {
 		if (writeHeader()) {
@@ -147,39 +147,39 @@ bool VersionFile::close()
 	return false;
 }
 
-void VersionFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, int* nroBloqueNuevo){
+void FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, int* nroBloqueNuevo){
 	
 	writeBloque(); // escribo el bloque actual
 	delete _bloqueActual;
-	_bloqueActual = new Bloque(_cantBloques); // creo el nuevo bloque apuntado por el actual
+	_bloqueActual = new FileBlock(_cantBloques); // creo el nuevo bloque apuntado por el actual
 	*nroBloqueNuevo = _cantBloques;	// guardo la referencia al nro del bloque nuevo
 	_cantBloques++;	// incremento la cantidad de bloques del archivo
     
 	//creo la version nueva
-	Version* version = new Version(nroVersion,nroVersion,Fecha,User,Offset,Tipo);
+	FileVersion* version = new FileVersion(nroVersion,nroVersion,Fecha,User,Offset,Tipo);
 	_bloqueActual->insertVersion(version); // inserto la version
 	delete version;
 }
 
-VersionFile::t_status VersionFile::insertVersion(int nroVersion,const char* User,tm Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo)
+FileVersionsFile::t_status FileVersionsFile::insertVersion(int nroVersion,const char* User,tm Fecha,long int Offset,char Tipo,int bloque,int* nroBloqueNuevo)
 {
 	readBloque(bloque); // obtengo el bloque
-	Version* ultimaVersion = _bloqueActual->getLastVersion();
+	FileVersion* ultimaVersion = _bloqueActual->getLastVersion();
 	int ultimoOriginal = ultimaVersion->getOriginal();
 	delete ultimaVersion;
-	Version* nuevaVersion = new Version(nroVersion,ultimoOriginal,Fecha,User,Offset,Tipo);
+	FileVersion* nuevaVersion = new FileVersion(nroVersion,ultimoOriginal,Fecha,User,Offset,Tipo);
 	if (_bloqueActual->hayLugar(nuevaVersion)) {
 		if (!_bloqueActual->searchVersion(nuevaVersion->getNroVersion())) {
 			_bloqueActual->insertVersion(nuevaVersion);
 			delete nuevaVersion;
-			return VersionFile::OK;
+			return FileVersionsFile::OK;
 		}
 		
 		delete nuevaVersion;
-		return VersionFile::ERROR;
+		return FileVersionsFile::ERROR;
 	}
 	
-	Bloque* bloqueNuevo = new Bloque(_cantBloques,_bloqueActual->getNumero());
+	FileBlock* bloqueNuevo = new FileBlock(_cantBloques,_bloqueActual->getNumero());
 	_cantBloques++;
 	_bloqueActual->setSiguiente(bloqueNuevo->getNumero());
 	writeBloque();                  // escribo el bloque actual modificado
@@ -188,17 +188,17 @@ VersionFile::t_status VersionFile::insertVersion(int nroVersion,const char* User
 	_bloqueActual->insertVersion(nuevaVersion);
 	delete nuevaVersion;
 	*nroBloqueNuevo = _bloqueActual->getNumero();
-	return VersionFile::OVERFLOW;
+	return FileVersionsFile::OVERFLOW;
 }
 
-bool VersionFile::searchVersion(Version** version,int nroVersion,int bloque)
+bool FileVersionsFile::searchVersion(FileVersion** version,int nroVersion,int bloque)
 {
 	readBloque(bloque);
 	return _bloqueActual->searchVersion(nroVersion,version);
 }
 
 
-bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Version>& lstVersions)
+bool FileVersionsFile::getVersionFrom(int original, int final, int bloque, list<FileVersion>& lstVersions)
 {
 	// levanto el bloque a partir del que voy a empezar a buscar la original y armar la lista de versiones.
 	// podre moverme hacia bloques anteriores o posteriores.
@@ -227,7 +227,7 @@ bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Versi
 	}
 
     // en este punto, _bloqueActual contiene la version original    
-	Version* auxVersion;
+	FileVersion* auxVersion;
 	_bloqueActual->searchVersion(original, &auxVersion);
 	
 	lstVersions.push_back(*auxVersion);
@@ -277,20 +277,20 @@ bool VersionFile::getVersionFrom(int original, int final, int bloque, list<Versi
 	return true;
 }
 
-int VersionFile::getLastOriginalVersionNumber(int bloque)
+int FileVersionsFile::getLastOriginalVersionNumber(int bloque)
 {
     readBloque(bloque);
-    Version* aux = _bloqueActual->getLastVersion();
+    FileVersion* aux = _bloqueActual->getLastVersion();
     int ret = aux->getOriginal();
     delete aux;
     return ret;
 }
 
 
-int VersionFile::getLastVersionNumber(int bloque)
+int FileVersionsFile::getLastVersionNumber(int bloque)
 {
     readBloque(bloque);
-    Version* aux = _bloqueActual->getLastVersion();
+    FileVersion* aux = _bloqueActual->getLastVersion();
     int ret = aux->getNroVersion();
     delete aux;
     return ret;

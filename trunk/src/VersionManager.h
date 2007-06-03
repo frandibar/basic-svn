@@ -1,8 +1,8 @@
 // VersionManager.h
 
 #include "arbolbmas.h"
-#include "Version.h"
-#include "VersionFile.h"
+#include "FileVersion.h"
+#include "FileVersionsFile.h"
 #include "Container.h"
 
 #include <string>
@@ -39,13 +39,13 @@ private:
     string    _almacen;
     string    _repository;
 
-    ArbolBMas   _textIndex;     // index for text files
-    VersionFile _textVersions;  // version file for text files
-    Container   _textContainer; // aca va el archivo de diffs para los de texto
+    ArbolBMas			_textIndex;     // index for text files
+    FileVersionsFile	_textVersions;  // version file for text files
+    Container			_textContainer; // aca va el archivo de diffs para los de texto
     
-    ArbolBMas   _binaryIndex;       // index for binary files
-    VersionFile _binaryVersions;    // version file for binary files
-    Container   _binaryContainer;   // aca va el archivo de diffs para los binarios
+    ArbolBMas			_binaryIndex;       // index for binary files
+    FileVersionsFile	_binaryVersions;    // version file for binary files
+    Container			_binaryContainer;   // aca va el archivo de diffs para los binarios
 };
 
 

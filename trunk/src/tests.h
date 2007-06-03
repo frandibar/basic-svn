@@ -1,7 +1,7 @@
-#include "Bloque.h"
+#include "FileBlock.h"
 #include "Container.h"
-#include "Version.h"
-#include "VersionFile.h"
+#include "FileVersion.h"
+#include "FileVersionsFile.h"
 #include "file.h"
 #include "DirectoryVersion.h"
 #include <string>

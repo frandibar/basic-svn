@@ -16,11 +16,11 @@ void testBloque()
 	string Fran = "Francisco";
 	string Fernando = "Fernando";
 
-	Bloque* bloque = new Bloque(0,-1,-1);
+	FileBlock* bloque = new FileBlock(0,-1,-1);
 	
 	time(&Time);
 	Timetm = localtime(&Time);
-    Version* version = new Version(1,1,*Timetm,Rodrigo.c_str(),0,'t');
+    FileVersion* version = new FileVersion(1,1,*Timetm,Rodrigo.c_str(),0,'t');
 
 	bloque->insertVersion(version);
 
@@ -28,7 +28,7 @@ void testBloque()
 
 	time(&Time);
 	Timetm = localtime(&Time);
-	version = new Version(2,1,*Timetm,Fran.c_str(),300,'t');
+	version = new FileVersion(2,1,*Timetm,Fran.c_str(),300,'t');
 
 	bloque->insertVersion(version);
 	
@@ -36,7 +36,7 @@ void testBloque()
 
 	time(&Time);
 	Timetm = localtime(&Time);
-	version = new Version(3,1,*Timetm,Fernando.c_str(),5000,'t');
+	version = new FileVersion(3,1,*Timetm,Fernando.c_str(),5000,'t');
 
 	bloque->insertVersion(version);
 	
@@ -78,13 +78,13 @@ void testBloque()
 
 	int cantVersiones = bloque->getCantidadVersiones();
 
-	char* buffer = new char[Bloque::TAMANIO_BLOQUE * sizeof(char)];
+	char* buffer = new char[FileBlock::TAMANIO_BLOQUE_ARCHIVOS * sizeof(char)];
 
 	bloque->write(buffer);
 
 	delete bloque;
 
-	Bloque* bloque2 = new Bloque();
+	FileBlock* bloque2 = new FileBlock();
 
 	bloque2->read(buffer);
 
@@ -102,7 +102,7 @@ void testVersionFile()
 	string Fran = "Francisco";
 	string Fernando = "Fernando";	
 	
-	VersionFile vf;
+	FileVersionsFile vf;
 
 	vf.create("versionFileTest.bin");
 
@@ -120,13 +120,13 @@ void testVersionFile()
 		Timetm = localtime(&Time);
 
 		i++;				
-	}while(vf.insertVersion(i,Rodrigo.c_str(),*Timetm,5000 + i * 1500,'t',bloqueOriginal,&nuevoBloque) != VersionFile::t_status::OVERFLOW);
+	}while(vf.insertVersion(i,Rodrigo.c_str(),*Timetm,5000 + i * 1500,'t',bloqueOriginal,&nuevoBloque) != FileVersionsFile::t_status::OVERFLOW);
 	
 	int original = vf.getLastOriginalVersionNumber(bloqueOriginal);
 
 	int final = vf.getLastVersionNumber(bloqueOriginal);
 
-	Version* version;
+	FileVersion* version;
 
 	bool found = vf.searchVersion(&version,i-3,bloqueOriginal);
 
@@ -169,17 +169,17 @@ void testVersionFile()
 
 	vf2.close();*/
 
-	VersionFile vf3;
+	FileVersionsFile vf3;
 
 	vf3.open("versionFileTest.bin");
 
-	list<Version> lstVersions;
+	list<FileVersion> lstVersions;
 
 	bool ok = vf3.getVersionFrom(1,10,1,lstVersions);
 	
-	list<Version>::iterator it;
+	list<FileVersion>::iterator it;
 
-	Version aux;
+	FileVersion aux;
 
 	for(it = lstVersions.begin();it != lstVersions.end();it++)
 	{
