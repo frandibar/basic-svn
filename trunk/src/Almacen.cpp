@@ -87,8 +87,7 @@ bool Almacen::destroy()
     _exists = false;
     string cmd = "rm -rf " + _name;
     int ret = system(cmd.c_str());
-    _name = "";
-    return (ret != -1);
+    return (ret == 0);
 }
 
 bool Almacen::addRepository(const string& a_Name) throw()

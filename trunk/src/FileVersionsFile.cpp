@@ -6,11 +6,10 @@
 using std::ios;
 using std::list;
 
-FileVersionsFile::FileVersionsFile()
+// constructor
+FileVersionsFile::FileVersionsFile() : _cantBloques(0), _bloqueActual(0), _isOpen(false)
 {
 	_buffer = new char[FileBlock::TAMANIO_BLOQUE_ARCHIVOS];
-	_bloqueActual = 0;
-	_cantBloques  = 0;
 }	
 
 FileVersionsFile::~FileVersionsFile()
@@ -110,20 +109,17 @@ bool FileVersionsFile::create(const string& a_Filename)
 
 	if (!_filestr.is_open()) {
 		_filestr.open(a_Filename.c_str(), ios::out | ios::binary);
-		
 		_filestr.close();
-
 		_filestr.open(a_Filename.c_str(), ios::in | ios::out | ios::binary);
-		if (!_filestr.is_open())
-			return false;
+		if (!_filestr.is_open()) {
+            _isOpen = false;
+        }
 	}
 
     _cantBloques = 0;
-
-    bool ret = writeHeader();
-    if (ret) _filename = a_Filename;
-    debug("FileVersionsFile creation " + string((ret) ? "successfull" : "failed") + "\n");
-    return ret;
+    _isOpen = _isOpen && writeHeader();
+    debug("FileVersionsFile creation " + string(_isOpen ? "successfull" : "failed") + "\n");
+    return _isOpen;
 }
 
 bool FileVersionsFile::destroy()
