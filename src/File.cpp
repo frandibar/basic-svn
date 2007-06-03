@@ -16,7 +16,8 @@ File::File(char* name, int versionNumber,char type)
 
 	int tam = strlen(name);
 	_name = (char*) malloc((tam+1) * sizeof(char));
-	strcpy(_name,name);
+	memcpy(_name,name,tam);
+	_name[tam] = 0;
 }
 
 File::~File()
@@ -42,21 +43,21 @@ int File::getTamanioEnDisco()
 	return ret;
 }
 
-void File::write(char** buffer)
+void File::write(char* buffer)
 {
 	int length = strlen(_name);
 
-	memcpy(*buffer,&length,sizeof(int));	//indicador del longitud de _name
-	*buffer += sizeof(int);
+	memcpy(buffer,&length,sizeof(int));	//indicador del longitud de _name
+	buffer += sizeof(int);
 
-	memcpy(*buffer,_name,length * sizeof(char));	// _name
-	*buffer += length * sizeof(char);
+	memcpy(buffer,_name,length * sizeof(char));	// _name
+	buffer += length * sizeof(char);
 
-	memcpy(*buffer,&_versionNumber,sizeof(int));	//_versionNumber
-	*buffer += sizeof(int);
+	memcpy(buffer,&_versionNumber,sizeof(int));	//_versionNumber
+	buffer += sizeof(int);
 
-	memcpy(*buffer,&_type,sizeof(char));	//_type
-	*buffer += sizeof(char);
+	memcpy(buffer,&_type,sizeof(char));	//_type
+	buffer += sizeof(char);
 }
 
 void File::read(char** buffer)

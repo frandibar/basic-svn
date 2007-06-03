@@ -20,7 +20,7 @@ public:
 	~DirectoryVersion();
 
 	void read(char** buffer);
-	void write(char** buffer);
+	void write(char* buffer);
 
 	std::list<File>*	getFilesList()	{	return	&_fileLst;		}
 	
