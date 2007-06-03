@@ -1,8 +1,8 @@
 // Version.cpp
 
-#include "Version.h"
+#include "FileVersion.h"
 
-Version::Version()
+FileVersion::FileVersion()
 {
     _nroVersion = -1;
     _original   = -1;
@@ -11,7 +11,7 @@ Version::Version()
     _user       = 0;
 }
 
-Version::Version(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo)
+FileVersion::FileVersion(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo)
 {
     _nroVersion = NroVersion;
     _original = Original;
@@ -27,13 +27,13 @@ Version::Version(int NroVersion, int Original, tm Fecha, const char* User, long 
     _user[tamanio] = 0;
 }
 
-Version::~Version()
+FileVersion::~FileVersion()
 {
 	if(_user);
 		delete _user;
 }
 
-void Version::write(char* buffer)
+void FileVersion::write(char* buffer)
 {
     int tamanioUsuario;
     //copio el nro de version
@@ -68,7 +68,7 @@ void Version::write(char* buffer)
     return;
 }
 
-void Version::read(char** buffer)
+void FileVersion::read(char** buffer)
 {
     int tamanioUsuario;
     // leo el nro de version
@@ -107,7 +107,7 @@ void Version::read(char** buffer)
     return;
 }
 
-int Version::tamanioEnDisco(){
+int FileVersion::tamanioEnDisco(){
     int tamanio = sizeof(int);					//nro de version 
 		tamanio+= sizeof(int);					//nro del original                  
         tamanio+= sizeof(tm);					//fecha
@@ -119,7 +119,7 @@ int Version::tamanioEnDisco(){
     return tamanio;
 }
 
-Version& Version::operator=(const Version &version)
+FileVersion& FileVersion::operator=(const FileVersion &version)
 {
     _nroVersion = version._nroVersion;
     _original   = version._original;
@@ -134,13 +134,13 @@ Version& Version::operator=(const Version &version)
 	return *this;
 }
 
-int Version::operator==(const Version &version) const
+int FileVersion::operator==(const FileVersion &version) const
 {
    return ((this->_nroVersion != version._nroVersion) ? 0 : 1);
 }
 
 
-int Version::operator<(const Version &version) const
+int FileVersion::operator<(const FileVersion &version) const
 {
    return ((this->_nroVersion < version._nroVersion) ? 1 : 0);
 }

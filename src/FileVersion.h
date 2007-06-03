@@ -8,12 +8,12 @@
 #include <iostream>
 #include <ctime>
 
-class Version
+class FileVersion
 {
 public:
-    Version();
-    Version(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo);
-    ~Version();
+    FileVersion();
+    FileVersion(int NroVersion, int Original, tm Fecha, const char* User, long int Offset, char Tipo);
+    ~FileVersion();
 
     //empaquetadores y desempaquetadores
     void read (char** buffer);
@@ -29,9 +29,9 @@ public:
 
     int tamanioEnDisco();
 
-	 Version &operator=(const Version &version);
-    int operator==(const Version &version) const;
-    int operator<(const Version &version) const;	 
+	FileVersion &operator=(const FileVersion &version);
+    int operator==(const FileVersion &version) const;
+    int operator<(const FileVersion &version) const;	 
 
 protected:
     

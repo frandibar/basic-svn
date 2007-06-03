@@ -80,7 +80,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
             int original = _textVersions.getLastOriginalVersionNumber(bloque);
             int last = _textVersions.getLastVersionNumber(bloque);
 			
-            list<Version> lstVersions;
+            list<FileVersion> lstVersions;
             if (!_textVersions.getVersionFrom(original, last, bloque, lstVersions)) {
                 // debo insertar el archivo completo
                 std::ifstream is(a_Filename.c_str());
@@ -107,14 +107,14 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
             // TODO: falta ver si la ultima version es la de borrado
 
-            VersionFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, 							
+            FileVersionsFile::t_status status = _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, 							
                                                                        a_Type, bloque, &nroNuevoBloque);
             switch (status) {
-                case VersionFile::OK :
+                case FileVersionsFile::OK :
                     return true;
                     break;
 
-                case VersionFile::OVERFLOW :
+                case FileVersionsFile::OVERFLOW :
                     // tengo que generar la clave a partir de a_File y repositoryVersion
                     return _textIndex.insert(key.c_str(), nroNuevoBloque);
 
@@ -153,12 +153,12 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         bloque = _binaryIndex.searchFile(a_Filename.c_str());
 
         if (bloque >= 0) { // el archivo esta en el indice
-            VersionFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, bloque, &nroNuevoBloque);
+            FileVersionsFile::t_status status = _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, bloque, &nroNuevoBloque);
             switch (status) {
-                case VersionFile::OK :
+                case FileVersionsFile::OK :
                     return true;
                     break;
-                case VersionFile::OVERFLOW :
+                case FileVersionsFile::OVERFLOW :
                     // tengo que generar la clave a partir de a_File y repositoryVersion
                     key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
                     return _binaryIndex.insert(key.c_str(), nroNuevoBloque);
