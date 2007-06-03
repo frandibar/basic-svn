@@ -1,7 +1,7 @@
 // DirectoryBlock.h
 
 #ifndef DIRECTORY_BLOCK_INCLUDED
-#define DIRECTORY_BLOKC_INCLUDED
+#define DIRECTORY_BLOCK_INCLUDED
 
 #include "DirectoryVersion.h"
 

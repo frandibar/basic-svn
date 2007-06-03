@@ -5,9 +5,13 @@
 
 #include "DirectoryVersion.h"
 #include "DirectoryBlock.h"
+#include "debug.h"
 
 #include <fstream>
 #include <list>
+#include <string>
+
+using std::string;
 
 class DirectoryVersionsFile
 {
@@ -17,9 +21,10 @@ public:
 	DirectoryVersionsFile();
 	~DirectoryVersionsFile();
 
-	bool create(const char* fileName); // crea el archivo
-	bool open(const char* fileName);
+	bool create(const string& a_Filename); // crea el archivo
+	bool open(const string& a_Filename);
 	bool close();
+	bool destroy();
 	
 	// trata de insertar las version en el bloque recibido con referencia:
 	// - si lo inserta en el bloque -> devuelve OK
@@ -45,7 +50,9 @@ protected:
 	DirectoryBlock* _bloqueActual;
 
 	// buffer de lectura-escritura
-	char* _buffer;
+	char*	_buffer;
+	string  _filename;
+    bool    _isOpen;
 
 	bool readBloque(int nroBloque);
 	bool writeBloque();
