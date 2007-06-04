@@ -313,3 +313,21 @@ int FileVersionsFile::getLastVersionNumber(int bloque)
     return ret;
 }
 
+void FileVersionsFile::getLastVersion(FileVersion** version,int bloque)
+{
+	readBloque(bloque);
+
+	_bloqueActual->moveFirst();
+
+	*version = 0;
+
+	while(_bloqueActual->hasNext())
+	{
+		if (*version)
+			delete *version;
+
+		*version = _bloqueActual->getNext();
+	}
+
+	return;
+}
