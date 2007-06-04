@@ -444,7 +444,7 @@ int ArbolBMas::searchFile(const char* key)
     return _nodoActual->searchFile(key);
 }
 
-int ArbolBMas::searchFileAndVersion(const char* fileName,int version)
+int ArbolBMas::searchFileAndVersion(const char* fileName, int version)
 {
     if (isEmpty())
         return -1;
@@ -456,11 +456,11 @@ int ArbolBMas::searchFileAndVersion(const char* fileName,int version)
     }
 
     while (_nodoActual->getType() != NodoBMas::NODOHOJA) {
-        int proximoALeer = _nodoActual->searchFileAndVersion(fileName,version);
+        int proximoALeer = _nodoActual->searchFileAndVersion(fileName, version);
         readNode(proximoALeer, &_nodoActual);
     }
 
-	return _nodoActual->searchFileAndVersion(fileName,version);
+	return _nodoActual->searchFileAndVersion(fileName, version);
 
 }
 

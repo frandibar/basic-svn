@@ -33,16 +33,16 @@ public:
 	// - si no lo inserta porque esa version ya estaba en el bloque -> devuelve ERROR
 	t_status insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int bloque, int* nroBloqueNuevo);
 
-	// crea un nuevo bloque para insertar la version, es la 1� version de un archivo nuevo
+	// crea un nuevo bloque para insertar la version, es la 1era version de un archivo nuevo
 	// en la variable nroBloqueNuevo se devuelve el nro del bloque que se creo para poder
 	// ingresarlo en el indice
-	void insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int* nroBloqueNuevo);
+	bool insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int* nroBloqueNuevo);
 	
 	bool searchVersion(FileVersion** version, int nroVersion,int bloque);
 	bool getVersionFrom(int original, int final, int bloque, std::list<FileVersion>& lstVersions);
 	int  getLastOriginalVersionNumber(int bloque);
 	int  getLastVersionNumber(int bloque);
-	void getLastVersion(FileVersion** version,int bloque);	//devuelve la ultima version del bloque
+	bool getLastVersion(FileVersion** version,int bloque);	//devuelve la ultima version del bloque
 
 protected:
 	bool readBloque(int nroBloque);
