@@ -1,6 +1,10 @@
+// nodobmasindice.cpp
+
 #include "nodobmasindice.h"
 
-const int NodoBMasIndice::BYTESREDONDEO = 4;  // (_hnoIzquierdo + _hnoDerecho) (nodobmashoja) - _hijoIzquierdo (nodobmasindice)
+#include <string>
+
+const int NodoBMasIndice::BYTESREDONDEO = 2;  // (_hnoIzquierdo + _hnoDerecho) (nodobmashoja) - _hijoIzquierdo (nodobmasindice)
 
 NodoBMasIndice::NodoBMasIndice(int Numero, int Nivel, int Padre, int HijoIzquierdo, char* key, int ref)
                                : NodoBMas(Numero, Nivel, Padre)
@@ -9,7 +13,7 @@ NodoBMasIndice::NodoBMasIndice(int Numero, int Nivel, int Padre, int HijoIzquier
     
     if (BYTESREDONDEO > 0) {
 		_redondeo = new char[BYTESREDONDEO + 1];
-        strcpy(_redondeo, "****");
+        strcpy(_redondeo, std::string(BYTESREDONDEO, '*').c_str());
         _redondeo[BYTESREDONDEO] = 0;
     }
 

@@ -20,14 +20,13 @@ public:
     int searchFile(const char* key);
 	int searchFileAndVersion(const char* fileName,int version);
 
-    NodoBMas* split(int Numero, char* arreglo,int bytesArreglo,int clavesArreglo,
-							char** claveAlPadre);
+    NodoBMas* split(int Numero, char* arreglo, int bytesArreglo, int clavesArreglo, char** claveAlPadre);
     void promoteRoot(NodoBMas** nodo1, NodoBMas** nodo2, int id1, int id2,
-					int clavesArreglo,char** arreglo,int bytesArreglo,char** claveARaiz);
+					int clavesArreglo, char** arreglo, int bytesArreglo, char** claveARaiz);
 
     // getters
     int getHijoIzquierdo() const { return _hijoIzquierdo; }
-    int getType() const { return NODOINDICE; }
+    t_nodeType getType() const { return INDEX; }
 
 protected:
     int   _hijoIzquierdo;            // la referencia al nodo con claves menores
