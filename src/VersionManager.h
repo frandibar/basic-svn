@@ -7,7 +7,7 @@
 #include "Container.h"
 #include "FileVersion.h"
 #include "FileVersionsFile.h"
-#include "DirectoryVersionsFile.h"
+#include "helpers.h"
 
 #include <ctime>
 #include <string>
@@ -20,16 +20,16 @@ class VersionManager
 {
 public:
     // static members
-    static const string TXT_INDEX_FILENAME;
-    static const string TXT_VERSION_FILENAME;
-    static const string TXT_DIFFS_FILENAME;
-
-    static const string BIN_INDEX_FILENAME;
-    static const string BIN_VERSION_FILENAME;
-    static const string BIN_DIFFS_FILENAME;
+    static const string FILE_INDEX_FILENAME;
+    static const string FILE_VERSION_FILENAME;
 
     static const string DIR_INDEX_FILENAME;
     static const string DIR_VERSION_FILENAME;
+
+    static const string TXT_DIFFS_FILENAME;
+    static const string BIN_DIFFS_FILENAME;
+
+    static const string DIR_CONTAINER_FILENAME;
 
     static const int VERSION_DIGITS;
 
@@ -44,7 +44,7 @@ public:
 
     bool isOpen() const { return _isOpen; }
     bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
-    bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, t_filetype a_Filetype);
+    bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version);
 
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);
@@ -55,16 +55,15 @@ private:
     string    _almacen;
     string    _repository;
 
-    ArbolBMas             _textIndex;     // index for text files
-    FileVersionsFile      _textVersions;  // version file for text files
-    Container             _textContainer; // aca va el archivo de diffs para los de texto
-    
-    ArbolBMas             _binaryIndex;       // index for binary files
-    FileVersionsFile      _binaryVersions;    // version file for binary files
-    Container             _binaryContainer;   // aca va el archivo de diffs para los binarios
+    ArbolBMas        _fileIndex;
+    FileVersionsFile _fileVersions;
 
-    ArbolBMas             _dirIndex;       // index for directories
-    DirectoryVersionsFile _dirVersions;    // version file for directories
+    ArbolBMas        _dirIndex;
+    FileVersionsFile _dirVersions;
+
+    Container        _textContainer;
+    Container        _binaryContainer;
+    //DirContainer     _dirContainer;
 };
 
 #endif

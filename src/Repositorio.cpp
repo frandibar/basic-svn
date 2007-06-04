@@ -187,12 +187,9 @@ bool Repositorio::getFile(const string& a_TargetDir, const string& a_Filename, c
     if (!_isOpen)
         return false;
 
-    if (!validateUser(a_Username, a_Password)) return false;
+    if (!validateUser(a_Username, a_Password)) 
+        return false;
 
-    t_filetype ftype = getFiletype(a_Filename);
-    if (ftype == INVALID) 
-        return false; // file not found
-
-    return _versionManager.getFile(a_TargetDir, a_Filename, a_Version, ftype);
+    return _versionManager.getFile(a_TargetDir, a_Filename, a_Version);
 }
 

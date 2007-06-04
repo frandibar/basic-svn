@@ -16,7 +16,7 @@ using std::string;
 void add        (const string& user, const string& pass, const string& repository, const string& file);
 void showHistory(const string& user, const string& pass, const string& repository, const string& file);
 void getFile    (const string& user, const string& pass, const string& repository, const string& dir, const string& file, const string& version);
-bool validateUser(const string& a_Repository, const string& a_Username, const string& a_Password);
+bool validateUserAndRepository(Almacen* a_Almacen, const string& a_Repository, const string& a_Username, const string& a_Password);
 void showHelp(const char* progname);
 void showDiff(const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB, const string& filename);
 void showByDate(const string& user, const string& pass, const string& reposit, const string& date);
@@ -90,11 +90,7 @@ int main(int argc, char** argv)
 void add(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
 {
     Almacen almacen;
-    if (!almacen.repositoryExists(a_Reposit)) {
-        cout << "El repositorio " << a_Reposit << " no existe." << endl;
-        return;
-    }
-    if (!validateUser(a_Reposit, a_Username, a_Password))
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
     if (!almacen.addFile(a_Reposit, a_Filename, a_Username, a_Password)) {
@@ -111,26 +107,24 @@ void showHistory(const string& user, const string& pass, const string& reposit, 
     cout << "showHistory" << user << " " << pass << " " << reposit << " " << file << endl;    
 }
 
-bool validateUser(const string& a_Reposit, const string& a_Username, const string& a_Password)
+bool validateUserAndRepository(Almacen* a_Almacen, const string& a_Reposit, const string& a_Username, const string& a_Password)
 {
-    Almacen almacen;
-    if (!almacen.repositoryExists(a_Reposit)) {
+    if (!a_Almacen->repositoryExists(a_Reposit)) {
         cout << "El repositorio " << a_Reposit << " no existe." << endl;
         return false;
     }
 
-    if (!almacen.userExists(a_Reposit, a_Username)) {
+    if (!a_Almacen->userExists(a_Reposit, a_Username)) {
         cout << "El usuario " << a_Username << " no pertenece al repositorio " << a_Reposit << "." << endl;
         return false;
     }
 
-    if (!almacen.validatePassword(a_Reposit, a_Username, a_Password)) {
+    if (!a_Almacen->validatePassword(a_Reposit, a_Username, a_Password)) {
         cout << "Contraseña invalida." << endl;
         return false;
     }
 
     return true;
-
 }
 
 
@@ -147,11 +141,7 @@ void showByDate(const string& user, const string& pass, const string& reposit, c
 void getFile(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
 {
     Almacen almacen;
-    if (!almacen.repositoryExists(a_Reposit)) {
-        cout << "El repositorio " << a_Reposit << " no existe." << endl;
-        return;
-    }
-    if (!validateUser(a_Reposit, a_Username, a_Password))
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
     if (!almacen.getFile(a_Reposit, a_TargetDir, a_Filename, a_Version, a_Username, a_Password)) {

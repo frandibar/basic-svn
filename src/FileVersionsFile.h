@@ -40,8 +40,8 @@ public:
 	
 	bool searchVersion(FileVersion** version, int nroVersion,int bloque);
 	bool getVersionFrom(int original, int final, int bloque, std::list<FileVersion>& lstVersions);
-	int getLastOriginalVersionNumber(int bloque);
-	int getLastVersionNumber(int bloque);
+	int  getLastOriginalVersionNumber(int bloque);
+	int  getLastVersionNumber(int bloque);
 	void getLastVersion(FileVersion** version,int bloque);	//devuelve la ultima version del bloque
 
 protected:

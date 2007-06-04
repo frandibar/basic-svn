@@ -287,5 +287,8 @@ bool Almacen::getFile(const string& a_Reposit, const string& a_TargetDir, const 
     if (rep == NULL)
         return false;
 
-    return rep->getFile(a_TargetDir, a_Filename, a_Version, a_Username, a_Password);
+    bool ret = rep->open();
+    ret = ret && rep->getFile(a_TargetDir, a_Filename, a_Version, a_Username, a_Password);
+    ret = ret && rep->close();
+    return ret;
 }
