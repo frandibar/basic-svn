@@ -256,10 +256,10 @@ void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
     if (idNodoPadre != 0) { // el padre es distinto de la raiz
         readNode(idNodoPadre, &_nodoActual);
 
-        if (_nodoActual->insert(claveAlPadre, idNodoHijo,&clavesArreglo,&arreglo,&bytesArreglo) == 2) {
+        if (_nodoActual->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
             // hago el split
             nuevoIndice = static_cast<NodoBMasIndice*>((static_cast<NodoBMasHoja*>(_nodoActual))->split
-									(_nNodos, arreglo,bytesArreglo,clavesArreglo,&claveASubir));
+									(_nNodos, arreglo, bytesArreglo, clavesArreglo, &claveASubir));
 
 			delete(arreglo);
             _nNodos++;
@@ -286,7 +286,7 @@ void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
 
     // si llego hasta aca es porque el que esta "rebalsado" es la raiz
     
-    if (_raiz->insert(claveAlPadre, idNodoHijo,&clavesArreglo,&arreglo,&bytesArreglo) == 2) {
+    if (_raiz->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
 
         _raiz->promoteRoot( (NodoBMas**)(&nuevoIndice),
                             (NodoBMas**)(&nuevoIndice2),
@@ -326,11 +326,11 @@ bool ArbolBMas::insert(const char* key, int reference)
 	char* arreglo;
 	char* claveARaiz;
 
-    if (_nNodos) {
+    if (_nNodos > 0) {
         int nodoReceptor = searchPlace(key);
         if (nodoReceptor) {              // voy a insertar en un nodo != _raiz
             char* claveAlPadre;
-            switch (_nodoActual->insert(key,reference,&clavesArreglo,&arreglo,&bytesArreglo)) {
+            switch (_nodoActual->insert(key, reference, &clavesArreglo, &arreglo, &bytesArreglo)) {
             case 1:
                 return true;
 
@@ -378,7 +378,7 @@ bool ArbolBMas::insert(const char* key, int reference)
             int idH2;
             NodoBMasHoja* nuevaHoja;
             NodoBMasHoja* nuevaHoja2;
-            switch (_raiz->insert(key,reference, &clavesArreglo, &arreglo,&bytesArreglo)) {
+            switch (_raiz->insert(key,reference, &clavesArreglo, &arreglo, &bytesArreglo)) {
             case 1:
                 return true;
 
@@ -389,8 +389,8 @@ bool ArbolBMas::insert(const char* key, int reference)
                 // creo 2 nodos hoja nuevos para hacer el split y hacer que la nueva raiz sea indice
                 _raiz->promoteRoot( (NodoBMas**)(&nuevaHoja),
                                     (NodoBMas**)(&nuevaHoja2),
-                                    _nNodos,_nNodos + 1,
-									clavesArreglo,&arreglo,bytesArreglo,&claveARaiz);
+                                    _nNodos, _nNodos + 1,
+									clavesArreglo, &arreglo, bytesArreglo, &claveARaiz);
 
                 _nNodos += 2;
 
@@ -401,13 +401,11 @@ bool ArbolBMas::insert(const char* key, int reference)
                 idH1 = nuevaHoja->getId();
                 idH2 = nuevaHoja2->getId();
 
-                nuevaRaiz = new NodoBMasIndice(_raiz->getId(),_raiz->getNivel() + 1,_raiz->getPadre(),
-											   idH1,claveARaiz,idH2);
+                nuevaRaiz = new NodoBMasIndice(_raiz->getId(), _raiz->getNivel() + 1, _raiz->getPadre(),
+											   idH1, claveARaiz, idH2);
 
-                delete(_raiz);
-
+                delete _raiz;
                 _nodoActual = _raiz = nuevaRaiz;
-
                 return true;
 
             default:
@@ -478,16 +476,14 @@ void ArbolBMas::list()
 	}
 
 	int hnoALeer = 0;
-
-	while(hnoALeer != -1){
+	while (hnoALeer != -1) {
 
 		(static_cast<NodoBMasHoja*>(_nodoActual))->list();
 
 		hnoALeer = (static_cast<NodoBMasHoja*>(_nodoActual))->getHnoDerecho();
 
-		if(hnoALeer >= 0)
+		if (hnoALeer >= 0)
 			readNode(hnoALeer,&_nodoActual);
 	}
-
 	return;
 }

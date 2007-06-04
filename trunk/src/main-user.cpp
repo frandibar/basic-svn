@@ -74,8 +74,13 @@ int main(int argc, char** argv)
 
             case 'o': // obtener archivo
                 // -o "nombre repositorio" "nombre directorio destino" "nombre archivo/dir" [version]
-                argsok = (argc == 8);
-                if (argsok) getFile(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
+                argsok = ((argc == 7) || (argc == 8));
+                if (argsok) {
+                    if (argc == 7)
+                        getFile(user, pass, optarg, argv[optind], argv[optind + 1], "");
+                    else
+                        getFile(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
+                }
                 break;
         }
     }

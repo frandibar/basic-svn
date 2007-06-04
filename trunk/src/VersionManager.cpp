@@ -233,10 +233,10 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
        if (offset == -1) 
            return false;
 
-       _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, FileVersion::MODIFICACION, &nroNuevoBloque);
+       if (!_fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, FileVersion::MODIFICACION, &nroNuevoBloque))
+           return false;
        key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
-       _fileIndex.insert(key.c_str(), nroNuevoBloque);	   
-       return true;
+       return (_fileIndex.insert(key.c_str(), nroNuevoBloque));
     }   
 
     return false; // never gets here

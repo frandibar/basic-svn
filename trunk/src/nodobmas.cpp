@@ -2,7 +2,6 @@
 #include <iostream>
 
 // CONSTS
-//const int NodoBMas::TAMANIOARREGLO = 42;
 const int NodoBMas::TAMANIONODO    = 2048;  // arbitrario
 const int NodoBMas::NODOHOJA       = 1;
 const int NodoBMas::NODOINDICE     = 2;
@@ -10,17 +9,15 @@ const int NodoBMas::NODOINDICE     = 2;
 // constructor
 NodoBMas::NodoBMas(int Numero, int Nivel, int Padre)
 {
-    _id = Numero;
-    _nivel = Nivel;
-    _padre = Padre;
-    _nclaves = 0;
-    //_pares = new char(TAMANIOARREGLO);
-	_espacioLibre = TAMANIOARREGLO;
-	_offset = 0;
+    _nivel        = Nivel;
+    _id           = Numero;
+    _padre        = Padre;
+    _espacioLibre = TAMANIOARREGLO;
+    _offset       = 0;
+    _nclaves      = 0;
 }
 
-int NodoBMas::insertPair(const char* key, int ref, int* offset, 
-						 int* tamanioArregloAux, char** arregloAux)
+bool NodoBMas::insertPair(const char* key, int ref, int* offset, int* tamanioArregloAux, char** arregloAux)
 {
     bool end = false;
 
@@ -29,9 +26,9 @@ int NodoBMas::insertPair(const char* key, int ref, int* offset,
 	int auxRef;
 	char* auxKey;
 	int tamanioClaveAInsertar = strlen(key);
-	(*tamanioArregloAux) = _nclaves;
+	*tamanioArregloAux = _nclaves;
 
-    while (((*offset) < _offset) && (!end) ) {
+    while ((*offset < _offset) && !end) {
 		// guardo el offser donde prodria llegar a insertar
 		offsetInsercion = *offset;
         // obtengo la clave y la referencia de la posicion i en la tira de bytes
@@ -43,9 +40,7 @@ int NodoBMas::insertPair(const char* key, int ref, int* offset,
 		// leo la clave
 		auxKey = new char[(tamanioClave + 1) * sizeof(char)];
         
-		memcpy(auxKey,
-                _pares + (*offset),
-                sizeof(char)*tamanioClave);
+		memcpy(auxKey, _pares + (*offset), sizeof(char)*tamanioClave);
 		auxKey[tamanioClave] = 0;
 		*offset += tamanioClave * sizeof(char);
 		
@@ -57,78 +52,63 @@ int NodoBMas::insertPair(const char* key, int ref, int* offset,
 
         int cmp = strcmp(key,auxKey);
         if (cmp < 0) {
-			/*
-				genero un arreglo auxiliar para poder contemplar los corrimientos en el arreglo
-				de claves
-			*/
+            // genero un arreglo auxiliar para poder contemplar los corrimientos en el arreglo
+            // de claves
             *arregloAux = new char[(TAMANIOARREGLO - offsetInsercion) * sizeof(char)];
 			memcpy(*arregloAux,_pares + offsetInsercion,TAMANIOARREGLO - offsetInsercion);
 
-			// inserto tamaño de la clave, clave y referencia
-			// tamaño clave
+			// inserto tamanio de la clave, clave y referencia
+			// tamanio clave
 			memcpy(_pares + offsetInsercion,
 					&tamanioClaveAInsertar,
 					sizeof(int));
 			offsetInsercion += sizeof(int);
 
 			// clave
-            memcpy(_pares + offsetInsercion, 
-                    key , 
-                    sizeof(char) * tamanioClaveAInsertar);
+            memcpy(_pares + offsetInsercion, key, sizeof(char) * tamanioClaveAInsertar);
 			offsetInsercion += tamanioClaveAInsertar * sizeof(char);
 
 			// referencia
-            memcpy(_pares + offsetInsercion,
-                    &ref,
-                    sizeof(int));
+            memcpy(_pares + offsetInsercion, &ref, sizeof(int));
 			offsetInsercion += sizeof(int);
 
 			*offset = offsetInsercion;
-
             end = true;
         }
 
         else if (cmp == 0){
             std::cout << "la clave que se intenta insertar ya existe" << std::endl;
-            return 0;
+            return false;
         }
 
 		if(!end)
 			(*tamanioArregloAux)--;
 
-		delete(auxKey);
+		delete auxKey;
 
     }
 
     if (!end) { // si llego aca es porque tengo que insertar al final
+        // inserto tamanio de la clave, clave y referencia
+        // tamanio clave
+        memcpy(_pares + (*offset), &tamanioClaveAInsertar, sizeof(int));
+        *offset += sizeof(int);
 
-			// inserto tamaño de la clave, clave y referencia
-			// tamaño clave
-			memcpy(_pares + (*offset),
-					&tamanioClaveAInsertar,
-					sizeof(int));
-			(*offset) += sizeof(int);
+        // clave
+        memcpy(_pares + *offset, key, sizeof(char)*tamanioClaveAInsertar);
+        *offset += tamanioClaveAInsertar * sizeof(char);
 
-			// clave
-            memcpy(_pares + (*offset), 
-                    key , 
-                    sizeof(char)*tamanioClaveAInsertar);
-			(*offset) += tamanioClaveAInsertar * sizeof(char);
+        // referencia
+        memcpy(_pares + *offset, &ref, sizeof(int));
+        *offset += sizeof(int);
 
-			// referencia
-            memcpy(_pares + (*offset),
-                    &ref,
-                    sizeof(int));
-			(*offset) += sizeof(int);
-
-			_offset = (*offset);
+        _offset = *offset;
     }
 
-    return 1;
+    return true;
 }
 
-void NodoBMas::completePairs(int* offset,
-							 int tamanioArreglo,char* arregloAux)
+void NodoBMas::completePairs(int* offset, int tamanioArreglo, char* arregloAux)
 {
 	char* nextByte = arregloAux;
 
@@ -157,45 +137,41 @@ void NodoBMas::completePairs(int* offset,
 		
 		delete(auxKey);
     }
-
-    return;
 }
 
-int NodoBMas::insertPair(const char* key, int ref)
+bool NodoBMas::insertPair(const char* key, int ref)
 {
 	char* arregloAux = 0;
     int offset = 0,
 		tamanioArregloAux = 0;
 
     if (insertPair(key, ref, &offset,&tamanioArregloAux,&arregloAux)) {
-        if (tamanioArregloAux != 0)
-		{
+        if (tamanioArregloAux != 0) {
             completePairs(&offset,tamanioArregloAux,arregloAux);
-			
-			delete(arregloAux);
+			delete arregloAux;
 		}
-        
 		_nclaves++;
-
 		_espacioLibre -= (strlen(key) * sizeof(char) + 2 * sizeof(int));
-
 		_offset = TAMANIOARREGLO - _espacioLibre;
-
-        return 1;
+        return true;
     }
-    return 0;
+    return false;
 }
 
 void NodoBMas::readInfoAdm(char** nextByte)
 {   
     memcpy(&_nivel,*nextByte,sizeof(int));
     *nextByte += sizeof(int);
+
     memcpy(&_id,*nextByte,sizeof(int));
     *nextByte += sizeof(int);
+
     memcpy(&_padre,*nextByte,sizeof(int));
     *nextByte += sizeof(int);
+
 	memcpy(&_espacioLibre,*nextByte,sizeof(int));
 	*nextByte += sizeof(int);
+
 	_offset = TAMANIOARREGLO - _espacioLibre;
 }
 
@@ -227,7 +203,7 @@ void NodoBMas::writeDatos(char** nextByte)
     *nextByte += sizeof(char) * TAMANIOARREGLO;
 }
 
-int NodoBMas::insertPair(const char* key,int ref,int *clavesArreglo,char** arregloAux,int* bytesArreglo)
+bool NodoBMas::insertPair(const char* key, int ref, int *clavesArreglo, char** arregloAux, int* bytesArreglo)
 {
 	int offset = 0;
 	int cantidadClaves = 0;
@@ -267,10 +243,8 @@ int NodoBMas::insertPair(const char* key,int ref,int *clavesArreglo,char** arreg
 
         int cmp = strcmp(key,auxKey);
         if (cmp < 0) {
-			/*
-				genero un arreglo auxiliar para poder contemplar los corrimientos en el arreglo
-				de claves
-			*/
+            // genero un arreglo auxiliar para poder contemplar los corrimientos en el arreglo
+            // de claves
 			*bytesArreglo = TAMANIOARREGLO - offsetInsercion + tamanioClaveAInsertar * sizeof(char) + 2 * sizeof(int);
             *arregloAux = new char[(*bytesArreglo) * sizeof(char)];
 			int offsetArreglo = 0;
@@ -301,13 +275,12 @@ int NodoBMas::insertPair(const char* key,int ref,int *clavesArreglo,char** arreg
             end = true;
         }
 
-        else if (cmp == 0){
+        else if (cmp == 0) {
             std::cout << "la clave que se intenta insertar ya existe" << std::endl;
-            return 0;
+            return false;
         }
 			
-		if(!end)
-		{
+		if (!end) {
 			(*clavesArreglo)--;
 			cantidadClaves++;
 		}
@@ -316,40 +289,35 @@ int NodoBMas::insertPair(const char* key,int ref,int *clavesArreglo,char** arreg
 
     }
 
-	if(!end)
-	{
-			*bytesArreglo = tamanioClaveAInsertar * sizeof(char) + 2 * sizeof(int);
-            *arregloAux = new char[(*bytesArreglo) * sizeof(char)];
-			int offsetArreglo = 0;
-			
-			// copio la clave que quiero insertar en el arreglo junto con los datos administrativos
-			// inserto tamaño de la clave, clave y referencia
-			// tamaño clave
-			memcpy(*arregloAux + offsetArreglo,
-					&tamanioClaveAInsertar,
-					sizeof(int));
-			offsetArreglo += sizeof(int);
+	if (!end) {
+        *bytesArreglo = tamanioClaveAInsertar * sizeof(char) + 2 * sizeof(int);
+        *arregloAux = new char[(*bytesArreglo) * sizeof(char)];
+        int offsetArreglo = 0;
 
-			// clave
-            memcpy(*arregloAux + offsetArreglo, 
-                    key , 
-                    sizeof(char)*tamanioClaveAInsertar);
-			offsetArreglo += tamanioClaveAInsertar * sizeof(char);
+        // copio la clave que quiero insertar en el arreglo junto con los datos administrativos
+        // inserto tamaño de la clave, clave y referencia
+        // tamaño clave
+        memcpy(*arregloAux + offsetArreglo,
+                &tamanioClaveAInsertar,
+                sizeof(int));
+        offsetArreglo += sizeof(int);
 
-			// referencia
-            memcpy(*arregloAux + offsetArreglo,
-                    &ref,
-                    sizeof(int));
-			offsetArreglo += sizeof(int);
+        // clave
+        memcpy(*arregloAux + offsetArreglo, key, sizeof(char)*tamanioClaveAInsertar);
+        offsetArreglo += tamanioClaveAInsertar * sizeof(char);
+
+        // referencia
+        memcpy(*arregloAux + offsetArreglo, &ref, sizeof(int));
+        offsetArreglo += sizeof(int);
 	}
 
-	if(end)
+	if (end)
 		_offset = offsetInsercion;
 
 	_nclaves = cantidadClaves;
 	_espacioLibre = TAMANIOARREGLO - _offset;
 
-	return 1;
+	return true;
 }
 
 void NodoBMas::completePairs(int* tamanioArreglo,char **arregloAux,int* bytesArreglo)
@@ -393,36 +361,27 @@ void NodoBMas::completePairs(int* tamanioArreglo,char **arregloAux,int* bytesArr
 	}
 
 	int bytesACopiar = *bytesArreglo - offsetArreglo;
-
 	arregloAux2 = new char[bytesACopiar * sizeof(char)];
-
 	memcpy(arregloAux2,*arregloAux + offsetArreglo,bytesACopiar);
-
 	delete(*arregloAux);
-
 	*arregloAux = arregloAux2;
-
 	*bytesArreglo = bytesACopiar;
-
-	return;
 }
 
-int NodoBMas::insert(const char* key, int ref, int* clavesArreglo, char** arregloAux,int* bytesArreglo)
+NodoBMas::t_status NodoBMas::insert(const char* key, int ref, int* clavesArreglo, char** arregloAux,int* bytesArreglo)
 {
     int tamanioClaveYRef = strlen(key) * sizeof(char) + sizeof(int) * 2;
 	
 	if (tamanioClaveYRef <= _espacioLibre)
-        return insertPair(key,ref);
+        return (insertPair(key,ref) ? OK : ERROR);
 	
 	else {
         if (insertPair(key, ref,clavesArreglo,arregloAux,bytesArreglo)) {
-           
 			completePairs(clavesArreglo, arregloAux,bytesArreglo);            
-           
-			return 2; // se inserto normalmente pero con overflow -> devuelvo 2
+			return OVERFLOW;  // se inserto normalmente pero con overflow
         }
         else
-            return 0; // no se pudo insertar porque la clave ya estaba -> devuelvo 0
+            return ALREADY_EXISTS; // no se pudo insertar porque la clave ya estaba
     }   
 }
 
