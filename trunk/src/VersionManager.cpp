@@ -273,16 +273,19 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     if (a_Version != "") {
         version = fromString<int>(a_Version);
         bloque = _fileIndex.searchFileAndVersion(a_Filename.c_str(), version);
-        if (bloque >= 0)
-            _fileVersions.searchVersion(&versionBuscada, version, bloque);
-        else
-            return false;        
+        if (!_fileVersions.searchVersion(&versionBuscada, version, bloque)) {
+            bloque = _fileIndex.searchFile(a_Filename.c_str());
+            if(!_fileVersions.getLastVersion(&versionBuscada, bloque))
+                return false;
+            else if(versionBuscada->getNroVersion() > version) {
+                delete versionBuscada;
+                return false;
+            }
+        }        
     }
     else {
         bloque = _fileIndex.searchFile(a_Filename.c_str());
-        if (bloque >= 0)
-            _fileVersions.getLastVersion(&versionBuscada, bloque);
-        else
+        if (!_fileVersions.getLastVersion(&versionBuscada, bloque))
            return false; 
     }
 

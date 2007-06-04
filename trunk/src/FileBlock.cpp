@@ -19,7 +19,7 @@ FileBlock::~FileBlock()
 {
 }
 
-void FileBlock::insertVersion(FileVersion* version)
+bool FileBlock::insertVersion(FileVersion* version)
 {
 	char* nextByte = _versiones + _used;
 	_espacioLibre -= version->tamanioEnDisco();
@@ -27,6 +27,7 @@ void FileBlock::insertVersion(FileVersion* version)
 	_cantVersiones++;
 	_used = (TAMANIO_ARREGLO_BLOQUE_ARCHIVOS - _espacioLibre);
 	_actualOffset = _used;
+    return true;
 }
 
 void FileBlock::read(char* buffer)
