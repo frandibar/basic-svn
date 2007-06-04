@@ -16,9 +16,9 @@ public:
 	void write(char* buffer);
 
 	int searchFile(const char* key);
-	int searchFileAndVersion(const char* fileName,int version);
+	int searchFileAndVersion(const char* fileName, int version);
 
-	NodoBMas* split(int Numero, char* arreglo,int bytesArreglo,int clavesArreglo,char** claveAlPadre);
+	NodoBMas* split(int Numero, char* arreglo, int bytesArreglo, int clavesArreglo, char** claveAlPadre);
 	void promoteRoot(NodoBMas** nodo1, NodoBMas** nodo2, int id1, int id2,
 					int clavesArreglo, char** arreglo, int bytesArreglo,
 					char** claveARaiz);

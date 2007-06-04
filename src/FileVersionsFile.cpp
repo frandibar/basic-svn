@@ -73,18 +73,17 @@ bool FileVersionsFile::readBloque(int nroBloque)
 bool FileVersionsFile::writeBloque()
 {
 	if (_filestr.is_open()) {
-		if(_bloqueActual != 0){
+		if (_bloqueActual != 0) {
 			_bloqueActual->write(_buffer);	//escribo el bloque en el buffer
 
 			_filestr.seekg((_bloqueActual->getNumero() + 1) * FileBlock::TAMANIO_BLOQUE_ARCHIVOS,ios::beg);
 			_filestr.seekp((_bloqueActual->getNumero() + 1) * FileBlock::TAMANIO_BLOQUE_ARCHIVOS,ios::beg);
 
 			_filestr.write(_buffer,FileBlock::TAMANIO_BLOQUE_ARCHIVOS);
-
 			return true;
 		}
 	}
-	return false;
+	return false;  // this does not mean an error
 }
 
 bool FileVersionsFile::crearBloque(int Anterior, int Siguiente)
@@ -162,8 +161,7 @@ bool FileVersionsFile::close()
 
 bool FileVersionsFile::insertVersion(int nroVersion, const char* User, tm Fecha, long int Offset, char Tipo, FileVersion::t_versionType VersionType, int* nroBloqueNuevo)
 {
-	if (!writeBloque())
-        return false;
+	writeBloque();  // ignore return value
 
 	delete _bloqueActual;
 	_bloqueActual = new FileBlock(_cantBloques); // creo el nuevo bloque apuntado por el actual

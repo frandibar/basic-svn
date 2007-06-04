@@ -1,3 +1,5 @@
+// nodobmas.h
+
 #ifndef NODOBMAS_H_INCLUDED
 #define NODOBMAS_H_INCLUDED
 
@@ -10,10 +12,11 @@
 class NodoBMas 
 {
 public:
-//    static const int TAMANIOARREGLO;
     static const int TAMANIONODO;
     static const int NODOHOJA;
     static const int NODOINDICE;
+
+    enum t_status { ALREADY_EXISTS = 0, OK, OVERFLOW, ERROR };
 
     // constructors
     NodoBMas(int Numero = 0, int Nivel = 0, int Padre = -1);
@@ -32,7 +35,7 @@ public:
     
                                                                         
     // metodo virtual para insertar una clave en un nodo
-    int insert(const char* key, int ref, int* clavesArreglo, char** arreglo,int* bytesArreglo);
+    t_status insert(const char* key, int ref, int* clavesArreglo, char** arreglo,int* bytesArreglo);
     int insert(const char* key, int ref);
 
     int isFull() const { return _espacioLibre == 0; }
@@ -60,12 +63,11 @@ public:
                             char** claveARaiz)  = 0;
 
 protected:
-    int insertPair(const char* key, int ref);
-    int insertPair( const char* key, int ref, int* offset,
-                    int* clavesArregloAux,char** arregloAux);
-    int insertPair(const char* key,int ref,int* clavesArreglo,char** arregloAux,int* bystesArreglo);
-    void completePairs(int* offset,int tamanioArreglo,char* arregloAux);
-    void completePairs(int* tamanioArreglo,char** arregloAux,int* bytesArreglo);            
+    bool insertPair(const char* key, int ref);
+    bool insertPair(const char* key, int ref, int* offset, int* clavesArregloAux, char** arregloAux);
+    bool insertPair(const char* key, int ref, int* clavesArreglo, char** arregloAux, int* bystesArreglo);
+    void completePairs(int* offset, int tamanioArreglo, char* arregloAux);
+    void completePairs(int* tamanioArreglo, char** arregloAux, int* bytesArreglo);            
 
     void readInfoAdm (char** nextByte);
     void readDatos   (char** nextByte);
@@ -73,12 +75,12 @@ protected:
     void writeDatos  (char** nextByte);
 
     // member variables
-    int       _id;               // id del nodo
     int       _nivel;            // nivel del nodo
+    int       _id;               // id del nodo
     int       _padre;            // referencia al padre del nodo
-    short int _nclaves;          // cantidad de claves que contiene el nodo
     int       _espacioLibre;     // cantidad de espacio libre dentro del nodo
     int       _offset;           // el offset de donde voy a empezar a insertar, esta variable se calcula
+    short int _nclaves;          // cantidad de claves que contiene el nodo
     char _pares[TAMANIOARREGLO]; // pares clave-referencia en el caso de los nodos hoja
                                  // pares clave-hijo claves mayores en el caso de los interiores
 
