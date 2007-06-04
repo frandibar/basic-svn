@@ -8,7 +8,7 @@ using std::ios;
 // constructor
 ArbolBMas::ArbolBMas() : _raiz(0), _nodoActual(0), _nNodos(0), _isOpen(false)
 {
-    _buffer = new char[NodoBMas::TAMANIONODO];
+    _buffer = new char[NodoBMas::NODE_SIZE];
 }
 
 ArbolBMas::~ArbolBMas()
@@ -23,7 +23,7 @@ bool ArbolBMas::readHeader()
     if (_filestr.is_open()) {
         char* nextByte = _buffer;
         _filestr.seekg(0, ios::beg);
-        _filestr.read(_buffer, NodoBMas::TAMANIONODO);
+        _filestr.read(_buffer, NodoBMas::NODE_SIZE);
         // leo la cantidad de nodos
         memcpy(&_nNodos, nextByte, sizeof(int));
         return true;
@@ -34,8 +34,8 @@ bool ArbolBMas::readHeader()
 bool ArbolBMas::readRoot()
 {
     if (_filestr.is_open()) {
-        _filestr.seekg(NodoBMas::TAMANIONODO, ios::beg);
-        _filestr.read(_buffer, NodoBMas::TAMANIONODO);
+        _filestr.seekg(NodoBMas::NODE_SIZE, ios::beg);
+        _filestr.read(_buffer, NodoBMas::NODE_SIZE);
 
         if (_nNodos > 1)
             _raiz = new NodoBMasIndice();
@@ -57,7 +57,7 @@ bool ArbolBMas::writeHeader()
         // volcar al archivo
         _filestr.seekg(0, ios::beg);
         _filestr.seekp(0, ios::beg);
-        _filestr.write(_buffer, NodoBMas::TAMANIONODO);
+        _filestr.write(_buffer, NodoBMas::NODE_SIZE);
         return true;
     }
     return false;
@@ -72,9 +72,9 @@ bool ArbolBMas::writeRoot()
         if (_filestr.fail())
             _filestr.clear();
 
-        _filestr.seekg(NodoBMas::TAMANIONODO, ios::beg);
-        _filestr.seekp(NodoBMas::TAMANIONODO, ios::beg);
-        _filestr.write(_buffer, NodoBMas::TAMANIONODO);
+        _filestr.seekg(NodoBMas::NODE_SIZE, ios::beg);
+        _filestr.seekp(NodoBMas::NODE_SIZE, ios::beg);
+        _filestr.write(_buffer, NodoBMas::NODE_SIZE);
         return true;
     }
     return false;
@@ -90,8 +90,8 @@ bool ArbolBMas::readNode(int idNode, NodoBMas** node)
         else
             *node = 0;
         
-        _filestr.seekg(NodoBMas::TAMANIONODO * (idNode + 1), ios::beg);
-        _filestr.read(_buffer, NodoBMas::TAMANIONODO);
+        _filestr.seekg(NodoBMas::NODE_SIZE * (idNode + 1), ios::beg);
+        _filestr.read(_buffer, NodoBMas::NODE_SIZE);
 
         int nivelNodo;
         memcpy(&nivelNodo, _buffer, sizeof(int));
@@ -115,12 +115,12 @@ bool ArbolBMas::writeNode(NodoBMas* nodo)
         if(_filestr.fail())
             _filestr.clear();
 
-        _filestr.seekp(NodoBMas::TAMANIONODO * (nodo->getId() + 1), ios::beg);
+        _filestr.seekp(NodoBMas::NODE_SIZE * (nodo->getId() + 1), ios::beg);
 
         if (_filestr.fail())
             _filestr.clear();
 
-        _filestr.write(_buffer, NodoBMas::TAMANIONODO);
+        _filestr.write(_buffer, NodoBMas::NODE_SIZE);
         return true;
     }
     return false;
@@ -217,7 +217,7 @@ int ArbolBMas::searchPlace(const char* key)
 
 int ArbolBMas::searchPlaceRec(const char* key)
 {
-    if (_nodoActual->getType() == NodoBMas::NODOHOJA)
+    if (_nodoActual->getType() == NodoBMas::LEAF)
         return _nodoActual->getId();
     else {
         int indice = _nodoActual->searchFile(key);
@@ -434,7 +434,7 @@ int ArbolBMas::searchFile(const char* key)
         _nodoActual = _raiz;
     }
 
-    while (_nodoActual->getType() != NodoBMas::NODOHOJA) {
+    while (_nodoActual->getType() != NodoBMas::LEAF) {
         int proximoALeer = _nodoActual->searchFile(key);
         readNode(proximoALeer, &_nodoActual);
     }
@@ -453,7 +453,7 @@ int ArbolBMas::searchFileAndVersion(const char* fileName, int version)
         _nodoActual = _raiz;
     }
 
-    while (_nodoActual->getType() != NodoBMas::NODOHOJA) {
+    while (_nodoActual->getType() != NodoBMas::LEAF) {
         int proximoALeer = _nodoActual->searchFileAndVersion(fileName, version);
         readNode(proximoALeer, &_nodoActual);
     }
@@ -470,7 +470,7 @@ void ArbolBMas::list()
         _nodoActual = _raiz;
     }
 
-	while(_nodoActual ->getType() != NodoBMas::NODOHOJA){
+	while(_nodoActual ->getType() != NodoBMas::LEAF){
 		int proximoALeer = (static_cast<NodoBMasIndice*>(_nodoActual))->getHijoIzquierdo();
 		readNode(proximoALeer,&_nodoActual);
 	}

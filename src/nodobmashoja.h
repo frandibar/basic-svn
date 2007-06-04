@@ -20,13 +20,12 @@ public:
 
 	NodoBMas* split(int Numero, char* arreglo, int bytesArreglo, int clavesArreglo, char** claveAlPadre);
 	void promoteRoot(NodoBMas** nodo1, NodoBMas** nodo2, int id1, int id2,
-					int clavesArreglo, char** arreglo, int bytesArreglo,
-					char** claveARaiz);
+					int clavesArreglo, char** arreglo, int bytesArreglo, char** claveARaiz);
 
     // getters
 	int getHnoDerecho()   const { return _hnoDerecho; }
 	int getHnoIzquierdo() const { return _hnoIzquierdo; }
-    int getType() const { return NODOHOJA; }
+    t_nodeType getType() const { return LEAF; }
    
     // setters
 	void setHnoDerecho  (int HnoDerecho) { _hnoDerecho = HnoDerecho; }

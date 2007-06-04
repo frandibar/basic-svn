@@ -1,17 +1,16 @@
+// nodobmas.cpp
+
 #include "nodobmas.h"
 #include <iostream>
 
-// CONSTS
-const int NodoBMas::TAMANIONODO    = 2048;  // arbitrario
-const int NodoBMas::NODOHOJA       = 1;
-const int NodoBMas::NODOINDICE     = 2;
+const int NodoBMas::NODE_SIZE = 2048;  // arbitrario
 
 // constructor
-NodoBMas::NodoBMas(int Numero, int Nivel, int Padre)
+NodoBMas::NodoBMas(int id, int nivel, int padre)
 {
-    _nivel        = Nivel;
-    _id           = Numero;
-    _padre        = Padre;
+    _nivel        = nivel;
+    _id           = id;
+    _padre        = padre;
     _espacioLibre = TAMANIOARREGLO;
     _offset       = 0;
     _nclaves      = 0;
@@ -177,8 +176,8 @@ void NodoBMas::readInfoAdm(char** nextByte)
 
 void NodoBMas::readDatos(char** nextByte)
 {
-    memcpy(&_nclaves,*nextByte,sizeof(short int));
-    *nextByte += sizeof(short int);
+    memcpy(&_nclaves,*nextByte,sizeof(_nclaves));
+    *nextByte += sizeof(_nclaves);
     memcpy(_pares,*nextByte,sizeof(char) * TAMANIOARREGLO);
     *nextByte += sizeof(char) * TAMANIOARREGLO;
 }
@@ -197,8 +196,8 @@ void NodoBMas::writeInfoAdm(char** nextByte)
 
 void NodoBMas::writeDatos(char** nextByte)
 {
-    memcpy(*nextByte,&_nclaves,sizeof(short int));
-    *nextByte += sizeof(short int);
+    memcpy(*nextByte,&_nclaves,sizeof(_nclaves));
+    *nextByte += sizeof(_nclaves);
     memcpy(*nextByte,_pares,sizeof(char) * TAMANIOARREGLO);
     *nextByte += sizeof(char) * TAMANIOARREGLO;
 }
@@ -215,14 +214,14 @@ bool NodoBMas::insertPair(const char* key, int ref, int *clavesArreglo, char** a
 	char* auxKey;
 	int auxRef;
 	int tamanioClaveAInsertar = strlen(key);
-	(*clavesArreglo) = _nclaves + 1;
+	*clavesArreglo = _nclaves + 1;
 
-    while (((offset) < _offset) && (!end) ) {
+    while ((offset < _offset) && !end) {
 		// guardo el offser donde prodria llegar a insertar
 		offsetInsercion = offset;
         // obtengo la clave y la referencia de la posicion i en la tira de bytes
 
-		// tomo el tamaño de la clave
+		// tomo el tamanio de la clave
 		memcpy(&tamanioClave,_pares + offset,sizeof(int));
 		offset += sizeof(int);
 
@@ -285,7 +284,7 @@ bool NodoBMas::insertPair(const char* key, int ref, int *clavesArreglo, char** a
 			cantidadClaves++;
 		}
 
-		delete(auxKey);
+		delete auxKey;
 
     }
 
@@ -320,7 +319,7 @@ bool NodoBMas::insertPair(const char* key, int ref, int *clavesArreglo, char** a
 	return true;
 }
 
-void NodoBMas::completePairs(int* tamanioArreglo,char **arregloAux,int* bytesArreglo)
+void NodoBMas::completePairs(int* tamanioArreglo, char **arregloAux, int* bytesArreglo)
 {
 	char* arregloAux2;
 	char* auxKey;
@@ -329,9 +328,9 @@ void NodoBMas::completePairs(int* tamanioArreglo,char **arregloAux,int* bytesArr
 
 	int offsetArreglo = 0;
 
-	while( TAMANIOARREGLO / 2 <= _espacioLibre  )
-	{
-		// levanto tamaño de la clave, clave y referencia
+	while (TAMANIOARREGLO / 2 <= _espacioLibre) {
+
+		// levanto tamanio de la clave, clave y referencia
 		memcpy(&tamanioClaveAux,*arregloAux + offsetArreglo,sizeof(int));
 		offsetArreglo += sizeof(int);
 
@@ -357,7 +356,7 @@ void NodoBMas::completePairs(int* tamanioArreglo,char **arregloAux,int* bytesArr
 		_nclaves++;
 		_espacioLibre = TAMANIOARREGLO - _offset;
 
-		delete(auxKey);
+		delete auxKey;
 	}
 
 	int bytesACopiar = *bytesArreglo - offsetArreglo;
@@ -368,45 +367,33 @@ void NodoBMas::completePairs(int* tamanioArreglo,char **arregloAux,int* bytesArr
 	*bytesArreglo = bytesACopiar;
 }
 
-NodoBMas::t_status NodoBMas::insert(const char* key, int ref, int* clavesArreglo, char** arregloAux,int* bytesArreglo)
+NodoBMas::t_status NodoBMas::insert(const char* key, int ref, int* clavesArreglo, char** arregloAux, int* bytesArreglo)
 {
     int tamanioClaveYRef = strlen(key) * sizeof(char) + sizeof(int) * 2;
 	
 	if (tamanioClaveYRef <= _espacioLibre)
         return (insertPair(key,ref) ? OK : ERROR);
-	
-	else {
-        if (insertPair(key, ref,clavesArreglo,arregloAux,bytesArreglo)) {
-			completePairs(clavesArreglo, arregloAux,bytesArreglo);            
-			return OVERFLOW;  // se inserto normalmente pero con overflow
-        }
-        else
-            return ALREADY_EXISTS; // no se pudo insertar porque la clave ya estaba
-    }   
-}
 
-int NodoBMas::insert(const char* key, int ref)
-{
-    return insertPair(key,ref);
+	else if (insertPair(key, ref,clavesArreglo,arregloAux,bytesArreglo)) {
+        completePairs(clavesArreglo, arregloAux,bytesArreglo);            
+        return OVERFLOW;  // se inserto normalmente pero con overflow
+    }
+    else
+        return ALREADY_EXISTS; // no se pudo insertar porque la clave ya estaba
 }
 
 
 int NodoBMas::getRef(int idNode)
 {
-    int ret;
-	int tamanioClave;
+    int ret = 0;
+	int tamanioClave = 0;
 	int offsetArreglo = 0;
 
-	for(int i = 0;i < idNode;++i)
-	{
-		memcpy(&tamanioClave,_pares + offsetArreglo,sizeof(int));
-		offsetArreglo += sizeof(int);
-		
-		offsetArreglo += tamanioClave * sizeof(char);
-
-		memcpy(&ret,_pares + offsetArreglo, sizeof(int));
+	for (int i = 0; i < idNode; ++i) {
+		memcpy(&tamanioClave, _pares + offsetArreglo, sizeof(int));
+		offsetArreglo += sizeof(int) + tamanioClave * sizeof(char);
+		memcpy(&ret, _pares + offsetArreglo, sizeof(int));
 		offsetArreglo += sizeof(int);
 	}
-
     return ret;
 }
