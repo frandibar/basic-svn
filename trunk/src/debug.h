@@ -8,6 +8,7 @@
 #ifdef DEBUG
 #   include <iostream>
 #   include <string>
+#   include "helpers.h"
     using std::cout;
     using std::endl;
     using std::cerr;

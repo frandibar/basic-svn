@@ -36,6 +36,8 @@ public:
 
     bool addFile   (const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
     bool removeFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool getFile (const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
+                  const string& a_Username, const string& a_Password) const;
 
     // getters
     string getName() const { return _name; }
