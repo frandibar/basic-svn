@@ -40,6 +40,8 @@ public:
 
 protected:
     t_filetype getFiletype(const string& filename);
+    bool saveVersion();
+    bool loadVersion();
 
 private:
     Repositorio();

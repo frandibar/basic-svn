@@ -141,7 +141,8 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
                 string tmpDiffFilename = randomFilename("tmp_");
                 string cmd = "diff -e " + tmpVersionFilename + " " + a_Filename + " > " + tmpDiffFilename;
-                system(cmd.c_str());
+                if (system(cmd.c_str()) != 0)
+                    return false;
 
                 std::ifstream is(tmpDiffFilename.c_str());
                 offset = _textContainer.append(is);
@@ -184,6 +185,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
            _textVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, FileVersion::MODIFICACION, &nroNuevoBloque);
            key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
            _textIndex.insert(key.c_str(), nroNuevoBloque);	   
+           return true;
         }   
     }
 
@@ -218,9 +220,10 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
             _binaryVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type,FileVersion::MODIFICACION, &nroNuevoBloque);
             key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
             _binaryIndex.insert(key.c_str(), nroNuevoBloque);
+            return true;
         }
     }
-    return false;
+    return false; // never gets here
 }
 
 bool VersionManager::create()

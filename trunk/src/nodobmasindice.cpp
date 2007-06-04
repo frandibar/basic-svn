@@ -1,6 +1,6 @@
 #include "nodobmasindice.h"
 
-const int NodoBMasIndice::BYTESREDONDEO = 4;
+const int NodoBMasIndice::BYTESREDONDEO = 4;  // (_hnoIzquierdo + _hnoDerecho) (nodobmashoja) - _hijoIzquierdo (nodobmasindice)
 
 NodoBMasIndice::NodoBMasIndice(int Numero, int Nivel, int Padre, int HijoIzquierdo, char* key, int ref)
                                : NodoBMas(Numero, Nivel, Padre)
@@ -19,10 +19,6 @@ NodoBMasIndice::NodoBMasIndice(int Numero, int Nivel, int Padre, int HijoIzquier
     }
     else _nclaves = 0;
 }
-
-/*NodoBMasIndice::~NodoBMasIndice(){
-	delete _redondeo;
-}*/
 
 void NodoBMasIndice::read(char* buffer)
 {

@@ -181,24 +181,25 @@ bool Almacen::addUser(const string& a_Reposit, const string& a_Username, const s
     if (rep == NULL)
         return false;
 
-    rep->addUser(a_Username, a_Password, a_Fullname);
+    bool ret = rep->addUser(a_Username, a_Password, a_Fullname);
 
-    try {
-        // initialize xerces
-        xercesc::XMLPlatformUtils::Initialize();
-        
-        if (!_config->addUser(a_Reposit, a_Username, a_Password, a_Fullname)) 
+    if (ret)
+        try {
+            // initialize xerces
+            xercesc::XMLPlatformUtils::Initialize();
+            
+            if (!_config->addUser(a_Reposit, a_Username, a_Password, a_Fullname)) 
+                return false;
+            _config->commit();
+
+            // terminate xerces
+            xercesc::XMLPlatformUtils::Terminate();
+        }
+        catch (...) {
             return false;
-        _config->commit();
+        }
 
-        // terminate xerces
-        xercesc::XMLPlatformUtils::Terminate();
-    }
-    catch (...) {
-        return false;
-    }
-
-    return true;
+    return ret;
 }
 
 bool Almacen::removeUser(const string& a_Reposit, const string& a_Username) throw()
@@ -207,24 +208,25 @@ bool Almacen::removeUser(const string& a_Reposit, const string& a_Username) thro
     if (rep == NULL)
         return false;
 
-    rep->removeUser(a_Username);
+    bool ret = rep->removeUser(a_Username);
 
-    try {
-        // initialize xerces
-        xercesc::XMLPlatformUtils::Initialize();
-        
-        if (!_config->removeUser(a_Reposit, a_Username)) 
+    if (ret)
+        try {
+            // initialize xerces
+            xercesc::XMLPlatformUtils::Initialize();
+            
+            if (!_config->removeUser(a_Reposit, a_Username)) 
+                return false;
+            _config->commit();
+
+            // terminate xerces
+            xercesc::XMLPlatformUtils::Terminate();
+        }
+        catch (...) {
             return false;
-        _config->commit();
+        }
 
-        // terminate xerces
-        xercesc::XMLPlatformUtils::Terminate();
-    }
-    catch (...) {
-        return false;
-    }
-
-    return true;
+    return ret;
 }
 
 bool Almacen::addFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password)

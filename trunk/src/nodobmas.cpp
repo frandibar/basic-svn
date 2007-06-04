@@ -2,10 +2,8 @@
 #include <iostream>
 
 // CONSTS
-const int NodoBMas::LONGCLAVE      = 10;
 //const int NodoBMas::TAMANIOARREGLO = 42;
-const int NodoBMas::MAXCLAVES      = 3;
-const int NodoBMas::TAMANIONODO    = 128;
+const int NodoBMas::TAMANIONODO    = 2048;  // arbitrario
 const int NodoBMas::NODOHOJA       = 1;
 const int NodoBMas::NODOINDICE     = 2;
 
@@ -38,7 +36,7 @@ int NodoBMas::insertPair(const char* key, int ref, int* offset,
 		offsetInsercion = *offset;
         // obtengo la clave y la referencia de la posicion i en la tira de bytes
 
-		// tomo el tamaño de la clave
+		// tomo el tamanio de la clave
 		memcpy(&tamanioClave,_pares + (*offset),sizeof(int));
 		*offset += sizeof(int);
 

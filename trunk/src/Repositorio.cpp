@@ -82,21 +82,25 @@ bool Repositorio::addFile(const string& a_Filename, const string& a_Username, co
 {
     if (!validateUser(a_Username, a_Password)) return false;
 
-    int ft = getFiletype(a_Filename);
+    int ftype = getFiletype(a_Filename);
 
-    if (ft == INVALID) 
+    if (ftype == INVALID) 
         return false; // file not found
 
-    if (ft == DIRECTORY)
+    if (ftype == DIRECTORY)
         // TODO
         ;
     
     time_t date;
     time(&date);
-    _versionManager.open();
-    if (!_versionManager.addFile(_version, a_Filename, a_Username, date, (ft == TEXT ? 't' : 'b')))
+    if (!_versionManager.open())
+        return false;
+    if (!_versionManager.addFile(_version + 1, a_Filename, a_Username, date, (ftype == TEXT ? 't' : 'b')))
+        return false;
+    if (!_versionManager.close())
         return false;
             
+    _version++;
     return true;
 }
 
@@ -116,14 +120,9 @@ bool Repositorio::addUser(const string& a_Username, const string& a_Password, co
 
 bool Repositorio::removeUser(const string& a_Username)
 {
-    // TODO
-    //User u;
-    //_lUsers.remove(u);
     std::list<User>::iterator it;
     for (it = _lUsers.begin(); it != _lUsers.end(); ++it) {
         if (it->username == a_Username) {
-            //User u = *it;
-            //_lUsers.remove(u);
             return true;
         }
     }
@@ -134,12 +133,12 @@ bool Repositorio::removeUser(const string& a_Username)
 bool Repositorio::create()
 {
     if (_isOpen)
-        return true;
+        return false;
 
     debug("creating Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
     // create directory where files will be stored
     mkdir((_almacen + "//" + _name).c_str(), 0755);
-    _isOpen = _versionManager.create();
+    _isOpen = saveVersion() && _versionManager.create();
     if (!_isOpen)
         remove(_name.c_str());
     debug("Repositorio creation " + string(_isOpen ? "successfull" : "failed") + "\n");
@@ -164,7 +163,8 @@ bool Repositorio::open()
         return true;
 
     debug("opening Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
-    _isOpen = _versionManager.open();
+    _isOpen = loadVersion();
+    _isOpen = _isOpen && _versionManager.open();
     debug("Repositorio open " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
@@ -175,8 +175,32 @@ bool Repositorio::close()
         return true;
 
     debug("closing Repositorio '" + _name + "' in Almacen '" + _almacen + "'\n");
-    _isOpen = _versionManager.close();
-    debug("Repositorio close " + string(_isOpen ? "successfull" : "failed") + "\n");
-    return _isOpen;
+    if (!saveVersion())
+        return false;
+    _isOpen = !_versionManager.close();
+    debug("Repositorio close " + string(!_isOpen ? "successfull" : "failed") + "\n");
+    return !_isOpen;
+}
+
+bool Repositorio::saveVersion()
+{
+    // saves a file named "version" containing the repository version
+    string filename = _almacen + "//" + _name + "//version"; 
+    std::ofstream os(filename.c_str());
+    if (!os.is_open()) return false;
+    os << _version << std::endl;
+    os.close();
+    return true;
+}
+
+bool Repositorio::loadVersion()
+{
+    // saves a file named "version" containing the repository version
+    string filename = _almacen + "//" + _name + "//version"; 
+    std::ifstream is(filename.c_str());
+    if (!is.is_open()) return false;
+    is >> _version;
+    is.close();
+    return true;
 }
 

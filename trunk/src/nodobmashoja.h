@@ -35,7 +35,7 @@ public:
 	// lista las claves y referencias del nodo
 	void list();
 
-protected:
+private:
 	int _hnoDerecho;
 	int _hnoIzquierdo;
 };
