@@ -141,7 +141,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
                 string tmpDiffFilename = randomFilename("tmp_");
                 string cmd = "diff -e " + tmpVersionFilename + " " + a_Filename + " > " + tmpDiffFilename;
-                if (system(cmd.c_str()) != 0)
+                if (system(cmd.c_str()) == -1)
                     return false;
 
                 std::ifstream is(tmpDiffFilename.c_str());
@@ -189,7 +189,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
         }   
     }
 
-    if (a_Type == 'b') {
+    else if (a_Type == 'b') {
         std::ifstream is(a_Filename.c_str());
         if (!is) 
             return false;
@@ -246,3 +246,41 @@ bool VersionManager::create()
     debug("VersionManager creation " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
+
+bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, t_filetype a_Filetype)
+{
+    // TODO
+    if (!_isOpen)
+        return false;
+
+    int bloque;
+    int lastVersion = -1;
+
+    if (a_Filetype == 't') {
+        // busco en el indice a ver si esta el archivo
+        if (a_Version == "")
+            bloque = _textIndex.searchFile(a_Filename.c_str());
+        else {
+            lastVersion = fromString<int>(a_Version);
+            bloque = _textIndex.searchFileAndVersion(a_Filename.c_str(), lastVersion);
+        }
+        if (bloque >= 0) { // el archivo esta en el indice
+            int original = _textVersions.getLastOriginalVersionNumber(bloque);
+            if (lastVersion == -1)
+                lastVersion = _textVersions.getLastVersionNumber(bloque);
+			
+            list<FileVersion> lstVersions;
+            if (_textVersions.getVersionFrom(original, lastVersion, bloque, lstVersions))
+                return (buildVersion(lstVersions, a_TargetDir + "//" + a_Filename));
+            else
+                return false;
+        }
+    }
+
+    else if (a_Filetype == 'b') {
+        // TODO
+        return false;
+    }
+    return false; // never gets here
+}
+

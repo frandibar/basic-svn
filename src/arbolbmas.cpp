@@ -316,7 +316,7 @@ void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
     }
 }
 
-bool ArbolBMas::insert(const char* key,int reference)
+bool ArbolBMas::insert(const char* key, int reference)
 // returns true if insertion was successfull
 {
     NodoBMasHoja* hojaNueva;
@@ -427,6 +427,9 @@ bool ArbolBMas::insert(const char* key,int reference)
 
 int ArbolBMas::searchFile(const char* key)
 {
+    if (isEmpty())
+        return -1;
+
     if ((_nodoActual != _raiz) && (_nodoActual != 0)) {
         writeNode(_nodoActual);
         delete _nodoActual;
@@ -443,6 +446,9 @@ int ArbolBMas::searchFile(const char* key)
 
 int ArbolBMas::searchFileAndVersion(const char* fileName,int version)
 {
+    if (isEmpty())
+        return -1;
+
     if ((_nodoActual != _raiz) && (_nodoActual != 0)) {
         writeNode(_nodoActual);
         delete _nodoActual;

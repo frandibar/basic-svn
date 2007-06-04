@@ -44,6 +44,7 @@ public:
 
     bool isOpen() const { return _isOpen; }
     bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
+    bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, t_filetype a_Filetype);
 
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);

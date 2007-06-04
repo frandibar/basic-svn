@@ -3,37 +3,10 @@
 #include "Repositorio.h"
 #include "debug.h"
 
-#include <sys/stat.h>
-#include <fstream>
 #include <ctime>
+#include <fstream>
+#include <sys/stat.h>
 
-
-Repositorio::t_filetype Repositorio::getFiletype(const string& filename)
-{
-    struct stat ss;
-    if (stat(filename.c_str(), &ss) == -1)
-        return INVALID; // error, file does not exist
-
-    if ((ss.st_mode & S_IFMT) == S_IFDIR)
-        return DIRECTORY;
-
-    // determine if filename is a text or binary file
-    // by reading first 512 bytes and searching for chars < 30
-    // text files have majority of bytes > 30 while binary files don't
-    std::ifstream is(filename.c_str());
-    if (!is) return INVALID; // error, could not open file
-
-    int bytesRead = 0;
-    int nChars    = 0;
-    int nNonchars = 0;
-    while (!is.eof() && bytesRead++ < 512) {
-        char c;
-        is >> c;
-        (c > 30) ? nChars++ : nNonchars++;
-    }
-    is.close();
-    return (nChars > nNonchars) ? TEXT : BINARY;
-}
 
 // constructor
 Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) :
@@ -43,13 +16,7 @@ Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) :
 
 bool Repositorio::validateUser(const string& a_Username, const string& a_Password) const
 {
-    if (!userExists(a_Username))
-        return false;
-    
-    if (!validatePassword(a_Username, a_Password))
-        return false;
-
-    return true;
+    return (userExists(a_Username) && validatePassword(a_Username, a_Password));
 }
 
 bool Repositorio::validatePassword(const string& a_Username, const string& a_Password) const
@@ -74,15 +41,23 @@ bool Repositorio::userExists(const string& a_Username) const
 
 bool Repositorio::removeFile(const string& a_Filename, const string& a_Username, const string& a_Password)
 {
+    if (!_isOpen)
+        return false;
+
+    if (!validateUser(a_Username, a_Password)) return false;
+
     // TODO
     return false;
 }
 
 bool Repositorio::addFile(const string& a_Filename, const string& a_Username, const string& a_Password)
 {
+    if (!_isOpen)
+        return false;
+
     if (!validateUser(a_Username, a_Password)) return false;
 
-    int ftype = getFiletype(a_Filename);
+    t_filetype ftype = getFiletype(a_Filename);
 
     if (ftype == INVALID) 
         return false; // file not found
@@ -185,6 +160,7 @@ bool Repositorio::close()
 bool Repositorio::saveVersion()
 {
     // saves a file named "version" containing the repository version
+    debug("saving repository version to " + toString(_version) + "\n");
     string filename = _almacen + "//" + _name + "//version"; 
     std::ofstream os(filename.c_str());
     if (!os.is_open()) return false;
@@ -195,6 +171,7 @@ bool Repositorio::saveVersion()
 
 bool Repositorio::loadVersion()
 {
+    debug("loading repository version\n");
     // saves a file named "version" containing the repository version
     string filename = _almacen + "//" + _name + "//version"; 
     std::ifstream is(filename.c_str());
@@ -202,5 +179,20 @@ bool Repositorio::loadVersion()
     is >> _version;
     is.close();
     return true;
+}
+
+bool Repositorio::getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
+                          const string& a_Username, const string& a_Password)
+{
+    if (!_isOpen)
+        return false;
+
+    if (!validateUser(a_Username, a_Password)) return false;
+
+    t_filetype ftype = getFiletype(a_Filename);
+    if (ftype == INVALID) 
+        return false; // file not found
+
+    return _versionManager.getFile(a_TargetDir, a_Filename, a_Version, ftype);
 }
 

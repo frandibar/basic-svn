@@ -14,8 +14,6 @@
 class Repositorio
 {
 public:
-    enum t_filetype { INVALID = -1, DIRECTORY = 0, TEXT, BINARY };
-
     Repositorio(const string& a_Almacen, const string& a_Name); 
     ~Repositorio() {};
 
@@ -27,6 +25,8 @@ public:
 
     bool addFile   (const string& a_Filename, const string& a_Username, const string& a_Password);
     bool removeFile(const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
+                 const string& a_Username, const string& a_Password);
 
     bool addUser   (const string& a_Username, const string& a_Password, const string& a_Fullname);
     bool removeUser(const string& a_Username);
@@ -39,7 +39,6 @@ public:
     std::list<User> getListOfUsers() const { return _lUsers; }
 
 protected:
-    t_filetype getFiletype(const string& filename);
     bool saveVersion();
     bool loadVersion();
 

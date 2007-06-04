@@ -31,8 +31,10 @@ protected:
     // el tamanio de la cabecera es el tamanio de un nodo
     bool readHeader();
     bool writeHeader();
+
     bool readRoot();
     bool writeRoot();
+    
     bool readNode(int id, NodoBMas** node);
     bool writeNode(NodoBMas* nodo);
 
@@ -47,6 +49,8 @@ protected:
 
     // metodo que actualiza el puntero al padre de los nodos apuntados por padre
     bool actualizarPadre(NodoBMasIndice* padre);
+
+    bool isEmpty() const { return _raiz == 0; }
    
 private: 
     // member variables

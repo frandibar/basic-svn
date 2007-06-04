@@ -15,10 +15,10 @@ using std::string;
 
 void add        (const string& user, const string& pass, const string& repository, const string& file);
 void showHistory(const string& user, const string& pass, const string& repository, const string& file);
-void getVersion (const string& user, const string& pass, const string& repository, const string& dir, const string& file);
+void getFile    (const string& user, const string& pass, const string& repository, const string& dir, const string& file, const string& version);
 bool validateUser(const string& a_Repository, const string& a_Username, const string& a_Password);
 void showHelp(const char* progname);
-void showDiff  (const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB);
+void showDiff(const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB, const string& filename);
 void showByDate(const string& user, const string& pass, const string& reposit, const string& date);
 
 
@@ -45,9 +45,14 @@ int main(int argc, char** argv)
                 break;
 
             case 'd': // mostrar diff entre 2 versiones
-                // -d "nombre repositorio" version_inicial version_final
-                argsok = (argc == 6);
-                if (argsok) showDiff(user, pass, optarg, argv[optind], argv[optind + 1]);
+                // -d "nombre repositorio" version_inicial version_final ["nombre archivo/directorio"]
+                argsok = ((argc == 6) || (argc == 7));
+                if (argsok) {
+                    if (argc == 6)
+                        showDiff(user, pass, optarg, argv[optind], argv[optind + 1], "");
+                    else
+                        showDiff(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
+                }
                 break;
 
             case 'f': // mostrar cambios en determinada fecha
@@ -68,9 +73,9 @@ int main(int argc, char** argv)
                 break;
 
             case 'o': // obtener archivo
-                // -o "nombre repositorio" "nombre directorio destino" "nombre archivo/dir"
-                argsok = (argc == 7);
-                if (argsok) getVersion(user, pass, optarg, argv[optind], argv[optind + 1]);
+                // -o "nombre repositorio" "nombre directorio destino" "nombre archivo/dir" [version]
+                argsok = (argc == 8);
+                if (argsok) getFile(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
                 break;
         }
     }
@@ -106,11 +111,6 @@ void showHistory(const string& user, const string& pass, const string& reposit, 
     cout << "showHistory" << user << " " << pass << " " << reposit << " " << file << endl;    
 }
 
-void getFile(const string& user, const string& pass, const string& reposit, const string& dir, const string& file)
-{
-    cout << user << " " << pass << " " << reposit << " " << dir << " " << file << endl;    
-}
-
 bool validateUser(const string& a_Reposit, const string& a_Username, const string& a_Password)
 {
     Almacen almacen;
@@ -134,7 +134,7 @@ bool validateUser(const string& a_Reposit, const string& a_Username, const strin
 }
 
 
-void showDiff(const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB)
+void showDiff(const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB, const string& filename = "")
 {
     cout << "showDiff " << user << " " << pass << " " << reposit << " " << versionA << " " << versionB << endl;
 }
@@ -144,9 +144,21 @@ void showByDate(const string& user, const string& pass, const string& reposit, c
     cout << "showByDate " << user << " " << pass << " " << reposit << " " << date << endl;
 }
 
-void getVersion(const string& user, const string& pass, const string& repository, const string& dir, const string& file)
+void getFile(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
 {
-    cout << "getVersion " << user << " " << pass << " " << repository << " " << dir << " " << file << endl;
+    Almacen almacen;
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "El repositorio " << a_Reposit << " no existe." << endl;
+        return;
+    }
+    if (!validateUser(a_Reposit, a_Username, a_Password))
+        return;
+
+    if (!almacen.getFile(a_Reposit, a_TargetDir, a_Filename, a_Version, a_Username, a_Password)) {
+        cout << "El archivo " << a_Filename << " no pudo ser recuperado." << endl;
+        return;
+    }
+    cout << "El archivo " << a_Filename << " ha sido recuperado exitosamente." << endl;
 }
 
 void showHelp(const char* progname)
@@ -155,7 +167,7 @@ void showHelp(const char* progname)
          << "                 [-d \"nombre repositorio\" version_inicial version_final] |" << endl
          << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)] | [-h] |" << endl
          << "                 [-l \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
-         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" [\"nombre archivo/directorio\"]]" << endl
+         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]]" << endl
          << "-a, almacenar archivos y directorios." << endl
          << "-d, ver diferencias entre dos versiones." << endl
          << "-f, ver las actualizaciones en una fecha dada." << endl
