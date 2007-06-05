@@ -51,6 +51,8 @@ bool ArbolBMas::readRoot()
 bool ArbolBMas::writeHeader()
 {
     if (_filestr.is_open()) {
+        // clear buffer
+        memset(_buffer,'\0', NodoBMas::NODE_SIZE);
         char* nextByte = _buffer;
         // volcar en _buffer la cantidad de nodos
         memcpy(nextByte, &_nNodos, sizeof(int));
