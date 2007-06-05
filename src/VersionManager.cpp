@@ -303,8 +303,15 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
             return false;
     }
     else if (ftype == 'b') {
-        // TODO
-        return false;
+        int offset = versionBuscada->getOffset();
+        delete versionBuscada;
+        std::ofstream os((a_TargetDir + "//" + a_Filename).c_str());
+        if (!os.is_open())
+            return false;
+        if (!_binaryContainer.get(offset, os))
+            return false;
+        os.close();
+        return true;
     }
     return false; // never gets here
 }
