@@ -292,3 +292,16 @@ bool Almacen::getFile(const string& a_Reposit, const string& a_TargetDir, const 
     ret = ret && rep->close();
     return ret;
 }
+
+bool Almacen::getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+{
+    Repositorio* rep = getRepository(a_Reposit);
+    if (rep == NULL)
+        return false;
+
+    bool ret = rep->open();
+    ret = ret && rep->getDiff(is, a_Username, a_Password, a_VersionA, a_VersionB, a_Filename);
+    ret = ret && rep->close();
+    return ret;
+}
+

@@ -1,9 +1,9 @@
 // main-admin.cpp
 
 #include <iostream>
+#include <cstdlib>      // getenv
 #include <fstream>
 #include <string>
-#include <cstdlib>      // getenv
 
 #include "Almacen.h"
 #include "debug.h"
@@ -15,75 +15,7 @@ using std::cout;
 using std::endl;
 using std::string;
 
-
 string CONFIG_FILE;
-
-
-void addRepository(const string& a_Name);
-void addUser(const string& a_Username, const string& a_Pass, const string& a_Fullname, const string& a_Reposit);
-void createAlmacen(const string& a_Dir);
-bool fileExists(const string& a_Filename);
-void removeRepository(const string& a_Name);
-void removeUser(const string& a_Reposit, const string& a_Username);
-void showHelp(const char* progname);
-void showUsers(const string& a_Reposit);
-
-int main(int argc, char** argv)
-{
-    int c; 
-    bool argsok = false;
-    while ((c = getopt(argc, argv, "-a:c:e:ho:r:u:")) != -1) {
-        switch (c) {
-            case 'a': // crear almacen de repositorios
-                // -a "nombre directorio"
-                argsok = (argc == 3);
-                if (argsok) createAlmacen(optarg);
-                break;
-
-            case 'c': // agregar repositorio
-                // -c "nombre repositorio"
-                argsok = (argc == 3);
-                if (argsok) addRepository(optarg);
-                break;
-
-            case 'e': // eliminar usuario
-                // -e usuario "nombre repositorio"
-                argsok = (argc == 4);
-                if (argsok) removeUser(argv[optind], optarg);
-                break;
-
-            case 'h': // mostrar ayuda
-                showHelp(argv[0]);
-                argsok = true;
-                break;
-
-            case 'o': // obtener listado de usuarios
-                // -o "nombre repositorio"
-                argsok = (argc == 3);
-                if (argsok) showUsers(optarg);
-                break;
-
-            case 'r': // eliminar repositorio
-                // -r "nombre repositorio"
-                argsok = (argc == 3);
-                if (argsok) removeRepository(optarg);
-                break;
-
-            case 'u': // crear usuario
-                // -u usuario password "nombre usuario" "nombre repositorio"
-                argsok = (argc == 6);
-                if (argsok) addUser(optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
-                break;
-        }
-    }
-
-    if (!argsok) {
-       cout << "Parametros invalidos." << endl;
-       showHelp(argv[0]);
-    }
-    return 0;
-}
-
 
 void addRepository(const string& a_Name)
 {
@@ -234,3 +166,62 @@ void showUsers(const string& a_Reposit)
         cout << it->username << " '" << it->fullname << "'" << endl;
     }
 }
+
+
+int main(int argc, char** argv)
+{
+    int c; 
+    bool argsok = false;
+    while ((c = getopt(argc, argv, "-a:c:e:ho:r:u:")) != -1) {
+        switch (c) {
+            case 'a': // crear almacen de repositorios
+                // -a "nombre directorio"
+                argsok = (argc == 3);
+                if (argsok) createAlmacen(optarg);
+                break;
+
+            case 'c': // agregar repositorio
+                // -c "nombre repositorio"
+                argsok = (argc == 3);
+                if (argsok) addRepository(optarg);
+                break;
+
+            case 'e': // eliminar usuario
+                // -e usuario "nombre repositorio"
+                argsok = (argc == 4);
+                if (argsok) removeUser(argv[optind], optarg);
+                break;
+
+            case 'h': // mostrar ayuda
+                showHelp(argv[0]);
+                argsok = true;
+                break;
+
+            case 'o': // obtener listado de usuarios
+                // -o "nombre repositorio"
+                argsok = (argc == 3);
+                if (argsok) showUsers(optarg);
+                break;
+
+            case 'r': // eliminar repositorio
+                // -r "nombre repositorio"
+                argsok = (argc == 3);
+                if (argsok) removeRepository(optarg);
+                break;
+
+            case 'u': // crear usuario
+                // -u usuario password "nombre usuario" "nombre repositorio"
+                argsok = (argc == 6);
+                if (argsok) addUser(optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
+                break;
+        }
+    }
+
+    if (!argsok) {
+       cout << "Parametros invalidos." << endl;
+       showHelp(argv[0]);
+    }
+    return 0;
+}
+
+

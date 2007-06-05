@@ -193,3 +193,15 @@ bool Repositorio::getFile(const string& a_TargetDir, const string& a_Filename, c
     return _versionManager.getFile(a_TargetDir, a_Filename, a_Version);
 }
 
+bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+{
+    if (!_isOpen)
+        return false;
+
+    if (!validateUser(a_Username, a_Password)) 
+        return false;
+
+    return _versionManager.getDiff(is, a_VersionA, a_VersionB, a_Filename);
+}
+
+

@@ -45,9 +45,12 @@ public:
     bool isOpen() const { return _isOpen; }
     bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
     bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version);
+    bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
 
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);
+    bool getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version);
+    bool buildTextVersion(int bloque, FileVersion* versionBuscada, const string& a_Filename);
 
 private:
     // member variables
