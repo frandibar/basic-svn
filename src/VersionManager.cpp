@@ -79,7 +79,7 @@ bool VersionManager::close()
 }
 
 bool VersionManager::buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename)
-// generates a file name a_Filename with the versions    
+// generates a file named a_Filename with the required version
 {
     std::ofstream osfinal(a_Filename.c_str());
     if (!osfinal.is_open())
@@ -269,9 +269,8 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     FileVersion* versionBuscada;
     int bloque;
 
-    int version = -1;
     if (a_Version != "") {
-        version = fromString<int>(a_Version);
+        int version = fromString<int>(a_Version);
         bloque = _fileIndex.searchFileAndVersion(a_Filename.c_str(), version);
         if (!_fileVersions.searchVersion(&versionBuscada, version, bloque)) {
             bloque = _fileIndex.searchFile(a_Filename.c_str());
@@ -316,3 +315,127 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     return false; // never gets here
 }
 
+bool VersionManager::getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version)
+{
+    if (a_Version != "") {
+        int version = fromString<int>(a_Version);
+        *bloque = _fileIndex.searchFileAndVersion(a_Filename.c_str(), version);
+        if (!_fileVersions.searchVersion(versionBuscada, version, *bloque)) {
+            *bloque = _fileIndex.searchFile(a_Filename.c_str());
+            if (!_fileVersions.getLastVersion(versionBuscada, *bloque))
+                return false;
+            else if ((*versionBuscada)->getNroVersion() > version) {
+                return false;
+            }
+        }        
+    }
+    else {
+        *bloque = _fileIndex.searchFile(a_Filename.c_str());
+        if (!_fileVersions.getLastVersion(versionBuscada, *bloque))
+           return false; 
+    }
+    return true;
+}
+
+bool VersionManager::buildTextVersion(int bloque, FileVersion* versionBuscada, const string& a_Filename)
+{
+    int original = versionBuscada->getOriginal();
+    int final    = versionBuscada->getNroVersion();
+
+    list<FileVersion> versionsList;
+    if (_fileVersions.getVersionFrom(original, final, bloque, versionsList))
+        return (buildVersion(versionsList, a_Filename));
+
+    return false;
+}
+
+bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+{
+    if (!_isOpen)
+        return false;
+
+    FileVersion* versionBuscadaA;
+    int bloqueA;
+
+    FileVersion* versionBuscadaB;
+    int bloqueB;
+
+    if (!getVersionAndBlock(&bloqueA, &versionBuscadaA, a_Filename, a_VersionA))
+        return false;
+
+    if (!getVersionAndBlock(&bloqueB, &versionBuscadaB, a_Filename, a_VersionB)) {
+        delete versionBuscadaA;
+        return false;
+    }
+
+    char ftypeA = versionBuscadaA->getTipo();
+    char ftypeB = versionBuscadaB->getTipo();
+    if (ftypeA != ftypeB)
+        return false;
+
+    string tmpA    = randomFilename("tmp_");
+    string tmpB    = randomFilename("tmp_");
+    string tmpDiff = randomFilename("tmp_");
+    if (ftypeA == 't') {
+        bool ret = buildTextVersion(bloqueA, versionBuscadaA, tmpA);
+        ret = ret && buildTextVersion(bloqueB, versionBuscadaB, tmpB);
+        delete versionBuscadaA;
+        delete versionBuscadaB;
+
+        if (ret) {
+            // perform diff between tmpA and tmpB
+            string cmd = "diff " + tmpA + " " + tmpB + " > " + tmpDiff;
+            if (system(cmd.c_str()) == -1)
+                return false;
+
+            is.open(tmpDiff.c_str());
+
+            // remove temporary files
+            remove(tmpA.c_str());
+            remove(tmpB.c_str());
+            remove(tmpDiff.c_str());
+        }
+        return ret;
+    }
+    else if (ftypeA == 'b') {
+        // obtener ambos archivos y compararlos
+        int offsetA = versionBuscadaA->getOffset();
+        int offsetB = versionBuscadaB->getOffset();
+        delete versionBuscadaA;
+        delete versionBuscadaB;
+
+        std::ofstream osA(tmpA.c_str());
+        std::ofstream osB(tmpB.c_str());
+        if (!osA.is_open() || !osB.is_open())
+            return false;
+        if (!_binaryContainer.get(offsetA, osA) ||
+            !_binaryContainer.get(offsetB, osB))
+            return false;
+        osA.close();
+        osB.close();
+
+        string cmd = "cmp " + tmpA + " " + tmpB + "| wc -c > " + tmpDiff;
+        if (system(cmd.c_str()) == -1)
+            return false;
+
+        is.open(tmpDiff.c_str());
+        int different;
+        is >> different;
+        is.close();
+        std::ofstream os(tmpDiff.c_str());
+        if (different == 0)
+            os << "Ambas versiones son identicas.\n";
+        else
+            os << "Las versiones difieren.\n";
+        os.close();
+        is.open(tmpDiff.c_str());
+
+        // remove temporary files
+        remove(tmpA.c_str());
+        remove(tmpB.c_str());
+        remove(tmpDiff.c_str());
+
+        return true;
+    }
+    return false;
+}

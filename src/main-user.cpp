@@ -2,24 +2,117 @@
 
 #include "Almacen.h"
 #include "debug.h"
+#include "helpers.h"
 
-#include <iostream>
-#include <string>
-#include <fstream>
 #include <exception>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
 
 using std::cout;
 using std::cerr;
 using std::endl;
 using std::string;
 
-void add        (const string& user, const string& pass, const string& repository, const string& file);
-void showHistory(const string& user, const string& pass, const string& repository, const string& file);
-void getFile    (const string& user, const string& pass, const string& repository, const string& dir, const string& file, const string& version);
-bool validateUserAndRepository(Almacen* a_Almacen, const string& a_Repository, const string& a_Username, const string& a_Password);
-void showHelp(const char* progname);
-void showDiff(const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB, const string& filename);
-void showByDate(const string& user, const string& pass, const string& reposit, const string& date);
+bool validateUserAndRepository(Almacen* a_Almacen, const string& a_Reposit, const string& a_Username, const string& a_Password)
+{
+    if (!a_Almacen->repositoryExists(a_Reposit)) {
+        cout << "El repositorio " << a_Reposit << " no existe." << endl;
+        return false;
+    }
+
+    if (!a_Almacen->userExists(a_Reposit, a_Username)) {
+        cout << "El usuario " << a_Username << " no pertenece al repositorio " << a_Reposit << "." << endl;
+        return false;
+    }
+
+    if (!a_Almacen->validatePassword(a_Reposit, a_Username, a_Password)) {
+        cout << "Contraseña invalida." << endl;
+        return false;
+    }
+
+    return true;
+}
+
+
+void add(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
+{
+    Almacen almacen;
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
+        return;
+
+    if (!almacen.addFile(a_Reposit, a_Filename, a_Username, a_Password)) {
+        cout << "El archivo " << a_Filename << " no pudo ser agregado." << endl;
+        return;
+    }
+
+    cout << "El archivo " << a_Filename << " ha sido agregado exitosamente." << endl;
+}
+
+
+void showHistory(const string& user, const string& pass, const string& reposit, const string& file)
+{
+    cout << "showHistory" << user << " " << pass << " " << reposit << " " << file << endl;    
+}
+
+
+void showDiff(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_VersionA, const string& a_VersionB, const string& a_Filename = "")
+{
+    Almacen almacen;
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
+        return;
+
+    std::ifstream is;
+    if (!almacen.getDiff(is, a_Username, a_Password, a_Reposit, a_VersionA, a_VersionB, a_Filename)) {
+        cout << "No se pudieron obtener las versiones solicitadas." << endl;
+        return;
+    }
+
+    string line;
+    while (!is.eof()) {
+        getline(is, line);
+        cout << line << endl;
+    } 
+}
+
+
+void showByDate(const string& user, const string& pass, const string& reposit, const string& date)
+{
+    cout << "showByDate " << user << " " << pass << " " << reposit << " " << date << endl;
+}
+
+
+void getFile(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
+{
+    Almacen almacen;
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
+        return;
+
+    if (!almacen.getFile(a_Reposit, a_TargetDir, a_Filename, a_Version, a_Username, a_Password)) {
+        cout << "El archivo " << a_Filename << " no pudo ser recuperado." << endl;
+        return;
+    }
+    cout << "El archivo " << a_Filename << " ha sido recuperado exitosamente." << endl;
+}
+
+
+void showHelp(const char* progname)
+{
+    cout << "uso: " << progname << " usuario contraseña [[-a \"nombre repositorio\" \"nombre archivo/directorio\" |" << endl
+         << "                 [-d \"nombre repositorio\" version_inicial version_final] [\"nombre archivo/directorio\"] |" << endl
+         << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)] | [-h] |" << endl
+         << "                 [-l \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
+         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]]" << endl
+         << "-a, almacenar archivos y directorios." << endl
+         << "-d, ver diferencias entre dos versiones." << endl
+         << "-f, ver las actualizaciones en una fecha dada." << endl
+         << "-l, ver historial de cambios a un archivo o directorio." << endl
+         << "-o, obtener una determinada version de un archivo o directorio." << endl
+         << endl
+         << "-h, mostrar esta ayuda." << endl
+         ;
+}
 
 
 int main(int argc, char** argv)
@@ -46,9 +139,9 @@ int main(int argc, char** argv)
 
             case 'd': // mostrar diff entre 2 versiones
                 // -d "nombre repositorio" version_inicial version_final ["nombre archivo/directorio"]
-                argsok = ((argc == 6) || (argc == 7));
+                argsok = ((argc == 7) || (argc == 8));
                 if (argsok) {
-                    if (argc == 6)
+                    if (argc == 7)
                         showDiff(user, pass, optarg, argv[optind], argv[optind + 1], "");
                     else
                         showDiff(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
@@ -90,86 +183,5 @@ int main(int argc, char** argv)
        showHelp(argv[0]);
     }
    
-}
-
-void add(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
-{
-    Almacen almacen;
-    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
-        return;
-
-    if (!almacen.addFile(a_Reposit, a_Filename, a_Username, a_Password)) {
-        cout << "El archivo " << a_Filename << " no pudo ser agregado." << endl;
-        return;
-    }
-
-    cout << "El archivo " << a_Filename << " ha sido agregado exitosamente." << endl;
-}
-
-
-void showHistory(const string& user, const string& pass, const string& reposit, const string& file)
-{
-    cout << "showHistory" << user << " " << pass << " " << reposit << " " << file << endl;    
-}
-
-bool validateUserAndRepository(Almacen* a_Almacen, const string& a_Reposit, const string& a_Username, const string& a_Password)
-{
-    if (!a_Almacen->repositoryExists(a_Reposit)) {
-        cout << "El repositorio " << a_Reposit << " no existe." << endl;
-        return false;
-    }
-
-    if (!a_Almacen->userExists(a_Reposit, a_Username)) {
-        cout << "El usuario " << a_Username << " no pertenece al repositorio " << a_Reposit << "." << endl;
-        return false;
-    }
-
-    if (!a_Almacen->validatePassword(a_Reposit, a_Username, a_Password)) {
-        cout << "Contraseña invalida." << endl;
-        return false;
-    }
-
-    return true;
-}
-
-
-void showDiff(const string& user, const string& pass, const string& reposit, const string& versionA, const string& versionB, const string& filename = "")
-{
-    cout << "showDiff " << user << " " << pass << " " << reposit << " " << versionA << " " << versionB << endl;
-}
-
-void showByDate(const string& user, const string& pass, const string& reposit, const string& date)
-{
-    cout << "showByDate " << user << " " << pass << " " << reposit << " " << date << endl;
-}
-
-void getFile(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
-{
-    Almacen almacen;
-    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
-        return;
-
-    if (!almacen.getFile(a_Reposit, a_TargetDir, a_Filename, a_Version, a_Username, a_Password)) {
-        cout << "El archivo " << a_Filename << " no pudo ser recuperado." << endl;
-        return;
-    }
-    cout << "El archivo " << a_Filename << " ha sido recuperado exitosamente." << endl;
-}
-
-void showHelp(const char* progname)
-{
-    cout << "uso: " << progname << " usuario contraseña [[-a \"nombre repositorio\" \"nombre archivo/directorio\" |" << endl
-         << "                 [-d \"nombre repositorio\" version_inicial version_final] |" << endl
-         << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)] | [-h] |" << endl
-         << "                 [-l \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
-         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]]" << endl
-         << "-a, almacenar archivos y directorios." << endl
-         << "-d, ver diferencias entre dos versiones." << endl
-         << "-f, ver las actualizaciones en una fecha dada." << endl
-         << "-l, ver historial de cambios a un archivo o directorio." << endl
-         << "-o, obtener una determinada version de un archivo o directorio." << endl
-         << endl
-         << "-h, mostrar esta ayuda." << endl
-         ;
 }
 
