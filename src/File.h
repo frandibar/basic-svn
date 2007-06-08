@@ -10,7 +10,7 @@ class File
 {
 public:
 	File();
-	File(char* name,int versionNumber,char type);
+	File(const char* name,int versionNumber,char type);
 
 	~File();
 

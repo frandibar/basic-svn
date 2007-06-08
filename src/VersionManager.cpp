@@ -2,7 +2,7 @@
 
 #include "VersionManager.h"
 #include "debug.h"
-#include "helpers.h"
+
 
 #include <fstream>
 #include <list>
@@ -240,6 +240,97 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
     }   
 
     return false; // never gets here
+}
+
+bool VersionManager::add(int repositoryVersion, const string& a_Target, const string& a_Username, time_t a_Date, t_filetype a_Type, const string& repositoryName)
+{
+  int componenteALeer = 1;
+  
+  string pathActual = repositoryName;	//este tendria que ser el repository name.
+
+  int cantComponentesPath = countComponents(a_Target);
+
+  return addRec(a_Target, componenteALeer, pathActual, repositoryVersion, cantComponentesPath, a_Username, a_Date, a_Type, repositoryName);
+
+}
+
+bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  string& pathActual, int repositoryVersion, int cantComponentesPath, const string& a_Username, time_t  a_Date, t_filetype a_Type, const string& repositoryName)
+{
+	bool ret = false;
+	string key;	
+
+	string finalTarget = repositoryName +  "//" + a_Target;
+	if(pathActual == finalTarget)
+	{	
+		if((a_Type == BINARY) || (a_Type == TEXT))		
+			ret = addFile(repositoryVersion, a_Target, a_Username, a_Date, a_Type);
+
+		else	//TODO ADD_DIRECTORY
+			ret = false;
+	}
+
+	else
+	{
+		// identifico si hay alguna version del directorio actual (por el que voy siguiendo el camino hasta target)
+		int bloque = _dirIndex.searchFile(pathActual.c_str());
+
+		//obtengo la fecha		    
+		tm* date = localtime(&a_Date);		
+
+		// creo una nueva version de directorio
+		DirectoryVersion* nuevaVersion = new DirectoryVersion(repositoryVersion, a_Username.c_str(), *date, DirectoryVersion::MODIFICACION);
+				
+		if(bloque >= 0)
+		{
+			//aca tengo que cotejar los cambios que se realizan en la version
+			ret = false;			
+		}
+		
+		else
+		{	
+			// tomo la componente correspondiente					
+			string componente = getComponent(a_Target,componenteALeer);
+
+			ret = addRec(a_Target, componenteALeer + 1, pathActual + "//" + componente, repositoryVersion, cantComponentesPath, a_Username, 						a_Date, a_Type,repositoryName);
+			
+			if(ret)
+			{
+				char tipoArchivo;
+
+				string caminoRecorrido = pathActual + "//" + componente;
+				
+				debug("camino recorrido: "+caminoRecorrido+"\n");
+				debug("final target: "+finalTarget+"\n");
+				if(caminoRecorrido == finalTarget)
+				{
+					if(a_Type == TEXT) tipoArchivo = 't';
+
+					else if(a_Type == BINARY) tipoArchivo = 'b';
+
+					else tipoArchivo = 'd';
+					
+					cout<<"tipo archivo: "<<tipoArchivo<<"\n";
+				}
+			
+				else tipoArchivo = 'd';
+
+				nuevaVersion->addFile(componente.c_str(),repositoryVersion,tipoArchivo);
+
+				int nuevoBloque;
+				_dirVersions.insertVersion(nuevaVersion,&nuevoBloque);
+
+				//genero la clave
+				key = pathActual + zeroPad(repositoryVersion,VERSION_DIGITS);
+				ret = _dirIndex.insert(key.c_str(),nuevoBloque);				
+			}			
+		}
+		
+		delete nuevaVersion;
+		
+		return ret;		
+	}
+
+	return ret;	//never gets here
 }
 
 bool VersionManager::create()

@@ -22,8 +22,8 @@ public:
 
     bool open();
     bool close();
-
-    bool addFile   (const string& a_Filename, const string& a_Username, const string& a_Password);
+   
+    bool add(const string& a_Target, const string& a_Username, const string& a_Password);
     bool removeFile(const string& a_Filename, const string& a_Username, const string& a_Password);
     bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
                  const string& a_Username, const string& a_Password);

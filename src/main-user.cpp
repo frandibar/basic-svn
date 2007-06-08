@@ -36,18 +36,18 @@ bool validateUserAndRepository(Almacen* a_Almacen, const string& a_Reposit, cons
 }
 
 
-void add(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
+void add(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Target)
 {
     Almacen almacen;
     if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
-    if (!almacen.addFile(a_Reposit, a_Filename, a_Username, a_Password)) {
-        cout << "El archivo " << a_Filename << " no pudo ser agregado." << endl;
+    if (!almacen.add(a_Reposit, a_Target, a_Username, a_Password)) {
+        cout << "El archivo " << a_Target << " no pudo ser agregado." << endl;
         return;
     }
 
-    cout << "El archivo " << a_Filename << " ha sido agregado exitosamente." << endl;
+    cout << "El archivo " << a_Target << " ha sido agregado exitosamente." << endl;
 }
 
 

@@ -50,27 +50,23 @@ bool Repositorio::removeFile(const string& a_Filename, const string& a_Username,
     return false;
 }
 
-bool Repositorio::addFile(const string& a_Filename, const string& a_Username, const string& a_Password)
+bool Repositorio::add(const string& a_Target, const string& a_Username, const string& a_Password)
 {
     if (!_isOpen)
         return false;
 
     if (!validateUser(a_Username, a_Password)) return false;
 
-    t_filetype ftype = getFiletype(a_Filename);
+    t_filetype ftype = getFiletype(a_Target);
 
     if (ftype == INVALID) 
         return false; // file not found
-
-    if (ftype == DIRECTORY)
-        // TODO
-        ;
-    
+                
     time_t date;
     time(&date);
     if (!_versionManager.open())
         return false;
-    if (!_versionManager.addFile(_version + 1, a_Filename, a_Username, date, (ftype == TEXT ? 't' : 'b')))
+    if (!_versionManager.add(_version + 1, a_Target, a_Username, date, ftype, _name))
         return false;
     if (!_versionManager.close())
         return false;

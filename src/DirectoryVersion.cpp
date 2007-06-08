@@ -37,7 +37,7 @@ DirectoryVersion::~DirectoryVersion()
 		delete _user;
 }
 
-void DirectoryVersion::addFile(char* fileName,int versionNumber,char type)
+void DirectoryVersion::addFile(const char* fileName,int versionNumber,char type)
 {
 	File* newFile = new File(fileName,versionNumber,type);
 
