@@ -307,12 +307,11 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 
 					else if(a_Type == BINARY) tipoArchivo = 'b';
 
-					else tipoArchivo = 'd';
-					
-					cout<<"tipo archivo: "<<tipoArchivo<<"\n";
+					else tipoArchivo = 'd';				
 				}
 			
 				else tipoArchivo = 'd';
+				
 
 				nuevaVersion->addFile(componente.c_str(),repositoryVersion,tipoArchivo);
 
