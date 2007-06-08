@@ -33,7 +33,7 @@ public:
  	size_t				getCantFile()	{	return	_fileLst.size();}
 	t_versionType		getType()		{	return _type;			}
 
-	void addFile(char* fileName,int versionNumber,char type);
+	void addFile(const char* fileName,int versionNumber,char type);
 
 	long int tamanioEnDisco();
 

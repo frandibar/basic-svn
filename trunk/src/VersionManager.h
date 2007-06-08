@@ -6,12 +6,15 @@
 #include "arbolbmas.h"
 #include "Container.h"
 #include "FileVersion.h"
+#include "DirectoryVersion.h"
 #include "FileVersionsFile.h"
+#include "DirectoryVersionsFile.h"
 #include "helpers.h"
 
 #include <ctime>
 #include <string>
 #include <list>
+#include <sys/stat.h>
 
 using std::string;
 
@@ -43,7 +46,9 @@ public:
     bool close();  
 
     bool isOpen() const { return _isOpen; }
-    bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);    
+    bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);
+    bool add(int repositoryVersion, const string& a_Target, const string& a_User, time_t a_Date, t_filetype a_Type, const string& repositoryName);
+    bool addRec(const string& a_Target, int componenteALeer, const string& pathActual, int repositoryVersion, int cantComponentesPath, const string& a_Username, time_t a_Date, t_filetype a_Type, const string& repositoryName);
     bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version);
     bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
 
@@ -61,8 +66,8 @@ private:
     ArbolBMas        _fileIndex;
     FileVersionsFile _fileVersions;
 
-    ArbolBMas        _dirIndex;
-    FileVersionsFile _dirVersions;
+    ArbolBMas        		_dirIndex;
+    DirectoryVersionsFile 	_dirVersions;
 
     Container        _textContainer;
     Container        _binaryContainer;

@@ -9,7 +9,7 @@ File::File()
 	_type = 0;
 }
 
-File::File(char* name, int versionNumber,char type)
+File::File(const char* name, int versionNumber,char type)
 {
 	_type = type;
 	_versionNumber = versionNumber;

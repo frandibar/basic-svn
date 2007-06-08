@@ -56,3 +56,53 @@ t_filetype getFiletype(const std::string& filename)
     return (nChars > nNonchars) ? TEXT : BINARY;
 }
 
+int countComponents(const std::string& a_Target)
+{
+  int cantComponentes = 0;
+  unsigned int length = a_Target.length();
+  unsigned int index = 0;
+
+  while(index < length)
+    {
+      index = a_Target.find_first_of("/",index);      
+      cantComponentes++;
+      if(index < length)
+	index++;
+    }
+
+  return cantComponentes;
+}
+
+std::string getComponent(const std::string& a_Target,int component)
+{
+	int cantidadComponentes = countComponents(a_Target);
+	
+	std::string res;	
+
+	if(component > cantidadComponentes)
+ 		res = "";
+	
+	else
+	{
+		int componenteLeida = 0;
+		unsigned int comienzo = 0;
+		unsigned int fin = 0;
+	
+
+		while(componenteLeida != component)
+		{
+			comienzo = fin;
+			fin = a_Target.find_first_of("/",fin);
+			componenteLeida++;
+			
+			if(fin < a_Target.length())
+				fin++;
+		}
+
+		res = a_Target.substr(comienzo,fin - comienzo - 1);		
+	}
+
+	return res;	
+}
+
+

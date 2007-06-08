@@ -35,7 +35,7 @@ public:
     bool validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const;
     std::list<User> getListOfUsers(const string& a_Reposit) const;
 
-    bool addFile   (const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool add(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password);
     bool removeFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
     bool getFile(const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
                  const string& a_Username, const string& a_Password) const;

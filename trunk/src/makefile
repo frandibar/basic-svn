@@ -5,11 +5,12 @@ CXXFLAGS = -ggdb -Wall --pedantic --ansi -fexceptions
 INCLUDES = 
 LIBS     = -lxerces-c
 
-TARGETS  = svnadmin svnuser 
+TARGETS  = svnadmin svnuser contarComponentes
 
-SRCS_common   = Almacen.cpp arbolbmas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp Version.cpp VersionManager.cpp
+SRCS_common   = Almacen.cpp arbolbmas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp VersionManager.cpp
 SRCS_svnadmin = $(SRCS_common) main-admin.cpp
 SRCS_svnuser  = $(SRCS_common) main-user.cpp
+SRCS_contarComponentes = contarComponentes.cpp
 
 # TODO: como hacer una regla que expanda OBJS_% ??
 
@@ -18,6 +19,9 @@ DPNDS_svnuser = $(SRCS_svnuser:%.cpp=.depends/%.d)
 
 OBJS_svnadmin  = $(SRCS_svnadmin:%.cpp=.objects/%.o)
 DPNDS_svnadmin = $(SRCS_svnadmin:%.cpp=.depends/%.d)
+
+OBJS_contarComponentes = $(SRCS_contarComponentes:%.cpp=.objects/%.o)
+DPNDS_contarComponentes = $(SRCS_contarComponentes:%.cpp=.objects/%.d)
 
 all: 	$(TARGETS)
 
@@ -46,5 +50,5 @@ clean:
 tar: 	
 	tar -czf svngrupo.tar.gz *.h *.cpp makefile 
 
--include $(DPNDS_svnuser) $(DPNDS_svnuser)
+-include $(DPNDS_svnuser) $(DPNDS_svnuser) $(DPNDS_contarComponentes)
 

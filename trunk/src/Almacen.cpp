@@ -229,13 +229,13 @@ bool Almacen::removeUser(const string& a_Reposit, const string& a_Username) thro
     return ret;
 }
 
-bool Almacen::addFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password)
+bool Almacen::add(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password)
 {
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
     bool ret = rep->open();
-    ret = ret && rep->addFile(a_Filename, a_Username, a_Password);
+    ret = ret && rep->add(a_Target, a_Username, a_Password);
     ret = ret && rep->close();
     return ret;
 }
