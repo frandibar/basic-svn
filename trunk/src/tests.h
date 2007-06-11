@@ -6,7 +6,7 @@
 #include "Container.h"
 #include "FileVersion.h"
 #include "FileVersionsFile.h"
-#include "file.h"
+#include "File.h"
 #include "DirectoryVersion.h"
 #include <string>
 #include <list>

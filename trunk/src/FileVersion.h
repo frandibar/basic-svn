@@ -28,7 +28,7 @@ public:
     tm				getFecha()       const { return _fecha;      }
     char*			getUser()        const { return _user;       }
     long int		getOffset()      const { return _offset;     }
-    char			getTipo()        const { return _tipo;       }
+    char			getTipo()        const 	  { return _tipo;       }
 	t_versionType	getVersionType() const { return _versionType;}
 
     int tamanioEnDisco();

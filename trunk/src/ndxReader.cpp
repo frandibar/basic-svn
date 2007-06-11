@@ -58,15 +58,36 @@ int main(int argc, char** argv)
         offset += sizeof(int);
         cout << "#claves : (" << sizeof(int) << "b " << offset - buffer + pad << ")\t" << nclaves << endl;
 
-        int keylength;
-        memcpy(&keylength, offset, sizeof(int));
-        offset += sizeof(int);
-        cout << "keylen  : (" << sizeof(int) << "b " << offset - buffer + pad << ")\t" << keylength << endl;
+		  int bytesLeidosEnData = 0;
+		  for(int i = 0;i < nclaves;i++)
+		  {
+	        int keylength;
+	        memcpy(&keylength, offset, sizeof(int));
+	        offset += sizeof(int);
+			  bytesLeidosEnData += sizeof(int);
+	        cout << "keylen  : (" << sizeof(int) << "b " << offset - buffer + pad << ")\t" << keylength << endl;
 
-        char data[SIZE2];
-        memcpy(data, offset, SIZE2 * sizeof(char));
-        offset += SIZE2 * sizeof(char);
-        cout << "data    : (" << SIZE2 * sizeof(char) << "b " << offset - buffer + pad << ")\t" << data << endl;
+			  char* key = new char[(keylength + 1) * sizeof(char)];
+			  memcpy(key,offset,keylength * sizeof(char));
+			  key[keylength] = 0;
+			  offset += sizeof(char) * keylength;
+			  bytesLeidosEnData += keylength * sizeof(char);
+			  cout<<"key: "<<key<<"\n";
+				
+			  int ref;
+			  memcpy(&ref,offset,sizeof(int));
+			  offset+= sizeof(int);
+			  bytesLeidosEnData += sizeof(int);
+			  cout<<"ref: "<<ref<<"\n";
+
+			  delete key;
+		  }
+
+		  char* data = new char[(SIZE2 - bytesLeidosEnData + 4) * sizeof(char)];
+	     memcpy(data, offset,(SIZE2 - bytesLeidosEnData + 4) * sizeof(char));
+	     offset += (SIZE2 - bytesLeidosEnData + 4) * sizeof(char);
+	     cout << "data    : (" << (SIZE2 - bytesLeidosEnData) * sizeof(char) << "b " << offset - buffer + pad << ")\t" << data << endl;
+		  delete data;
 
         if (nivel == 0) {   // nodo hoja
             int izq;

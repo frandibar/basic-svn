@@ -280,7 +280,7 @@ std::list<User> Almacen::getListOfUsers(const string& a_Reposit) const
     return users;
 }
 
-bool Almacen::getFile(const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
+bool Almacen::get(const string& a_Reposit, const string& a_TargetDestiny, const string& a_Target, const string& a_Version, 
              const string& a_Username, const string& a_Password) const
 {
     Repositorio* rep = getRepository(a_Reposit);
@@ -288,7 +288,7 @@ bool Almacen::getFile(const string& a_Reposit, const string& a_TargetDir, const 
         return false;
 
     bool ret = rep->open();
-    ret = ret && rep->getFile(a_TargetDir, a_Filename, a_Version, a_Username, a_Password);
+    ret = ret && rep->get(a_TargetDestiny, a_Target, a_Version, a_Username, a_Password);
     ret = ret && rep->close();
     return ret;
 }

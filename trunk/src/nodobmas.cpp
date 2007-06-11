@@ -49,8 +49,42 @@ bool NodoBMas::insertPair(const char* key, int ref, int* offset, int* tamanioArr
                 sizeof(int));
 		*offset += sizeof(int);
 
-        int cmp = strcmp(key,auxKey);
-        if (cmp < 0) {
+		// genero el nombre del archivo que esta en el nodo
+		char* auxFileName = new char[(tamanioClave - 4) * sizeof(char)];
+		memcpy(auxFileName,auxKey,(tamanioClave - 5));
+		auxFileName[tamanioClave - 5] = 0;
+
+		//genero la version string del archivo que esta en el nodo
+		char* versionStr = new char[6];
+		memcpy(versionStr, auxKey + (tamanioClave - 5),5*sizeof(char));
+		versionStr[5] = 0;
+	
+		int auxVersion = atoi(versionStr);
+
+		delete versionStr;
+
+		int keySize = strlen(key);
+
+		// genero el nombre del archivo que esta en el nodo
+		char* auxFileName2 = new char[(keySize - 4) * sizeof(char)];
+		memcpy(auxFileName2,key,(keySize - 5));
+		auxFileName2[keySize - 5] = 0;
+
+		//genero la version string del archivo que esta en el nodo
+		char* versionStr2 = new char[6];
+		memcpy(versionStr2, key + (keySize - 5),5*sizeof(char));
+		versionStr2[5] = 0;
+
+		int auxVersion2 = atoi(versionStr2);
+
+		delete(versionStr2);
+
+        int cmp_filename = strcmp(auxFileName2,auxFileName);
+
+		  delete auxFileName;
+		  delete auxFileName2;
+
+        if (cmp_filename < 0) {
             // genero un arreglo auxiliar para poder contemplar los corrimientos en el arreglo
             // de claves
             *arregloAux = new char[(TAMANIOARREGLO - offsetInsercion) * sizeof(char)];
@@ -75,10 +109,45 @@ bool NodoBMas::insertPair(const char* key, int ref, int* offset, int* tamanioArr
             end = true;
         }
 
-        else if (cmp == 0){
+		  else if(cmp_filename == 0)
+		  {
+				if(auxVersion2 < auxVersion)
+				{
+		            // genero un arreglo auxiliar para poder contemplar los corrimientos en el arreglo
+		            // de claves
+		            *arregloAux = new char[(TAMANIOARREGLO - offsetInsercion) * sizeof(char)];
+					memcpy(*arregloAux,_pares + offsetInsercion,TAMANIOARREGLO - offsetInsercion);
+
+					// inserto tamanio de la clave, clave y referencia
+					// tamanio clave
+					memcpy(_pares + offsetInsercion,
+							&tamanioClaveAInsertar,
+							sizeof(int));
+					offsetInsercion += sizeof(int);
+
+					// clave
+		            memcpy(_pares + offsetInsercion, key, sizeof(char) * tamanioClaveAInsertar);
+					offsetInsercion += tamanioClaveAInsertar * sizeof(char);
+
+					// referencia
+		            memcpy(_pares + offsetInsercion, &ref, sizeof(int));
+					offsetInsercion += sizeof(int);
+
+					*offset = offsetInsercion;
+		            end = true;				
+				}
+				
+				else if(auxVersion == auxVersion2){
+					 std::cout << "la clave que se intenta insertar ya existe" << std::endl;
+            	return false;
+				}
+				
+		  }
+
+/*        else if ((cmp_filename == 0)&&(versionStr2 == versionStr)){
             std::cout << "la clave que se intenta insertar ya existe" << std::endl;
             return false;
-        }
+        }*/
 
 		if(!end)
 			(*tamanioArregloAux)--;

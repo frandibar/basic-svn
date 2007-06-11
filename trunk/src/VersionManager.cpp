@@ -2,12 +2,16 @@
 
 #include "VersionManager.h"
 #include "debug.h"
-
-
 #include <fstream>
 #include <list>
+#include <iterator>
+#include <unistd.h>
+#include <sys/stat.h>
 
 using std::list;
+using std::iterator;
+
+using namespace std;
 
 const string VersionManager::FILE_INDEX_FILENAME    = "file_index.ndx";
 const string VersionManager::FILE_VERSION_FILENAME  = "file_versions.ndx";
@@ -111,7 +115,7 @@ bool VersionManager::buildVersion(std::list<FileVersion>& lstVersions, const str
 }
 
     
-bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type)
+bool VersionManager::addFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type)
 {
     if (!_isOpen)
         return false;
@@ -120,10 +124,15 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
     int nroNuevoBloque;
     long int offset;
     string key;
+	
+	key = repositoryName;
+
+	for(int i = 1; i <= countComponents(a_Filename); ++i)
+		key = key + "//" + getComponent(a_Filename,i);
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el archivo
-    bloque = _fileIndex.searchFile(a_Filename.c_str());
+    bloque = _fileIndex.searchFile(key.c_str());
 
     if (bloque >= 0) { // el archivo esta en el indice
         FileVersion* ultimaVersion;
@@ -187,6 +196,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
                 case FileVersionsFile::OVERFLOW :
                     // tengo que generar la clave a partir de a_File y repositoryVersion
+						  key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
                     return _fileIndex.insert(key.c_str(), nroNuevoBloque);
 
                 default:
@@ -210,7 +220,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
                         break;
                     case FileVersionsFile::OVERFLOW :
                         // tengo que generar la clave a partir de a_File y repositoryVersion
-                        key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+                        key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
                         return _fileIndex.insert(key.c_str(), nroNuevoBloque);
                     default:
                         return false;
@@ -235,35 +245,36 @@ bool VersionManager::addFile(int repositoryVersion, const string& a_Filename, co
 
        if (!_fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, FileVersion::MODIFICACION, &nroNuevoBloque))
            return false;
-       key = a_Filename + zeroPad(repositoryVersion, VERSION_DIGITS);
+       key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
        return (_fileIndex.insert(key.c_str(), nroNuevoBloque));
     }   
 
     return false; // never gets here
 }
 
-bool VersionManager::add(int repositoryVersion, const string& a_Target, const string& a_Username, time_t a_Date, t_filetype a_Type, const string& repositoryName)
+bool VersionManager::add(int repositoryVersion, const string& repositoryName, const string& a_Target, const string& a_Username, time_t a_Date, t_filetype a_Type)
 {
-  int componenteALeer = 1;
-  
-  string pathActual = repositoryName;	//este tendria que ser el repository name.
-
   int cantComponentesPath = countComponents(a_Target);
 
-  return addRec(a_Target, componenteALeer, pathActual, repositoryVersion, cantComponentesPath, a_Username, a_Date, a_Type, repositoryName);
+  string pathActual = repositoryName;	
 
+  return addRec(a_Target,1, pathActual, repositoryName, repositoryVersion, cantComponentesPath, a_Username, a_Date, a_Type);
 }
 
-bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  string& pathActual, int repositoryVersion, int cantComponentesPath, const string& a_Username, time_t  a_Date, t_filetype a_Type, const string& repositoryName)
+bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  string& pathActual, const string& repositoryName, int repositoryVersion, int cantComponentesPath, const string& a_Username, time_t  a_Date, t_filetype a_Type)
 {
 	bool ret = false;
-	string key;	
+	string key;
 
-	string finalTarget = repositoryName +  "//" + a_Target;
-	if(pathActual == finalTarget)
+	string finalPath = repositoryName;
+
+	for(int i = 1; i <= countComponents(a_Target); ++i)
+		finalPath = finalPath + "//" + getComponent(a_Target,i);
+
+	if(pathActual.compare(finalPath) == 0)
 	{	
 		if((a_Type == BINARY) || (a_Type == TEXT))		
-			ret = addFile(repositoryVersion, a_Target, a_Username, a_Date, a_Type);
+			ret = addFile(repositoryVersion,repositoryName, a_Target, a_Username, a_Date, (a_Type == TEXT ? 't' : 'b'));
 
 		else	//TODO ADD_DIRECTORY
 			ret = false;
@@ -279,43 +290,88 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 
 		// creo una nueva version de directorio
 		DirectoryVersion* nuevaVersion = new DirectoryVersion(repositoryVersion, a_Username.c_str(), *date, DirectoryVersion::MODIFICACION);
-				
-		if(bloque >= 0)
+
+		// tomo la componente correspondiente					
+		string componente = getComponent(a_Target,componenteALeer);
+
+		// defino el tipo de archivo que es la componente leida
+		char tipoArchivo;
+
+		int nuevoBloque;
+
+		string caminoRecorrido = pathActual + "//" + componente;
+						
+		if(caminoRecorrido.compare(finalPath) == 0)
 		{
-			//aca tengo que cotejar los cambios que se realizan en la version
-			ret = false;			
+			if(a_Type == TEXT) tipoArchivo = 't';
+
+			else if(a_Type == BINARY) tipoArchivo = 'b';
+
+			else tipoArchivo = 'd';				
+		}
+		
+		else tipoArchivo = 'd';
+					
+		if(bloque >= 0)
+		{		
+			//obtengo el ultimo nro de version del directorio
+			int lastVersionNumber = _dirVersions.getLastVersionNumber(bloque);
+
+			DirectoryVersion* oldVersion;
+
+			//trato de obtener la ultima version del directorio
+			if(!_dirVersions.getVersion(lastVersionNumber,bloque,&oldVersion))
+				ret = false;	
+
+			else
+			{
+				ret = addRec(a_Target,componenteALeer + 1,pathActual + "//" + componente, repositoryName, repositoryVersion, cantComponentesPath, a_Username, a_Date, a_Type);
+
+				if(ret){
+					//aca tengo que cotejar los cambios que se realizan en la version										
+					list<File>* lst = oldVersion->getFilesList();
+					
+					list<File>::iterator it;
+
+					debug("comienzo a copiar la lista");
+					//copio los archivos que tenia en la version anterior a la nueva para luego actualizarlos
+					for(it = lst->begin();it != lst->end();it++)	
+						nuevaVersion->addFile(it->getName(),it->getVersion(),it->getType());
+
+					debug("termine de copiar la lista");
+					debug("elimino la version vieja");
+					//libero el puntero a la ultima version
+					delete oldVersion;
+
+					//actualizo la version de la componente leida
+					nuevaVersion->update(componente.c_str(),repositoryVersion,tipoArchivo);
+					debug("actualizo la version");
+
+					switch(_dirVersions.insertVersion(nuevaVersion, bloque, &nuevoBloque))
+					{
+						case DirectoryVersionsFile::OK:
+							ret = true;
+							break;
+						case DirectoryVersionsFile::OVERFLOW:
+							key = pathActual + zeroPad(repositoryVersion,VERSION_DIGITS);
+							ret = _dirIndex.insert(key.c_str(),nuevoBloque);
+							break;
+						default:
+							ret = false;
+							break;				
+					}
+				}										
+			}			
 		}
 		
 		else
 		{	
-			// tomo la componente correspondiente					
-			string componente = getComponent(a_Target,componenteALeer);
-
-			ret = addRec(a_Target, componenteALeer + 1, pathActual + "//" + componente, repositoryVersion, cantComponentesPath, a_Username, 						a_Date, a_Type,repositoryName);
+			ret = addRec(a_Target, componenteALeer + 1, pathActual + "//" + componente, repositoryName, repositoryVersion, cantComponentesPath, a_Username, 						a_Date, a_Type);
 			
 			if(ret)
-			{
-				char tipoArchivo;
-
-				string caminoRecorrido = pathActual + "//" + componente;
-				
-				debug("camino recorrido: "+caminoRecorrido+"\n");
-				debug("final target: "+finalTarget+"\n");
-				if(caminoRecorrido == finalTarget)
-				{
-					if(a_Type == TEXT) tipoArchivo = 't';
-
-					else if(a_Type == BINARY) tipoArchivo = 'b';
-
-					else tipoArchivo = 'd';				
-				}
-			
-				else tipoArchivo = 'd';
-				
-
+			{		
 				nuevaVersion->addFile(componente.c_str(),repositoryVersion,tipoArchivo);
 
-				int nuevoBloque;
 				_dirVersions.insertVersion(nuevaVersion,&nuevoBloque);
 
 				//genero la clave
@@ -351,7 +407,7 @@ bool VersionManager::create()
     return _isOpen;
 }
 
-bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version)
+bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version,const string& repositoryName)
 {
     if (!_isOpen)
         return false;
@@ -378,6 +434,13 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
            return false; 
     }
 
+	 int RepNameEnd = a_Filename.find_first_not_of(repositoryName + "//");
+	
+	 string path = a_Filename;
+	
+	 path.erase(0,RepNameEnd);
+
+
     char ftype = versionBuscada->getTipo();
     if (ftype == 't') {
         int original = versionBuscada->getOriginal();
@@ -386,7 +449,7 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
         int final = versionBuscada->getNroVersion();
         delete versionBuscada;
         if (_fileVersions.getVersionFrom(original, final, bloque, versionsList)) {
-            return (buildVersion(versionsList, a_TargetDir + "//" + a_Filename));
+            return (buildVersion(versionsList, a_TargetDir + "//" + path));
         }
         else
             return false;
@@ -394,7 +457,7 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     else if (ftype == 'b') {
         int offset = versionBuscada->getOffset();
         delete versionBuscada;
-        std::ofstream os((a_TargetDir + "//" + a_Filename).c_str());
+        std::ofstream os((a_TargetDir + "//" + path).c_str());
         if (!os.is_open())
             return false;
         if (!_binaryContainer.get(offset, os))
@@ -403,6 +466,234 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
         return true;
     }
     return false; // never gets here
+}
+
+bool VersionManager::getDirectory(const string& a_TargetDir,const string& pathToFile, const string& a_Path, const string& a_DirName, const string& a_Version,const string& repositoryName)
+{
+	
+	string fullDirName = a_Path + "//" + a_DirName;
+    if (!_isOpen)
+        return false;
+
+    DirectoryVersion* versionBuscada;
+    int bloque;
+	 int lastVersion;
+
+    if (a_Version != "") {
+        int version = fromString<int>(a_Version);
+        bloque = _dirIndex.searchFileAndVersion(fullDirName.c_str(), version);
+        if (!_dirVersions.searchVersion(&versionBuscada, version, bloque)) {
+            bloque = _dirIndex.searchFile(fullDirName.c_str());
+				lastVersion = _dirVersions.getLastVersionNumber(bloque);
+            if(!_dirVersions.searchVersion(&versionBuscada, lastVersion, bloque))
+                return false;
+            else if(versionBuscada->getNroVersion() > version) {
+                delete versionBuscada;
+                return false;
+            }
+        }        
+    }
+    else {
+        bloque = _dirIndex.searchFile(fullDirName.c_str());
+		  lastVersion = _dirVersions.getLastVersionNumber(bloque);
+        if (!_dirVersions.searchVersion(&versionBuscada, lastVersion, bloque))
+           return false; 
+    }
+
+	 bool ret = true;	//el valor que voy a devolver
+	 
+	 //obtengo la lista de archivos/directorios del directorio que quiero obtener
+	 list<File>* filesLst = versionBuscada->getFilesList();	
+	 list<File>::iterator it;
+
+	 //si el directorio que voy a obtener no esta creado en el destino --> lo creo
+	 bool creado = false;
+	 
+	 string currentDir = get_current_dir_name();
+
+	 if(chdir((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str()) != 0)
+	 {
+			if(mkdir((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str(),0755) != 0)
+			{
+				cout<<"Imposible crear: "<<a_TargetDir << "//" << pathToFile << "//" << a_DirName<<endl;
+				delete versionBuscada;				 
+				return false;
+			}	
+			
+			else
+			{
+				creado = true;
+				chdir(currentDir.c_str());
+			}
+	 }
+		
+	 for(it = filesLst->begin(); it != filesLst->end(); it++)
+	 {
+		string FName = it->getName();
+		string version_number = toString<int>(it->getVersion());
+		
+		if(it->getType() != 'd')
+			ret = ret && getFile(a_TargetDir, fullDirName + "//" + FName, version_number, repositoryName);
+		else
+			ret = ret && getDirectory(a_TargetDir,pathToFile + "//" + a_DirName, fullDirName, FName, version_number, repositoryName);
+
+	 }
+	
+	 //si fallo la recuperacion y cree un directorio --> lo elimino
+	 if((ret == false) && (creado == true))
+		remove((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str());
+
+	 delete versionBuscada;
+
+	 chdir(currentDir.c_str());
+		
+    return ret;
+}
+
+bool VersionManager::get(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny)
+{
+    if (!_isOpen)
+        return false;
+
+	 // voy a tener que la version del directorio que contiene a ese archivo/directorio para cotejar que existe la version que estoy buscando
+    DirectoryVersion* versionDirectorioContenedor;
+    int bloque;
+
+	 //tengo que armar el path del directorio contenerdor al archivo/directorio que estoy buscando
+	 //para todos los casos el directorio raiz es el repositorio por lo tanto todos los paths de los archivos empiezan con:
+	 //"nombre_repositorio//" y van seguidos del path correspondiente...
+
+	 string searchingPath = repositoryName;
+
+    //voy agregando componente a componente para saber donde debo buscar
+ 	 for(int i = 1; i < countComponents(a_Target);i++)
+		searchingPath = searchingPath + "//" + getComponent(a_Target,i);
+	 	
+	 //obtengo la version del directorio que contiene al archivo/directorio objetivo con el mismo nro de version que deseo que tenga el 
+ 	 //archivo/directorio si es que voy a querer una version en particular o la ultima version del directorio que contiene al archivo/ 
+	 //directorio si esa que no especifique ninguna
+    if (a_Version != "") {
+        int version = fromString<int>(a_Version);
+        bloque = _dirIndex.searchFileAndVersion(searchingPath.c_str(), version);
+        if (!_dirVersions.searchVersion(&versionDirectorioContenedor, version, bloque)) {
+            bloque = _dirIndex.searchFile(searchingPath.c_str());
+				version = _dirVersions.getLastVersionNumber(bloque);
+            if(!_dirVersions.getVersion(version, bloque, &versionDirectorioContenedor))
+                return false;
+            else if(versionDirectorioContenedor->getNroVersion() > version) {
+                delete versionDirectorioContenedor;
+                return false;
+            }
+        }        
+    }
+    else {
+        bloque = _dirIndex.searchFile(searchingPath.c_str());
+		  int lastVersion = _dirVersions.getLastVersionNumber(bloque);
+        if (!_dirVersions.getVersion(lastVersion, bloque, &versionDirectorioContenedor))
+           return false; 
+    }
+
+	string filename = getComponent(a_Target,countComponents(a_Target));
+	
+	File* file;
+	if(!versionDirectorioContenedor->searchFile(filename.c_str(),&file))
+	{	
+		delete versionDirectorioContenedor;
+		return false;
+	}
+
+	//una vez obtenida la version del directorio voy a tener que armar la estructura de directorios que contienen al archivo/directorio
+	//objetivo dentro del directorio destino para luego "bajar" la version solicitada del archivo/directorio objetivo
+
+	//aca voy a guardar el path actual para luego volver al directorio de trabajo
+	string currentDirectory = get_current_dir_name();
+
+	//empiezo a armar la estructura
+	int existentes  = 0;
+
+	//trato de cambiar de directorio al directorio destino para chequear que existe
+	if(chdir(a_TargetDestiny.c_str()) != 0)
+	{
+		//si el directorio destion no existe -> vuelvo al directorio de trabajo actual y elimino las referencias que tengo en memoria
+		chdir(currentDirectory.c_str());
+		delete versionDirectorioContenedor;
+		cout<<"El directorio elegido como destino no existe"<<endl;
+		return false;		
+	}
+
+	chdir(currentDirectory.c_str()); //vuelvo al directorio de trabajo
+	
+	//ahora tengo que armar la estructura de directorios a donde va a ir a parar el archivo/directorio objetivo
+	int RepNameEnd = searchingPath.find_first_not_of(repositoryName + "//");
+	
+	string path = searchingPath;
+	
+	path.erase(0,RepNameEnd);
+	
+	string pathAuxiliar = a_TargetDestiny;
+	
+	int components = countComponents(path);
+
+	if(path.length() > 0)
+	{
+		//empiezo a armar la estructura de directorios
+		int components = countComponents(path);
+
+		debug("creando directorios \n");
+
+		for(int j = 1; j <= components;j++)
+		{
+			pathAuxiliar = pathAuxiliar + "/" + getComponent(path,j);
+
+			//si no existe el directorio lo creo
+			if(chdir(pathAuxiliar.c_str()) != 0)
+			{				
+				if(mkdir(pathAuxiliar.c_str(),0755) != 0)
+					cout<<"error al crear: "<<pathAuxiliar<<endl;
+			}
+			
+			else
+			{
+				existentes++;
+				chdir(currentDirectory.c_str());
+			}
+		}		
+	}
+
+	bool ret;					
+
+	if(file->getType() != 'd')
+	{
+		ret = getFile(a_TargetDestiny,searchingPath + "//" + filename ,a_Version,repositoryName);
+	}
+
+	else
+	{
+		ret = getDirectory(a_TargetDestiny,path , searchingPath, filename, a_Version,repositoryName);
+	}
+
+	if(ret == false)
+	{
+		//elimino los directorios que cree para albergar el archivo/directorio que queria obtener
+		
+		for(int j = components; j > existentes; j--)
+		{
+			remove(pathAuxiliar.c_str());
+			
+			int index = pathAuxiliar.find_last_of("/");
+		
+			pathAuxiliar.erase(index);			
+		}
+	}
+
+	delete versionDirectorioContenedor;
+	
+	return ret;
+}
+
+bool VersionManager::getRec(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny, int 					componenteALeer, int cantComponentesPath, const string& pathActual)
+{
+	return false;
 }
 
 bool VersionManager::getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version)
