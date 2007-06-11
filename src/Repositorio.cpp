@@ -66,7 +66,7 @@ bool Repositorio::add(const string& a_Target, const string& a_Username, const st
     time(&date);
     if (!_versionManager.open())
         return false;
-    if (!_versionManager.add(_version + 1, a_Target, a_Username, date, ftype, _name))
+    if (!_versionManager.add(_version + 1, _name, a_Target, a_Username, date, ftype))
         return false;
     if (!_versionManager.close())
         return false;
@@ -177,7 +177,7 @@ bool Repositorio::loadVersion()
     return true;
 }
 
-bool Repositorio::getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
+bool Repositorio::get(const string& a_TargetDestiny, const string& a_Target, const string& a_Version, 
                           const string& a_Username, const string& a_Password)
 {
     if (!_isOpen)
@@ -186,7 +186,7 @@ bool Repositorio::getFile(const string& a_TargetDir, const string& a_Filename, c
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getFile(a_TargetDir, a_Filename, a_Version);
+    return _versionManager.get(a_Version, a_Target, _name, a_TargetDestiny);
 }
 
 bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)

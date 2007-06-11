@@ -281,7 +281,7 @@ void NodoBMasHoja::promoteRoot(NodoBMas** nodo1,NodoBMas** nodo2, int id1, int i
 							   char** claveARaiz)
 {
 	// creo los dos nodos que van a ser los hijos de la raiz
-    *nodo1 = new NodoBMasHoja(id1, _id, -1, id2);
+   *nodo1 = new NodoBMasHoja(id1, _id, -1, id2);
 
 	*nodo2 = new NodoBMasHoja(id2,_id,id1,-1);
 

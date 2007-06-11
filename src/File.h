@@ -14,11 +14,13 @@ public:
 
 	~File();
 
-	char*	getName()		{	return	_name;			}
-	int		getVersion()	{	return _versionNumber;	}
-	char	getType()		{	return _type;			}
+	char*	getName()					{	return	_name;			}
+	int	getVersion()				{	return _versionNumber;	}
+	char	getType()					{	return _type;			}
 
-	int		getTamanioEnDisco();
+	void	setVersion(int Version)	{ _versionNumber = Version; }
+
+	int	getTamanioEnDisco();
 
 	void	read(char** buffer);
 	void	write(char* buffer);
@@ -26,7 +28,7 @@ public:
 private:
 
 	char*	_name;
-	int		_versionNumber;
+	int	_versionNumber;
 	char	_type;
 };
 

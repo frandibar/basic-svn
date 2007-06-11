@@ -1,8 +1,10 @@
 // DirectoryVersion.cpp
 
 #include "DirectoryVersion.h"
+#include "debug.h"
 
 using std::list;
+using std::string;
 
 DirectoryVersion::DirectoryVersion()
 {
@@ -142,3 +144,45 @@ long int DirectoryVersion::tamanioEnDisco()
 	return size;
 }
 
+void DirectoryVersion::update(const char* fileName, int versionNumber, char type)
+{
+	list<File>::iterator it;
+
+	bool modified = false;
+
+	for(it = _fileLst.begin();it != _fileLst.end();++it)
+	{
+		int cmp = strcmp(it->getName(),fileName);
+
+		if((cmp == 0) && (it->getType() == type))
+		{
+			it->setVersion(versionNumber);
+			modified = true;
+		}
+	}
+	
+	if(!modified)
+
+	addFile(fileName,versionNumber,type);
+
+	return;
+}
+
+bool DirectoryVersion::searchFile(const char* filename,File** file)
+{
+
+	list<File>::iterator it;
+
+	for(it = _fileLst.begin();it != _fileLst.end();it++)
+	{
+		int cmp = strcmp(filename,it->getName());
+		
+		if(cmp == 0)
+		{
+			*file = new File(filename,it->getVersion(),it->getType());
+			return true;
+		}
+	}
+	
+	return false;
+}

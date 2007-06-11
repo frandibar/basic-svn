@@ -34,8 +34,11 @@ public:
 	t_versionType		getType()		{	return _type;			}
 
 	void addFile(const char* fileName,int versionNumber,char type);
+	void update(const char* fileName,int versionNumber,char type);
 
 	long int tamanioEnDisco();
+
+	bool searchFile(const char* filename,File** file);
 
 private:
 	int					_nroVersion;	// version number

@@ -237,8 +237,7 @@ bool DirectoryVersionsFile::getVersion(int versionNumber,int bloque,DirectoryVer
 	}
 
     // en este punto, _bloqueActual contiene la version original    
-	DirectoryVersion* auxVersion;
-	_bloqueActual->searchVersion(versionNumber, &auxVersion);
+	_bloqueActual->searchVersion(versionNumber, version);
 
 	return true;
 }

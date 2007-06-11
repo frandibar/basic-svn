@@ -83,13 +83,13 @@ void showByDate(const string& user, const string& pass, const string& reposit, c
 }
 
 
-void getFile(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
+void get(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
 {
     Almacen almacen;
     if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
-    if (!almacen.getFile(a_Reposit, a_TargetDir, a_Filename, a_Version, a_Username, a_Password)) {
+    if (!almacen.get(a_Reposit, a_TargetDir, a_Filename, a_Version, a_Username, a_Password)) {
         cout << "El archivo " << a_Filename << " no pudo ser recuperado." << endl;
         return;
     }
@@ -170,9 +170,9 @@ int main(int argc, char** argv)
                 argsok = ((argc == 7) || (argc == 8));
                 if (argsok) {
                     if (argc == 7)
-                        getFile(user, pass, optarg, argv[optind], argv[optind + 1], "");
+                        get(user, pass, optarg, argv[optind], argv[optind + 1], "");
                     else
-                        getFile(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
+                        get(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
                 }
                 break;
         }

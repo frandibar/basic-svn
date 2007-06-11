@@ -18,7 +18,6 @@
 
 using std::string;
 
-
 class VersionManager
 {
 public:
@@ -46,10 +45,16 @@ public:
     bool close();  
 
     bool isOpen() const { return _isOpen; }
-    bool addFile(int repositoryVersion, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);
-    bool add(int repositoryVersion, const string& a_Target, const string& a_User, time_t a_Date, t_filetype a_Type, const string& repositoryName);
-    bool addRec(const string& a_Target, int componenteALeer, const string& pathActual, int repositoryVersion, int cantComponentesPath, const string& a_Username, time_t a_Date, t_filetype a_Type, const string& repositoryName);
-    bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version);
+
+    bool addFile(int repositoryVersion,const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date, char a_Type);
+    bool add(int repositoryVersion,const string& repositoryName, const string& a_Target, const string& a_User, time_t a_Date, t_filetype 		a_Type);
+    bool addRec(const string& a_Target, int componenteALeer, const string& pathActual,const string& repositoryName, int repositoryVersion, 		 int cantComponentesPath, const 	 string& a_Username, time_t a_Date, t_filetype a_Type);
+
+    bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version,const string& repositoryName);
+	 bool getDirectory(const string& a_TargetDir, const string& pathToFile, const string& a_Path, const string& a_DirName, const string& a_Version,const string& repositoryName);
+	 bool get(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny);
+	 bool getRec(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny, 						 int componenteALeer, int cantComponentesPath, const string& pathActual);
+
     bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
 
 protected:

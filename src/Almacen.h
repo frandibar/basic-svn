@@ -37,7 +37,7 @@ public:
 
     bool add(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password);
     bool removeFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password);
-    bool getFile(const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version, 
+    bool get(const string& a_Reposit, const string& a_TargetDestiny, const string& a_Target, const string& a_Version, 
                  const string& a_Username, const string& a_Password) const;
     bool getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_VersionA, const string& a_VersionB, const string& a_Filename = "");
 
