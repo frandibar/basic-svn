@@ -39,15 +39,24 @@ bool Repositorio::userExists(const string& a_Username) const
     return false;
 }
 
-bool Repositorio::removeFile(const string& a_Filename, const string& a_Username, const string& a_Password)
+bool Repositorio::removeFileOrDirectory(const string& a_Target, const string& a_Username, const string& a_Password)
 {
     if (!_isOpen)
         return false;
 
     if (!validateUser(a_Username, a_Password)) return false;
 
-    // TODO
-    return false;
+    time_t date;
+    time(&date);
+    if (!_versionManager.open())
+        return false;
+    if (!_versionManager.removeFileOrDirectory(_version + 1, _name, a_Target, a_Username, date))
+        return false;
+    if (!_versionManager.close())
+        return false;
+            
+    _version++;
+    return true;
 }
 
 bool Repositorio::add(const string& a_Target, const string& a_Username, const string& a_Password)

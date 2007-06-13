@@ -24,7 +24,7 @@ public:
     bool close();
    
     bool add(const string& a_Target, const string& a_Username, const string& a_Password);
-    bool removeFile(const string& a_Filename, const string& a_Username, const string& a_Password);
+    bool removeFileOrDirectory(const string& a_Target, const string& a_Username, const string& a_Password);
     bool get(const string& a_TargetDestiny, const string& a_Target, const string& a_Version, 
                  const string& a_Username, const string& a_Password);
 
