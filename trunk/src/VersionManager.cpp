@@ -7,6 +7,7 @@
 #include <iterator>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <dirent.h>
 
 using std::list;
 using std::iterator;
@@ -252,6 +253,208 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
     return false; // never gets here
 }
 
+bool VersionManager::addDirectory(int repositoryVersion, const string& repositoryName, const string& a_Directoryname, const string& a_User, time_t a_Date)
+{
+    if (!_isOpen)
+        return false;
+
+    int bloque;
+    int nroNuevoBloque;
+    string key;
+	 DIR* dir;
+	 struct dirent* myDirent;
+	 DirectoryVersion* nuevaVersion;
+	
+	key = repositoryName;
+
+	for(int i = 1; i <= countComponents(a_Directoryname); ++i)
+		key = key + "//" + getComponent(a_Directoryname,i);
+
+    tm* date = localtime(&a_Date);
+    // busco en el indice a ver si esta el directorio
+    bloque = _dirIndex.searchFile(key.c_str());
+
+    if (bloque >= 0) { // el directorio esta en el indice
+        DirectoryVersion* ultimaVersion;
+		  int lastVersion  = _dirVersions.getLastVersionNumber(bloque);	//obtengo el numero de la ultima version
+
+        _dirVersions.getVersion(lastVersion, bloque, &ultimaVersion);	//obtengo la ultima version
+
+		  //creo la nueva version
+		  nuevaVersion = new DirectoryVersion(repositoryVersion,a_User.c_str(),*date,DirectoryVersion::MODIFICACION);
+
+		  //debo cotejar los cambios que hubo en el directorio (eliminacion y agregado de nuevos archivos/directorios)
+
+		  //abro el directorio que quiero "versionar"
+
+		  if((dir = opendir(a_Directoryname.c_str())) == NULL)
+		  {
+					delete nuevaVersion;
+					delete ultimaVersion;
+					
+					cout<<"El directorio: "<<a_Directoryname<<" no existe"<<endl;
+					return false;
+  	 	  }
+
+		  //obtengo una lista con todos los nombres de los archivos/directorios pertenecientes al directorio que quiero agregar
+		  list<string> fileIncludedLst;
+		  while((myDirent = readdir(dir)) != NULL)
+		  {
+				string filename = myDirent->d_name;
+				if( (filename.compare(".") != 0) && (filename.compare("..") != 0) )
+					fileIncludedLst.push_back(filename);
+		  }
+
+		  closedir(dir);
+			
+		  //ahora debo si hay algun borrado y luego generar la version del archivo
+		  
+		  list<string> filesErased; //lista con los nombres de los archivos/directorios que fueron borrados
+
+		  list<File>* filesLst = ultimaVersion->getFilesList();	//lista con los archivos que pertencian a la ultima version
+		  
+		  list<File>::iterator it_oldFiles;		//iterador para recorrer la lista de los archivos/directorios de la ultima version
+		  list<string>::iterator it_newFiles;	//iterador para recorrer la lista de los archivos/directorios de la nueva version
+
+		  for(it_oldFiles = filesLst->begin(); it_oldFiles != filesLst->end(); it_oldFiles++)
+		  {
+			 string fname = it_oldFiles->getName();
+			 bool included = false;
+			 
+			 for(it_newFiles = fileIncludedLst.begin();it_newFiles != fileIncludedLst.end(); it_newFiles++)
+				if(fname.compare(*it_newFiles)==0)
+					included = true;
+			
+			 if(!included)
+				filesErased.push_back(fname);				
+		  }
+
+		  delete ultimaVersion;	//elimino la ultima version, ya no la voy a necesitar
+
+		  list<string>::iterator it_includedFiles;
+		  bool result = true;
+
+		  for(it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); it_includedFiles++)
+		  {	//versiono todos los archivos/directorios que pertenecen al directorio
+				
+				string fname = a_Directoryname + "/" + *it_includedFiles;
+				
+				t_filetype ftype = getFiletype(fname);
+				char type;
+				
+				if(ftype == DIRECTORY)
+				{
+					type = 'd';
+					result = result && addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+				}
+				
+				else if((ftype == TEXT)||(ftype == BINARY))
+				{
+					type = (ftype == TEXT ? 't' : 'b');
+					result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date,type);
+				}
+				
+				else result = false;
+
+				if(result)// agrego el archivo al directorio
+					nuevaVersion->addFile((*it_includedFiles).c_str(),repositoryVersion,type);					
+				
+		  }
+
+		  //TODO eliminar los archivos/directorios que estan en la lista de borrados
+		  if(result)
+		  { 							
+	        DirectoryVersionsFile::t_status status = _dirVersions.insertVersion(nuevaVersion, bloque, &nroNuevoBloque);
+	        switch (status) {
+	        	case DirectoryVersionsFile::OK :
+	         	result = true;
+	            break;
+
+	         case DirectoryVersionsFile::OVERFLOW :
+	         	// tengo que generar la clave a partir de a_Directoryname y repositoryVersion
+					key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+	         	result = _dirIndex.insert(key.c_str(), nroNuevoBloque);
+					break;
+
+	          default:
+	          	result = false;
+					break;
+	        }
+			}
+
+		  delete nuevaVersion;
+			
+		  return result;
+	 }
+
+	else	//es la 1º vez que se va a agregar el directorio, por lo tanto, no debo cotejar los cambios
+	{
+		  nuevaVersion = new DirectoryVersion(repositoryVersion,a_User.c_str(),*date,DirectoryVersion::MODIFICACION);
+
+		  if((dir = opendir(a_Directoryname.c_str())) == NULL)
+		  {
+					delete nuevaVersion;
+					
+					cout<<"El directorio: "<<a_Directoryname<<" no existe"<<endl;
+					return false;
+  	 	  }
+
+		  //obtengo una lista con todos los nombres de los archivos/directorios pertenecientes al directorio que quiero agregar
+		  list<string> fileIncludedLst;
+		  while((myDirent = readdir(dir)) != NULL)
+		  {
+				string filename = myDirent->d_name;
+				if( (filename.compare(".") != 0) && (filename.compare("..") != 0) )
+					fileIncludedLst.push_back(filename);		  
+		  }
+			
+		  closedir(dir);
+
+		  list<string>::iterator it_includedFiles;
+		  bool result = true;
+
+		  for(it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); it_includedFiles++)
+		  {	//versiono todos los archivos/directorios que pertenecen al directorio
+				
+				string fname = a_Directoryname + "/" + *it_includedFiles;
+				
+				t_filetype ftype = getFiletype(fname);
+				char type;
+				
+				if(ftype == DIRECTORY)
+				{
+					type = 'd';
+					result = result && addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+				}
+				
+				else if((ftype == TEXT)||(ftype == BINARY))
+				{
+					type = (ftype == TEXT ? 't' : 'b');
+					result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date,type);
+				}
+				
+				else result = false;
+
+				if(result)// agrego el archivo al directorio
+					nuevaVersion->addFile((*it_includedFiles).c_str(),repositoryVersion,type);					
+				
+		  }
+
+		if(result)
+		{
+	       _dirVersions.insertVersion(nuevaVersion, &nroNuevoBloque);
+		    key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+		    result = (_dirIndex.insert(key.c_str(), nroNuevoBloque));
+		}
+	
+		delete nuevaVersion;
+		
+		return result;		
+	}
+	
+	return false;
+}
+
 bool VersionManager::add(int repositoryVersion, const string& repositoryName, const string& a_Target, const string& a_Username, time_t a_Date, t_filetype a_Type)
 {
   int cantComponentesPath = countComponents(a_Target);
@@ -276,8 +479,8 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 		if((a_Type == BINARY) || (a_Type == TEXT))		
 			ret = addFile(repositoryVersion,repositoryName, a_Target, a_Username, a_Date, (a_Type == TEXT ? 't' : 'b'));
 
-		else	//TODO ADD_DIRECTORY
-			ret = false;
+		else	
+			ret = addDirectory(repositoryVersion,repositoryName, a_Target, a_Username,a_Date);
 	}
 
 	else
@@ -689,11 +892,6 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
 	delete versionDirectorioContenedor;
 	
 	return ret;
-}
-
-bool VersionManager::getRec(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny, int 					componenteALeer, int cantComponentesPath, const string& pathActual)
-{
-	return false;
 }
 
 bool VersionManager::getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version)
