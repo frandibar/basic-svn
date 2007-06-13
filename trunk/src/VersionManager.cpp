@@ -142,6 +142,36 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
             delete ultimaVersion;
             return false;
         }
+		  
+		  //analizo si la ultima version fue o no de borrado, si es asi, debo copiar todo el archivo
+		  if(ultimaVersion->getVersionType() == FileVersion::BORRADO)
+		  {
+				delete ultimaVersion;	//elimino la ultima version
+
+            std::ifstream is(a_Filename.c_str());
+            if (!is) 
+                return false;
+            offset = _textContainer.append(is);
+            is.close();
+            if (offset == -1) 
+                return false;
+
+            FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, 				   FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
+            switch (status) {
+            	case FileVersionsFile::OK :
+               	return true;
+                  break;
+            	case FileVersionsFile::OVERFLOW :
+               	// tengo que generar la clave a partir de a_File y repositoryVersion
+               	key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+                  return _fileIndex.insert(key.c_str(), nroNuevoBloque);
+						break;
+               default:
+            		return false;
+						break;
+				}
+		  }
+
         delete ultimaVersion;
 
         if (a_Type == 't') {
@@ -185,8 +215,6 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
                 remove(tmpVersionFilename.c_str());
                 remove(tmpDiffFilename.c_str());
             }
-
-            // TODO: falta ver si la ultima version es la de borrado
 
             FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset,
                                                            a_Type, FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
@@ -306,62 +334,84 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 		  }
 
 		  closedir(dir);
-			
-		  //ahora debo si hay algun borrado y luego generar la version del archivo
-		  
-		  list<string> filesErased; //lista con los nombres de los archivos/directorios que fueron borrados
 
 		  list<File>* filesLst = ultimaVersion->getFilesList();	//lista con los archivos que pertencian a la ultima version
-		  
+			  
 		  list<File>::iterator it_oldFiles;		//iterador para recorrer la lista de los archivos/directorios de la ultima version
 		  list<string>::iterator it_newFiles;	//iterador para recorrer la lista de los archivos/directorios de la nueva version
 
-		  for(it_oldFiles = filesLst->begin(); it_oldFiles != filesLst->end(); it_oldFiles++)
-		  {
-			 string fname = it_oldFiles->getName();
-			 bool included = false;
-			 
-			 for(it_newFiles = fileIncludedLst.begin();it_newFiles != fileIncludedLst.end(); it_newFiles++)
-				if(fname.compare(*it_newFiles)==0)
-					included = true;
-			
-			 if(!included)
-				filesErased.push_back(fname);				
-		  }
+		  bool result = true;
 
+		  if(ultimaVersion->getType() != DirectoryVersion::BORRADO)
+		  {		
+			  //ahora debo si hay algun borrado y luego generar la version del archivo
+			  
+			  list<File> filesErased; //lista con los nombres de los archivos/directorios que fueron borrados
+
+			  for(it_oldFiles = filesLst->begin(); it_oldFiles != filesLst->end(); it_oldFiles++)
+			  {
+				 string fname = it_oldFiles->getName();
+				 bool included = false;
+				 
+				 for(it_newFiles = fileIncludedLst.begin();it_newFiles != fileIncludedLst.end(); it_newFiles++)
+					if(fname.compare(*it_newFiles)==0)
+						included = true;
+				
+				 if(!included)
+				 {
+					File* file = new File(it_oldFiles->getName(),it_oldFiles->getVersion(),it_oldFiles->getType());
+					filesErased.push_back(*file);
+				 }				
+			  }
+
+			  list<File>::iterator it_erasedFiles;
+
+			  for(it_erasedFiles = filesErased.begin();it_erasedFiles != filesErased.end();it_erasedFiles++)
+			  {
+					string name = it_erasedFiles->getName();
+					string fname = a_Directoryname + "/" + name;
+
+					if(it_erasedFiles->getType() != 'd')
+						result = result && removeFile(repositoryVersion, repositoryName, fname, a_User, a_Date);
+					
+					else
+						result = result && removeDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+			  }
+
+			  filesErased.clear();		
+	      }
+			
 		  delete ultimaVersion;	//elimino la ultima version, ya no la voy a necesitar
 
 		  list<string>::iterator it_includedFiles;
-		  bool result = true;
 
-		  for(it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); it_includedFiles++)
-		  {	//versiono todos los archivos/directorios que pertenecen al directorio
-				
-				string fname = a_Directoryname + "/" + *it_includedFiles;
-				
-				t_filetype ftype = getFiletype(fname);
-				char type;
-				
-				if(ftype == DIRECTORY)
-				{
-					type = 'd';
-					result = result && addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
-				}
-				
-				else if((ftype == TEXT)||(ftype == BINARY))
-				{
-					type = (ftype == TEXT ? 't' : 'b');
-					result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date,type);
-				}
-				
-				else result = false;
+		  if(result)
+			  for(it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); it_includedFiles++)
+			  {	//versiono todos los archivos/directorios que pertenecen al directorio
+					
+					string fname = a_Directoryname + "/" + *it_includedFiles;
+					
+					t_filetype ftype = getFiletype(fname);
+					char type;
+					
+					if(ftype == DIRECTORY)
+					{
+						type = 'd';
+						result = result && addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+					}
+					
+					else if((ftype == TEXT)||(ftype == BINARY))
+					{
+						type = (ftype == TEXT ? 't' : 'b');
+						result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date,type);
+					}
+					
+					else result = false;
 
-				if(result)// agrego el archivo al directorio
-					nuevaVersion->addFile((*it_includedFiles).c_str(),repositoryVersion,type);					
-				
-		  }
-
-		  //TODO eliminar los archivos/directorios que estan en la lista de borrados
+					if(result)// agrego el archivo al directorio
+						nuevaVersion->addFile((*it_includedFiles).c_str(),repositoryVersion,type);										
+			  }
+			
 		  if(result)
 		  { 							
 	        DirectoryVersionsFile::t_status status = _dirVersions.insertVersion(nuevaVersion, bloque, &nroNuevoBloque);
@@ -643,6 +693,11 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 	
 	 path.erase(0,RepNameEnd);
 
+	 if(versionBuscada->getVersionType() == FileVersion::BORRADO)	//si la version buscada es una version de borrado entonces no hago nada
+	 {
+		delete versionBuscada;
+		return false;
+	 }
 
     char ftype = versionBuscada->getTipo();
     if (ftype == 't') {
@@ -702,6 +757,12 @@ bool VersionManager::getDirectory(const string& a_TargetDir,const string& pathTo
         if (!_dirVersions.searchVersion(&versionBuscada, lastVersion, bloque))
            return false; 
     }
+
+	 if(versionBuscada->getType() == DirectoryVersion::BORRADO)
+	 {	//no puedo recuperar una version de borrado
+		delete versionBuscada;
+		return false;
+	 }
 
 	 bool ret = true;	//el valor que voy a devolver
 	 
@@ -778,8 +839,10 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
     if (a_Version != "") {
         int version = fromString<int>(a_Version);
         bloque = _dirIndex.searchFileAndVersion(searchingPath.c_str(), version);
+		  if (bloque < 0) return false;
         if (!_dirVersions.searchVersion(&versionDirectorioContenedor, version, bloque)) {
             bloque = _dirIndex.searchFile(searchingPath.c_str());
+				if (bloque < 0) return false;
 				version = _dirVersions.getLastVersionNumber(bloque);
             if(!_dirVersions.getVersion(version, bloque, &versionDirectorioContenedor))
                 return false;
@@ -791,10 +854,17 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
     }
     else {
         bloque = _dirIndex.searchFile(searchingPath.c_str());
+		  if(bloque < 0) return false;
 		  int lastVersion = _dirVersions.getLastVersionNumber(bloque);
         if (!_dirVersions.getVersion(lastVersion, bloque, &versionDirectorioContenedor))
            return false; 
     }
+
+	if(versionDirectorioContenedor->getType() == DirectoryVersion::BORRADO)
+	{
+		delete versionDirectorioContenedor;
+		return false;
+	}
 
 	string filename = getComponent(a_Target,countComponents(a_Target));
 	
@@ -892,6 +962,173 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
 	delete versionDirectorioContenedor;
 	
 	return ret;
+}
+
+bool VersionManager::removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date)
+{
+	// TODO
+	return false;
+}
+
+bool VersionManager::removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date)
+{
+    if (!_isOpen)
+        return false;
+
+    int bloque;
+    int nroNuevoBloque;
+    string key;
+	
+	key = repositoryName;
+
+	for(int i = 1; i <= countComponents(a_Filename); ++i)
+		key = key + "//" + getComponent(a_Filename,i);
+	
+	debug("clave a borrar: "+key+"\n");
+
+    tm* date = localtime(&a_Date);
+    // busco en el indice a ver si esta el archivo
+    bloque = _fileIndex.searchFile(key.c_str());
+
+    if (bloque >= 0) { // el archivo esta en el indice, entonces, se puede borrar
+        FileVersion* ultimaVersion;
+		  
+        _fileVersions.getLastVersion(&ultimaVersion, bloque);
+	
+		  if(ultimaVersion->getVersionType() == FileVersion::BORRADO)
+		  { //si ya esta borrado no puedo volver a borrarlo				
+			 delete ultimaVersion;
+			 return false;
+		  }
+
+		  debug("obtengo el fileType \n");
+		  char tipoArchivo = ultimaVersion->getTipo();
+			
+		  delete ultimaVersion;
+			
+		  // si el archivo no fue borrado, creo una version de borrado
+        FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, -1,
+        tipoArchivo, FileVersion::BORRADO, bloque, &nroNuevoBloque);
+		  debug("version de borrado creada \n");
+        switch (status) {
+        	case FileVersionsFile::OK :
+				debug("status OK \n");
+         	return true;
+         	break;
+         case FileVersionsFile::OVERFLOW :
+            // tengo que generar la clave a partir de a_File y repositoryVersion
+			   key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+				debug("status OVERFLOW \n");
+            return _fileIndex.insert(key.c_str(), nroNuevoBloque);
+
+         default:
+				debug("status ERROR \n");
+            return false;
+				break;
+         }
+		}
+	
+	debug("bloque < 0 \n");	
+		        	
+	return false;
+}
+
+bool VersionManager::removeDirectory(int repositoryVersion, const string& repositoryName, const string& a_Directoryname, const string& a_User, time_t a_Date)
+{
+	debug("ingreso en removeDirectory \n");
+    if (!_isOpen)
+        return false;
+
+    int bloque;
+    int nroNuevoBloque;
+    string key;
+	 DirectoryVersion* nuevaVersion;
+	
+	key = repositoryName;
+
+	for(int i = 1; i <= countComponents(a_Directoryname); ++i)
+		key = key + "//" + getComponent(a_Directoryname,i);
+
+    tm* date = localtime(&a_Date);
+    // busco en el indice a ver si esta el directorio
+    bloque = _dirIndex.searchFile(key.c_str());
+
+    if (bloque >= 0) { // el directorio esta en el indice
+        DirectoryVersion* ultimaVersion;
+		  int lastVersion  = _dirVersions.getLastVersionNumber(bloque);	//obtengo el numero de la ultima version
+
+        _dirVersions.getVersion(lastVersion, bloque, &ultimaVersion);	//obtengo la ultima version
+
+		  debug("bloque >= 0 \n");
+		  if(ultimaVersion->getType() == DirectoryVersion::BORRADO)
+		  {
+			 //no puedo volver a borrar algo ya borrado
+			 delete ultimaVersion;
+			 debug("ultima version fue borrado \n");
+			 return false;
+		  }
+
+		  bool result = true;
+		  //creo la nueva version
+		  nuevaVersion = new DirectoryVersion(repositoryVersion,a_User.c_str(),*date,DirectoryVersion::BORRADO);
+		  
+		  list<File>* filesLst = ultimaVersion->getFilesList();
+		  
+		  list<File>::iterator it_filesToRemove;
+		  //a cada archivo/directorio de la version anterior les debo hacer un borrado
+		  for(it_filesToRemove = filesLst->begin();it_filesToRemove != filesLst->end(); it_filesToRemove++)
+		  {
+			
+			 string fname = it_filesToRemove->getName();
+			 string fullPath = a_Directoryname + "/" + fname;
+
+			 debug("archivo a eliminar: "+fullPath+"\n");
+			 if(it_filesToRemove->getType() == 'd')
+			 {
+				result = result && removeDirectory(repositoryVersion,repositoryName,fullPath,a_User,a_Date);
+				debug("entro en removeDirectory \n");
+			 }
+			 else
+			 {
+				result = result && removeFile(repositoryVersion,repositoryName,fullPath,a_User,a_Date);
+				debug("entro en removeFile \n");
+			 }
+			 if(!result)
+				debug("el borrado falla en: "+fullPath+"\n");			
+		  }
+	
+		  if(!result)
+		  {
+				debug("fallo el borrado \n");
+				delete ultimaVersion;
+				delete nuevaVersion;
+				
+				return false;
+		  }
+			
+		  DirectoryVersionsFile::t_status status = _dirVersions.insertVersion(nuevaVersion, bloque, &nroNuevoBloque);
+	     	switch (status) {
+	      	case DirectoryVersionsFile::OK :
+					debug("status OK \n");
+	         	result = true;
+	            break;
+	         case DirectoryVersionsFile::OVERFLOW :
+	         	// tengo que generar la clave a partir de a_Directoryname y repositoryVersion
+					key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+	         	result = _dirIndex.insert(key.c_str(), nroNuevoBloque);
+					debug("status OK \n");
+					debug("nueva clave: "+key+"\n");
+					break;
+
+	          default:
+	          	result = false;
+					break;
+			}
+		return result;
+	}
+
+	//si llega aca es porque no habia una vesion previa del directorio, por lo tanto, no se puede realizar el borrado		  
+	return false;
 }
 
 bool VersionManager::getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version)

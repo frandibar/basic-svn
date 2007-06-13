@@ -240,12 +240,12 @@ bool Almacen::add(const string& a_Reposit, const string& a_Target, const string&
     return ret;
 }
 
-bool Almacen::removeFile(const string& a_Reposit, const string& a_Filename, const string& a_Username, const string& a_Password)
+bool Almacen::remove(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password)
 {
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
-    return rep->removeFile(a_Filename, a_Username, a_Password);
+    return rep->removeFileOrDirectory(a_Target, a_Username, a_Password);
 }
 
 bool Almacen::validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const

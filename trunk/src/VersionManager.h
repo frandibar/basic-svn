@@ -56,6 +56,10 @@ public:
 	 bool get(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny);
     bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
 
+	 bool removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date);
+	 bool removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date);
+	 bool removeDirectory(int repositoryVersion, const string& repositoryName, const string& a_Directoryname, const string& a_User, time_t a_Date);
+
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);
     bool getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version);

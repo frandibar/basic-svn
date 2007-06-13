@@ -183,7 +183,19 @@ FileVersionsFile::t_status FileVersionsFile::insertVersion(int nroVersion, const
 {
 	readBloque(bloque); // obtengo el bloque
 	FileVersion* ultimaVersion = _bloqueActual->getLastVersion();
-	int ultimoOriginal = ultimaVersion->getOriginal();
+	int ultimoOriginal;	
+	
+	if(VersionType == FileVersion::MODIFICACION)
+	{
+		if(ultimaVersion->getVersionType() != FileVersion::BORRADO)	
+			ultimoOriginal	= ultimaVersion->getOriginal();
+		else
+			ultimoOriginal = nroVersion;
+	}
+	
+	else
+		ultimoOriginal = -1;
+
 	delete ultimaVersion;
 	FileVersion* nuevaVersion = new FileVersion(nroVersion, ultimoOriginal, Fecha, User, Offset, Tipo, VersionType);
 	if (_bloqueActual->hayLugar(nuevaVersion)) {
