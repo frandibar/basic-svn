@@ -700,14 +700,35 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 	 }
 
     char ftype = versionBuscada->getTipo();
+	 ifstream fileToCheck;
+	 char option;
     if (ftype == 't') {
         int original = versionBuscada->getOriginal();
         // busco en el indice a ver si esta el archivo
         list<FileVersion> versionsList;
         int final = versionBuscada->getNroVersion();
         delete versionBuscada;
-        if (_fileVersions.getVersionFrom(original, final, bloque, versionsList)) {
-            return (buildVersion(versionsList, a_TargetDir + "//" + path));
+        if (_fileVersions.getVersionFrom(original, final, bloque, versionsList))
+		  {
+				//chequeo si el archivo ya existe o no. Si ya existe, debo preguntar si lo reescribo o no.
+				fileToCheck.open((a_TargetDir + "//" + path).c_str());
+				fileToCheck.close();
+				if(fileToCheck.fail())	//si el archivo no existia lo escribo
+            	return (buildVersion(versionsList, a_TargetDir + "//" + path));
+				else
+				{
+					do{
+						cout<<"El archivo: "<<a_TargetDir<<"/"<<path<<" ya existe. Desea sobreescribirlo? S/N"<<endl;
+						cin>>option;
+						cout<<endl;
+						option = toupper(option);
+					}while( (option != 'N') && (option != 'S') );
+					
+					if(option == 'S')
+            		return (buildVersion(versionsList, a_TargetDir + "//" + path));
+					else
+						return true;
+				}
         }
         else
             return false;
@@ -715,13 +736,42 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     else if (ftype == 'b') {
         int offset = versionBuscada->getOffset();
         delete versionBuscada;
-        std::ofstream os((a_TargetDir + "//" + path).c_str());
-        if (!os.is_open())
-            return false;
-        if (!_binaryContainer.get(offset, os))
-            return false;
-        os.close();
-        return true;
+		  //chequeo si el archivo ya existe o no. Si ya existe, debo preguntar si lo reescribo o no.
+		  fileToCheck.open((a_TargetDir + "//" + path).c_str());
+		  fileToCheck.close();
+		  if(fileToCheck.fail())	//si el archivo no existia lo escribo
+		  {
+	        std::ofstream os((a_TargetDir + "//" + path).c_str());
+	        if (!os.is_open())
+	            return false;
+	        if (!_binaryContainer.get(offset, os))
+	            return false;
+	        os.close();
+	        return true;
+		   }
+			else	//si el archivo ya existia pregunto si hay que sobreescribirlo
+			{
+				do{
+					cout<<"El archivo: "<<a_TargetDir<<"/"<<path<<" ya existe. Desea sobreescribirlo? S/N"<<endl;
+					cin>>option;
+					cout<<endl;
+					option = toupper(option);
+				}while( (option != 'N') && (option != 'S') );
+				
+				if(option == 'S')
+				{	//sobreescribo el archivo
+		       	std::ofstream os((a_TargetDir + "//" + path).c_str());
+		        	if (!os.is_open())
+		         	return false;
+		        	if (!_binaryContainer.get(offset, os))
+		            return false;
+		        	os.close();
+		        	return true;
+				}
+				
+				else
+					return true;
+			}
     }
     return false; // never gets here
 }
@@ -860,108 +910,141 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
            return false; 
     }
 
-	if(versionDirectorioContenedor->getType() == DirectoryVersion::BORRADO)
+
+	if(a_Target != "")
 	{
-		delete versionDirectorioContenedor;
-		return false;
-	}
+		if(versionDirectorioContenedor->getType() == DirectoryVersion::BORRADO)
+		{
+			delete versionDirectorioContenedor;
+			return false;
+		}
 
-	string filename = getComponent(a_Target,countComponents(a_Target));
-	
-	File* file;
-	if(!versionDirectorioContenedor->searchFile(filename.c_str(),&file))
-	{	
-		delete versionDirectorioContenedor;
-		return false;
-	}
+		string filename = getComponent(a_Target,countComponents(a_Target));
+		
+		File* file;
+		if(!versionDirectorioContenedor->searchFile(filename.c_str(),&file))
+		{	
+			delete versionDirectorioContenedor;
+			return false;
+		}
 
-	//una vez obtenida la version del directorio voy a tener que armar la estructura de directorios que contienen al archivo/directorio
-	//objetivo dentro del directorio destino para luego "bajar" la version solicitada del archivo/directorio objetivo
+		//una vez obtenida la version del directorio voy a tener que armar la estructura de directorios que contienen al archivo/directorio
+		//objetivo dentro del directorio destino para luego "bajar" la version solicitada del archivo/directorio objetivo
+		
+		//aca voy a guardar el path actual para luego volver al directorio de trabajo
+		string currentDirectory = get_current_dir_name();
 
-	//aca voy a guardar el path actual para luego volver al directorio de trabajo
-	string currentDirectory = get_current_dir_name();
+		//empiezo a armar la estructura
+		int existentes  = 0;
 
-	//empiezo a armar la estructura
-	int existentes  = 0;
+		//trato de cambiar de directorio al directorio destino para chequear que existe
+		if(chdir(a_TargetDestiny.c_str()) != 0)
+		{
+			//si el directorio destion no existe -> vuelvo al directorio de trabajo actual y elimino las referencias que tengo en memoria
+			chdir(currentDirectory.c_str());
+			delete versionDirectorioContenedor;
+			cout<<"El directorio elegido como destino no existe"<<endl;
+			return false;		
+		}
 
-	//trato de cambiar de directorio al directorio destino para chequear que existe
-	if(chdir(a_TargetDestiny.c_str()) != 0)
-	{
-		//si el directorio destion no existe -> vuelvo al directorio de trabajo actual y elimino las referencias que tengo en memoria
-		chdir(currentDirectory.c_str());
-		delete versionDirectorioContenedor;
-		cout<<"El directorio elegido como destino no existe"<<endl;
-		return false;		
-	}
-
-	chdir(currentDirectory.c_str()); //vuelvo al directorio de trabajo
-	
-	//ahora tengo que armar la estructura de directorios a donde va a ir a parar el archivo/directorio objetivo
-	int RepNameEnd = searchingPath.find_first_not_of(repositoryName + "//");
-	
-	string path = searchingPath;
-	
-	path.erase(0,RepNameEnd);
-	
-	string pathAuxiliar = a_TargetDestiny;
-	
-	int components = countComponents(path);
-
-	if(path.length() > 0)
-	{
-		//empiezo a armar la estructura de directorios
+		chdir(currentDirectory.c_str()); //vuelvo al directorio de trabajo
+			
+		//ahora tengo que armar la estructura de directorios a donde va a ir a parar el archivo/directorio objetivo
+		int RepNameEnd = searchingPath.find_first_not_of(repositoryName + "//");
+			
+		string path = searchingPath;
+			
+		path.erase(0,RepNameEnd);
+			
+		string pathAuxiliar = a_TargetDestiny;
+			
 		int components = countComponents(path);
 
-		debug("creando directorios \n");
-
-		for(int j = 1; j <= components;j++)
+		if(path.length() > 0)
 		{
-			pathAuxiliar = pathAuxiliar + "/" + getComponent(path,j);
+			//empiezo a armar la estructura de directorios
+			int components = countComponents(path);
 
-			//si no existe el directorio lo creo
-			if(chdir(pathAuxiliar.c_str()) != 0)
-			{				
-				if(mkdir(pathAuxiliar.c_str(),0755) != 0)
-					cout<<"error al crear: "<<pathAuxiliar<<endl;
-			}
-			
-			else
+			debug("creando directorios \n");
+
+			for(int j = 1; j <= components;j++)
 			{
-				existentes++;
-				chdir(currentDirectory.c_str());
+				pathAuxiliar = pathAuxiliar + "/" + getComponent(path,j);
+
+				//si no existe el directorio lo creo
+				if(chdir(pathAuxiliar.c_str()) != 0)
+				{						
+					if(mkdir(pathAuxiliar.c_str(),0755) != 0)
+					cout<<"error al crear: "<<pathAuxiliar<<endl;
+				}
+					
+				else
+				{
+					existentes++;
+					chdir(currentDirectory.c_str());
+				}
+			}		
+		}
+
+		bool ret;					
+
+		if(file->getType() != 'd')
+			ret = getFile(a_TargetDestiny,searchingPath + "//" + filename ,a_Version,repositoryName);
+
+		else
+			ret = getDirectory(a_TargetDestiny,path , searchingPath, filename, a_Version,repositoryName);
+
+		if(ret == false)
+		{
+			//elimino los directorios que cree para albergar el archivo/directorio que queria obtener
+				
+			for(int j = components; j > existentes; j--)
+			{
+				remove(pathAuxiliar.c_str());
+					
+				int index = pathAuxiliar.find_last_of("/");
+				
+				pathAuxiliar.erase(index);			
 			}
-		}		
+		}
+
+		delete versionDirectorioContenedor;
+			
+		return ret;
 	}
-
-	bool ret;					
-
-	if(file->getType() != 'd')
-	{
-		ret = getFile(a_TargetDestiny,searchingPath + "//" + filename ,a_Version,repositoryName);
-	}
-
+	
 	else
 	{
-		ret = getDirectory(a_TargetDestiny,path , searchingPath, filename, a_Version,repositoryName);
-	}
+		bool ret = true;
+		list<File>* filesLst = versionDirectorioContenedor->getFilesList();
 
-	if(ret == false)
-	{
-		//elimino los directorios que cree para albergar el archivo/directorio que queria obtener
-		
-		for(int j = components; j > existentes; j--)
+		list<File>::iterator it_files;
+
+		string fname;
+		for(it_files = filesLst->begin(); it_files != filesLst->end(); it_files++)
 		{
-			remove(pathAuxiliar.c_str());
+			fname = it_files->getName();
 			
-			int index = pathAuxiliar.find_last_of("/");
-		
-			pathAuxiliar.erase(index);			
+			if(it_files->getType() == 'd')
+				ret = ret && getDirectory(a_TargetDestiny, "" , searchingPath, fname, a_Version, repositoryName);
+			
+			else
+				ret == ret && getFile(a_TargetDestiny,searchingPath + "//" + fname, a_Version, repositoryName);
 		}
-	}
 
-	delete versionDirectorioContenedor;
-	
-	return ret;
+		if(!ret)
+		{
+			for(it_files = filesLst->begin(); it_files != filesLst->end(); it_files++)
+			{
+				fname = it_files->getName();
+			
+				remove((a_TargetDestiny + "/" + fname).c_str());
+			}
+		}
+		
+		delete versionDirectorioContenedor;
+		return ret;	
+	}
 }
 
 bool VersionManager::removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date)
