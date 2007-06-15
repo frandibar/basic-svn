@@ -166,10 +166,12 @@ int main(int argc, char** argv)
                 break;
 
             case 'o': // obtener archivo
-                // -o "nombre repositorio" "nombre directorio destino" "nombre archivo/dir" [version]
-                argsok = ((argc == 7) || (argc == 8));
+                // -o "nombre repositorio" "nombre directorio destino" ["nombre archivo/dir"] [version]
+                argsok = ((argc == 6) || (argc == 7) || (argc == 8));
                 if (argsok) {
-                    if (argc == 7)
+                    if (argc == 6)
+								get(user, pass, optarg, argv[optind], "", ""); 
+						  else if (argc == 7)
                         get(user, pass, optarg, argv[optind], argv[optind + 1], "");
                     else
                         get(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
