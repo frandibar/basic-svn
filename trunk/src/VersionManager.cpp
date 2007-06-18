@@ -156,20 +156,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
             if (offset == -1) 
                 return false;
 
-            FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, 				   FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
-            switch (status) {
-            	case FileVersionsFile::OK :
-               	return true;
-                  break;
-            	case FileVersionsFile::OVERFLOW :
-               	// tengo que generar la clave a partir de a_File y repositoryVersion
-               	key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-                  return _fileIndex.insert(key.c_str(), nroNuevoBloque);
-						break;
-               default:
-            		return false;
-						break;
-				}
+				return indexAFile(repositoryVersion, key, a_User, date, offset, a_Type, FileVersion::MODIFICACION,bloque);
 		  }
 
         delete ultimaVersion;
@@ -216,21 +203,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
                 remove(tmpDiffFilename.c_str());
             }
 
-            FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset,
-                                                           a_Type, FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
-            switch (status) {
-                case FileVersionsFile::OK :
-                    return true;
-                    break;
-
-                case FileVersionsFile::OVERFLOW :
-                    // tengo que generar la clave a partir de a_File y repositoryVersion
-						  key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-                    return _fileIndex.insert(key.c_str(), nroNuevoBloque);
-
-                default:
-                    return false;
-            }
+				return indexAFile(repositoryVersion, key, a_User, date, offset, a_Type, FileVersion::MODIFICACION,bloque);
         }
         else if (a_Type == 'b') {
             std::ifstream is(a_Filename.c_str());
@@ -242,18 +215,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
                 return false;
 
             if (bloque >= 0) { // el archivo esta en el indice
-                FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, FileVersion::MODIFICACION, bloque, &nroNuevoBloque);
-                switch (status) {
-                    case FileVersionsFile::OK :
-                        return true;
-                        break;
-                    case FileVersionsFile::OVERFLOW :
-                        // tengo que generar la clave a partir de a_File y repositoryVersion
-                        key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-                        return _fileIndex.insert(key.c_str(), nroNuevoBloque);
-                    default:
-                        return false;
-                }
+					return indexAFile(repositoryVersion, key, a_User, date, offset, a_Type, FileVersion::MODIFICACION,bloque);
             }
         }
     }
@@ -359,7 +321,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 				
 				 if(!included)
 				 {
-					File* file = new File(it_oldFiles->getName(),it_oldFiles->getVersion(),it_oldFiles->getType());
+					File* file = new File(it_oldFiles->getName(), it_oldFiles->getVersion(),it_oldFiles->getType());
 					filesErased.push_back(*file);
 				 }				
 			  }
@@ -409,28 +371,11 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 					else result = false;
 
 					if(result)// agrego el archivo al directorio
-						nuevaVersion->addFile((*it_includedFiles).c_str(),repositoryVersion,type);										
+						nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion,type);										
 			  }
 			
 		  if(result)
-		  { 							
-	        DirectoryVersionsFile::t_status status = _dirVersions.insertVersion(nuevaVersion, bloque, &nroNuevoBloque);
-	        switch (status) {
-	        	case DirectoryVersionsFile::OK :
-	         	result = true;
-	            break;
-
-	         case DirectoryVersionsFile::OVERFLOW :
-	         	// tengo que generar la clave a partir de a_Directoryname y repositoryVersion
-					key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-	         	result = _dirIndex.insert(key.c_str(), nroNuevoBloque);
-					break;
-
-	          default:
-	          	result = false;
-					break;
-	        }
-			}
+		  		result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque); 							
 
 		  delete nuevaVersion;
 			
@@ -486,7 +431,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 				else result = false;
 
 				if(result)// agrego el archivo al directorio
-					nuevaVersion->addFile((*it_includedFiles).c_str(),repositoryVersion,type);					
+					nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion, type);					
 				
 		  }
 
@@ -589,7 +534,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 					debug("comienzo a copiar la lista");
 					//copio los archivos que tenia en la version anterior a la nueva para luego actualizarlos
 					for(it = lst->begin();it != lst->end();it++)	
-						nuevaVersion->addFile(it->getName(),it->getVersion(),it->getType());
+						nuevaVersion->addFile(it->getName(), it->getVersion(), it->getType());
 
 					debug("termine de copiar la lista");
 					debug("elimino la version vieja");
@@ -597,22 +542,10 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 					delete oldVersion;
 
 					//actualizo la version de la componente leida
-					nuevaVersion->update(componente.c_str(),repositoryVersion,tipoArchivo);
+					nuevaVersion->update(componente.c_str(), repositoryVersion, tipoArchivo);
 					debug("actualizo la version");
 
-					switch(_dirVersions.insertVersion(nuevaVersion, bloque, &nuevoBloque))
-					{
-						case DirectoryVersionsFile::OK:
-							ret = true;
-							break;
-						case DirectoryVersionsFile::OVERFLOW:
-							key = pathActual + zeroPad(repositoryVersion,VERSION_DIGITS);
-							ret = _dirIndex.insert(key.c_str(),nuevoBloque);
-							break;
-						default:
-							ret = false;
-							break;				
-					}
+					ret = indexADirectory(repositoryVersion, key, nuevaVersion, bloque);					
 				}										
 			}			
 		}
@@ -623,7 +556,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 			
 			if(ret)
 			{		
-				nuevaVersion->addFile(componente.c_str(),repositoryVersion,tipoArchivo);
+				nuevaVersion->addFile(componente.c_str(), repositoryVersion, tipoArchivo);
 
 				_dirVersions.insertVersion(nuevaVersion,&nuevoBloque);
 
@@ -668,24 +601,8 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     FileVersion* versionBuscada;
     int bloque;
 
-    if (a_Version != "") {
-        int version = fromString<int>(a_Version);
-        bloque = _fileIndex.searchFileAndVersion(a_Filename.c_str(), version);
-        if (!_fileVersions.searchVersion(&versionBuscada, version, bloque)) {
-            bloque = _fileIndex.searchFile(a_Filename.c_str());
-            if(!_fileVersions.getLastVersion(&versionBuscada, bloque))
-                return false;
-            else if(versionBuscada->getNroVersion() > version) {
-                delete versionBuscada;
-                return false;
-            }
-        }        
-    }
-    else {
-        bloque = _fileIndex.searchFile(a_Filename.c_str());
-        if (!_fileVersions.getLastVersion(&versionBuscada, bloque))
-           return false; 
-    }
+	 if(!getFileVersionAndBlock(&bloque, &versionBuscada, a_Filename, a_Version))
+		return false;	
 
 	 int RepNameEnd = a_Filename.find_first_not_of(repositoryName + "//");
 	
@@ -787,26 +704,8 @@ bool VersionManager::getDirectory(const string& a_TargetDir,const string& pathTo
     int bloque;
 	 int lastVersion;
 
-    if (a_Version != "") {
-        int version = fromString<int>(a_Version);
-        bloque = _dirIndex.searchFileAndVersion(fullDirName.c_str(), version);
-        if (!_dirVersions.searchVersion(&versionBuscada, version, bloque)) {
-            bloque = _dirIndex.searchFile(fullDirName.c_str());
-				lastVersion = _dirVersions.getLastVersionNumber(bloque);
-            if(!_dirVersions.searchVersion(&versionBuscada, lastVersion, bloque))
-                return false;
-            else if(versionBuscada->getNroVersion() > version) {
-                delete versionBuscada;
-                return false;
-            }
-        }        
-    }
-    else {
-        bloque = _dirIndex.searchFile(fullDirName.c_str());
-		  lastVersion = _dirVersions.getLastVersionNumber(bloque);
-        if (!_dirVersions.searchVersion(&versionBuscada, lastVersion, bloque))
-           return false; 
-    }
+	 if(!getDirVersion(&versionBuscada,fullDirName, a_Version))
+		return false;
 
 	 if(versionBuscada->getType() == DirectoryVersion::BORRADO)
 	 {	//no puedo recuperar una version de borrado
@@ -886,30 +785,8 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
 	 //obtengo la version del directorio que contiene al archivo/directorio objetivo con el mismo nro de version que deseo que tenga el 
  	 //archivo/directorio si es que voy a querer una version en particular o la ultima version del directorio que contiene al archivo/ 
 	 //directorio si esa que no especifique ninguna
-    if (a_Version != "") {
-        int version = fromString<int>(a_Version);
-        bloque = _dirIndex.searchFileAndVersion(searchingPath.c_str(), version);
-		  if (bloque < 0) return false;
-        if (!_dirVersions.searchVersion(&versionDirectorioContenedor, version, bloque)) {
-            bloque = _dirIndex.searchFile(searchingPath.c_str());
-				if (bloque < 0) return false;
-				version = _dirVersions.getLastVersionNumber(bloque);
-            if(!_dirVersions.getVersion(version, bloque, &versionDirectorioContenedor))
-                return false;
-            else if(versionDirectorioContenedor->getNroVersion() > version) {
-                delete versionDirectorioContenedor;
-                return false;
-            }
-        }        
-    }
-    else {
-        bloque = _dirIndex.searchFile(searchingPath.c_str());
-		  if(bloque < 0) return false;
-		  int lastVersion = _dirVersions.getLastVersionNumber(bloque);
-        if (!_dirVersions.getVersion(lastVersion, bloque, &versionDirectorioContenedor))
-           return false; 
-    }
-
+	if(!getDirVersion(&versionDirectorioContenedor, searchingPath,a_Version))
+		return false;
 
 	if(a_Target != "")
 	{
@@ -1088,27 +965,8 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
 		  char tipoArchivo = ultimaVersion->getTipo();
 			
 		  delete ultimaVersion;
-			
-		  // si el archivo no fue borrado, creo una version de borrado
-        FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, -1,
-        tipoArchivo, FileVersion::BORRADO, bloque, &nroNuevoBloque);
-		  debug("version de borrado creada \n");
-        switch (status) {
-        	case FileVersionsFile::OK :
-				debug("status OK \n");
-         	return true;
-         	break;
-         case FileVersionsFile::OVERFLOW :
-            // tengo que generar la clave a partir de a_File y repositoryVersion
-			   key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-				debug("status OVERFLOW \n");
-            return _fileIndex.insert(key.c_str(), nroNuevoBloque);
+		  return indexAFile(repositoryVersion, key, a_User, date, -1, tipoArchivo, FileVersion::BORRADO, bloque);
 
-         default:
-				debug("status ERROR \n");
-            return false;
-				break;
-         }
 		}
 	
 	debug("bloque < 0 \n");	
@@ -1188,33 +1046,18 @@ bool VersionManager::removeDirectory(int repositoryVersion, const string& reposi
 				
 				return false;
 		  }
-			
-		  DirectoryVersionsFile::t_status status = _dirVersions.insertVersion(nuevaVersion, bloque, &nroNuevoBloque);
-	     	switch (status) {
-	      	case DirectoryVersionsFile::OK :
-					debug("status OK \n");
-	         	result = true;
-	            break;
-	         case DirectoryVersionsFile::OVERFLOW :
-	         	// tengo que generar la clave a partir de a_Directoryname y repositoryVersion
-					key = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-	         	result = _dirIndex.insert(key.c_str(), nroNuevoBloque);
-					debug("status OK \n");
-					debug("nueva clave: "+key+"\n");
-					break;
-
-	          default:
-	          	result = false;
-					break;
-			}
+		
+		  result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque);
+		
+		  delete nuevaVersion;
 		return result;
 	}
 
-	//si llega aca es porque no habia una vesion previa del directorio, por lo tanto, no se puede realizar el borrado		  
+	//si llega aca es porque no habia una version previa del directorio, por lo tanto, no se puede realizar el borrado		  
 	return false;
 }
 
-bool VersionManager::getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version)
+bool VersionManager::getFileVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version)
 {
     if (a_Version != "") {
         int version = fromString<int>(a_Version);
@@ -1236,6 +1079,80 @@ bool VersionManager::getVersionAndBlock(int* bloque, FileVersion** versionBuscad
     return true;
 }
 
+bool VersionManager::getDirVersion(DirectoryVersion** versionBuscada, const string& a_Dirname, const string& a_Version)
+{
+	 int bloque;
+    if (a_Version != "") {
+        int version = fromString<int>(a_Version);
+        bloque = _dirIndex.searchFileAndVersion(a_Dirname.c_str(), version);
+		  if (bloque < 0) return false;
+        if (!_dirVersions.searchVersion(versionBuscada, version, bloque)) {
+            bloque = _dirIndex.searchFile(a_Dirname.c_str());
+				if (bloque < 0) return false;
+				version = _dirVersions.getLastVersionNumber(bloque);
+            if(!_dirVersions.getVersion(version, bloque, versionBuscada))
+                return false;
+            else if((*versionBuscada)->getNroVersion() > version) {
+                delete (*versionBuscada);
+                return false;
+            }
+        }        
+    }
+    else {
+        bloque = _dirIndex.searchFile(a_Dirname.c_str());
+		  if(bloque < 0) return false;
+		  int lastVersion = _dirVersions.getLastVersionNumber(bloque);
+        if (!_dirVersions.getVersion(lastVersion, bloque, versionBuscada))
+           return false; 
+    }
+	return true;
+}
+
+bool VersionManager::indexAFile(int repositoryVersion, const string& key, const string& a_User, tm* date, int offset, char a_Type, FileVersion::t_versionType a_VersionType, int bloque)
+{
+	int nroNuevoBloque;
+	string newKey;
+
+	FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, a_VersionType, bloque, &nroNuevoBloque);
+	switch (status) {
+   	case FileVersionsFile::OK :
+      	return true;
+         break;
+   case FileVersionsFile::OVERFLOW :
+   	// tengo que generar la clave a partir de a_File y repositoryVersion
+   	newKey = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+   	return _fileIndex.insert(newKey.c_str(), nroNuevoBloque);
+		break;
+   default:
+      return false;
+		break;
+	}
+	return false;
+}
+
+bool VersionManager::indexADirectory(int repositoryVersion, const string& key, DirectoryVersion* nuevaVersion,int bloque)
+{
+	int nroNuevoBloque;
+	string newKey;
+
+	DirectoryVersionsFile::t_status status = _dirVersions.insertVersion(nuevaVersion, bloque, &nroNuevoBloque);
+	switch (status) {
+	   case DirectoryVersionsFile::OK :
+	      return true;
+	      break;
+	   case DirectoryVersionsFile::OVERFLOW :
+	      // tengo que generar la clave a partir de a_Directoryname y repositoryVersion
+			newKey = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+	      return _dirIndex.insert(key.c_str(), nroNuevoBloque);
+			break;
+
+		default:
+			return false;
+			break;
+	}
+	return false;
+}
+
 bool VersionManager::buildTextVersion(int bloque, FileVersion* versionBuscada, const string& a_Filename)
 {
     int original = versionBuscada->getOriginal();
@@ -1248,7 +1165,7 @@ bool VersionManager::buildTextVersion(int bloque, FileVersion* versionBuscada, c
     return false;
 }
 
-bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
 {
     if (!_isOpen)
         return false;
@@ -1259,10 +1176,11 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
     FileVersion* versionBuscadaB;
     int bloqueB;
 
-    if (!getVersionAndBlock(&bloqueA, &versionBuscadaA, a_Filename, a_VersionA))
+	 
+    if (!getFileVersionAndBlock(&bloqueA, &versionBuscadaA, a_Filename, a_VersionA))
         return false;
 
-    if (!getVersionAndBlock(&bloqueB, &versionBuscadaB, a_Filename, a_VersionB)) {
+    if (!getFileVersionAndBlock(&bloqueB, &versionBuscadaB, a_Filename, a_VersionB)) {
         delete versionBuscadaA;
         return false;
     }
@@ -1338,6 +1256,532 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
     }
     return false;
 }
+
+
+bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_VersionA, const string& a_VersionB, int tabs)
+{
+	string espacio;
+	for(int i = 1; i <= tabs; i++)
+		espacio = espacio + "\t";
+
+	string dirname = a_DirName;
+	int index = dirname.find_last_of("//",dirname.length());
+	dirname.erase(0,index + 1);
+
+	bool ret = true;
+
+	DirectoryVersion* versionDirectorioA;
+	DirectoryVersion* versionDirectorioB;
+
+	if(!getDirVersion(&versionDirectorioA, a_DirName, a_VersionA))
+		return false;
+	
+	if(!getDirVersion(&versionDirectorioB, a_DirName, a_VersionB))
+	{
+		delete versionDirectorioA;
+		return false;
+	}
+
+	list<File>* lstA = versionDirectorioA->getFilesList();
+	list<File>* lstB = versionDirectorioB->getFilesList();
+
+	list<File>::iterator it_listA;
+	list<File>::iterator it_listB;
+
+	string fname;
+		
+	cout<<espacio<<dirname<<endl;
+
+	for(it_listA = lstA->begin(); it_listA != lstA->end(); it_listA++)
+	{
+		bool found = false;
+		for(it_listB = lstB->begin(); it_listB != lstB->end(); it_listB++)
+		{
+			if(strcmp(it_listA->getName(),it_listB->getName()) == 0)
+			{
+				found = true;
+				fname = it_listA->getName();
+
+				if(it_listA->getVersion() != it_listB->getVersion())
+				{
+						
+					if((it_listA->getType() != 'd') && (it_listB->getType() != 'd'))
+					{
+						FileVersion* file_versionA;
+						FileVersion* file_versionB;									
+					
+						int bloqueA;
+						int bloqueB;
+							
+						if(!getFileVersionAndBlock(&bloqueA, &file_versionA, a_DirName + "//" + fname, a_VersionA))
+							break;				
+		
+						if(!getFileVersionAndBlock(&bloqueB, &file_versionB, a_DirName + "//" + fname, a_VersionB))
+						{
+							delete file_versionA;
+							break;
+						}																					
+							
+						cout<<espacio + "\t"<<fname<<" version: "<<file_versionA->getNroVersion()<<" tipo: "<<file_versionA->getTipo()<<
+						" usuario: "<<file_versionA->getUser()<<"\t";
+						cout<<espacio + "\t"<<fname<<" version: "<<file_versionB->getNroVersion()<<" tipo: "<<file_versionB->getTipo()<<
+						" usuario: "<<file_versionB->getUser()<<endl;
+							
+						delete file_versionA;
+						delete file_versionB;
+					}
+							
+					else if( (it_listA->getType() == 'd') && (it_listB->getType() == 'd') )
+						ret = ret && getDirectoryDiff(a_DirName + "//" + fname, a_VersionA, a_VersionB, tabs + 1);
+											
+					else if ( (it_listA->getType() == 'd') && (it_listB->getType() != 'd') )
+					{
+						DirectoryVersion* dir_version;
+						FileVersion* file_version;
+						int bloque;
+							
+						if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionA))
+							break;
+							
+						if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionB))
+						{
+							delete dir_version;
+							break;
+						}
+
+						cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+						" usuario: "<<dir_version->getUser()<<"\t";
+						cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+						" usuario: "<<file_version->getUser()<<endl;
+
+						delete file_version;
+						delete dir_version;
+					}
+						
+					else
+					{
+						DirectoryVersion* dir_version;
+						FileVersion* file_version;
+						int bloque;
+							
+						if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionB))
+							break;
+							
+						if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionA))
+						{
+							delete file_version;
+							break;
+						}
+
+						cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+						" usuario: "<<file_version->getUser()<<"\t";
+						cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+						" usuario: "<<dir_version->getUser()<<endl;
+
+						delete file_version;
+						delete dir_version;
+					}					
+				}
+				else
+				{
+					DirectoryVersion* dir_version;
+					FileVersion* file_version;
+					int bloque;
+				
+					if(it_listA->getType() != 'd')
+					{
+						if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionA))
+							break;
+
+						cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+						" usuario: "<<dir_version->getUser()<<endl;
+							
+						delete dir_version;			
+					}						
+					else
+					{
+						if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionB))
+							break;
+						cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+						" usuario: "<<file_version->getUser()<<endl;
+
+						delete file_version;					
+					}
+				}
+			}
+		}
+			
+		if(!found)
+		{	
+			if(it_listA->getType() == 'd')
+			{
+				DirectoryVersion* dir_version;
+				if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionA))
+					break;
+
+				cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+				" usuario: "<<dir_version->getUser()<<" borrado"<<endl;
+
+				delete dir_version;					
+			}
+			else
+			{
+				FileVersion* file_version;
+				int bloque;
+							
+				if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionA))
+					break;
+					
+				cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+				" usuario: "<<file_version->getUser()<<" borrado"<<endl;	
+
+				delete file_version;
+			}
+		}			
+	}
+
+	for(it_listB = lstB->begin(); it_listB != lstB->end(); it_listB++)
+	{
+		bool found = false;
+		for(it_listA = lstA->begin(); it_listA != lstA->end(); it_listA++)
+		{
+			if(strcmp(it_listA->getName(),it_listB->getName()) == 0)
+				found = true;	
+		}
+			
+		if(!found)
+		{
+			fname = it_listB->getName();
+
+			if(it_listB->getType() == 'd')
+			{
+				DirectoryVersion* dir_version;
+				if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionB))
+					break;
+
+				cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+				" usuario: "<<dir_version->getUser()<<" agregado"<<endl;
+
+				delete dir_version;					
+			}
+			else
+			{
+				FileVersion* file_version;
+				int bloque;
+							
+				if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionB))
+					break;
+					
+				cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+				" usuario: "<<file_version->getUser()<<" agregado"<<endl;	
+
+				delete file_version;
+			}
+		}
+	}
+
+	delete versionDirectorioA;
+	delete versionDirectorioB;
+	return ret;	
+}
+
+bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName)
+{
+    if (!_isOpen)
+        return false;
+
+	 string searchingPath = repositoryName;
+
+    //voy agregando componente a componente para saber donde debo buscar
+ 	 for(int i = 1; i < countComponents(a_Target);i++)
+		searchingPath = searchingPath + "//" + getComponent(a_Target,i);
+
+    DirectoryVersion* versionDirectorioA;
+    DirectoryVersion* versionDirectorioB;
+	 	
+	if(!getDirVersion(&versionDirectorioA, searchingPath,a_VersionA))
+		return false;
+
+	if(!getDirVersion(&versionDirectorioB,searchingPath,a_VersionB))
+	{
+		delete versionDirectorioA;
+		return false;
+	}
+
+	bool ret;
+
+	if(a_Target != "")
+	{
+		if(versionDirectorioA->getType() == DirectoryVersion::BORRADO)
+		{
+			delete versionDirectorioA;
+			delete versionDirectorioB;
+			cout<<"No existe la version: "<<a_VersionA<<" de "<<searchingPath<<endl;
+			return false;
+		}
+
+		if(versionDirectorioB->getType() == DirectoryVersion::BORRADO)
+		{
+			delete versionDirectorioA;
+			delete versionDirectorioB;
+			cout<<"No existe la version: "<<a_VersionB<<" de "<<searchingPath<<endl;
+			return false;
+		}
+
+		string filename = getComponent(a_Target,countComponents(a_Target));
+		
+		File* fileA;
+		if(!versionDirectorioA->searchFile(filename.c_str(),&fileA))
+		{	
+			delete versionDirectorioA;
+			delete versionDirectorioB;
+			cout<<"No existe la version: "<<a_VersionA<<" de "<<searchingPath<<"//"<<filename<<endl;
+			return false;
+		}
+
+		File* fileB;
+		if(!versionDirectorioB->searchFile(filename.c_str(),&fileB))
+		{
+			delete fileA;	
+			delete versionDirectorioA;
+			delete versionDirectorioB;
+			cout<<"No existe la version: "<<a_VersionB<<" de "<<searchingPath<<"//"<<filename<<endl;
+			return false;
+		}
+		
+		if(fileA->getType() != fileB->getType())
+		{
+			delete fileA;
+			delete fileB;	
+			delete versionDirectorioA;
+			delete versionDirectorioB;
+			cout<<"Las versiones "<<a_VersionA<<" y "<<a_VersionB<<" de "<<filename<<" son tipos de archivos diferentes"<<endl;
+			return false;
+		}
+					
+		if(fileA->getType() != 'd')
+			ret = getFileDiff(is, a_VersionA, a_VersionB,searchingPath + "//" + filename);
+
+		else
+			ret = getDirectoryDiff(searchingPath + "//" + filename, a_VersionA, a_VersionB,0);
+
+		delete versionDirectorioA;
+		delete versionDirectorioB;
+		delete fileA;
+		delete fileB;			
+
+		return ret;
+	}
+	
+	else
+	{
+		list<File>* lstA = versionDirectorioA->getFilesList();
+		list<File>* lstB = versionDirectorioB->getFilesList();
+
+		list<File>::iterator it_listA;
+		list<File>::iterator it_listB;
+
+		string fname;
+	
+		ret = true;
+		cout<<repositoryName<<endl;
+
+		for(it_listA = lstA->begin(); it_listA != lstA->end(); it_listA++)
+		{
+			bool found = false;
+			for(it_listB = lstB->begin(); it_listB != lstB->end(); it_listB++)
+			{
+				if(strcmp(it_listA->getName(),it_listB->getName()) == 0)
+				{
+					found = true;
+					fname = it_listA->getName();
+
+					if(it_listA->getVersion() != it_listB->getVersion())
+					{
+						
+						if((it_listA->getType() != 'd') && (it_listB->getType() != 'd'))
+						{
+							FileVersion* file_versionA;
+							FileVersion* file_versionB;									
+					
+							int bloqueA;
+							int bloqueB;
+							
+							if(!getFileVersionAndBlock(&bloqueA, &file_versionA, searchingPath + "//" + fname, a_VersionA))
+								break;				
+		
+							if(!getFileVersionAndBlock(&bloqueB, &file_versionB, searchingPath + "//" + fname, a_VersionB))
+							{
+								delete file_versionA;
+								break;
+							}																					
+							
+							cout<<"\t"<<fname<<" version: "<<file_versionA->getNroVersion()<<" tipo: "<<file_versionA->getTipo()<<
+							" usuario: "<<file_versionA->getUser()<<"\t";
+							cout<<"\t"<<fname<<" version: "<<file_versionB->getNroVersion()<<" tipo: "<<file_versionB->getTipo()<<
+							" usuario: "<<file_versionB->getUser()<<endl;
+							
+							delete file_versionA;
+							delete file_versionB;
+						}
+							
+						else if( (it_listA->getType() == 'd') && (it_listB->getType() == 'd') )
+							ret = ret && getDirectoryDiff(searchingPath + "//" + fname, a_VersionA, a_VersionB,1);
+						
+						else if ( (it_listA->getType() == 'd') && (it_listB->getType() != 'd') )
+						{
+							DirectoryVersion* dir_version;
+							FileVersion* file_version;
+							int bloque;
+							
+							if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
+								break;
+							
+							if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
+							{
+								delete dir_version;
+								break;
+							}
+
+							cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+							" usuario: "<<dir_version->getUser()<<"\t";
+							cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+							" usuario: "<<file_version->getUser()<<endl;
+
+							delete file_version;
+							delete dir_version;
+						}
+						
+						else
+						{
+							DirectoryVersion* dir_version;
+							FileVersion* file_version;
+							int bloque;
+							
+							if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionB))
+								break;
+							
+							if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionA))
+							{
+								delete file_version;
+								break;
+							}
+
+							cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+							" usuario: "<<file_version->getUser()<<"\t";
+							cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+							" usuario: "<<dir_version->getUser()<<endl;
+
+							delete file_version;
+							delete dir_version;
+						}					
+					}
+					else
+					{
+						DirectoryVersion* dir_version;
+						FileVersion* file_version;
+						int bloque;
+				
+						if(it_listA->getType() == 'd')
+						{
+							if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
+								break;
+
+							cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+							" usuario: "<<dir_version->getUser()<<endl;
+							
+							delete dir_version;			
+						}						
+						else
+						{
+							if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
+								break;
+							cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+							" usuario: "<<file_version->getUser()<<endl;
+
+							delete file_version;					
+						}
+					}
+				}
+			}
+			
+			if(!found)
+			{	
+				if(it_listA->getType() == 'd')
+				{
+					DirectoryVersion* dir_version;
+					if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
+						break;
+
+					cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+					" usuario: "<<dir_version->getUser()<<" borrado"<<endl;
+
+					delete dir_version;					
+				}
+				else
+				{
+					FileVersion* file_version;
+					int bloque;
+							
+					if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionA))
+						break;
+					
+					cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+					" usuario: "<<file_version->getUser()<<" borrado"<<endl;	
+
+					delete file_version;
+				}
+			}			
+		}
+
+		for(it_listB = lstB->begin(); it_listB != lstB->end(); it_listB++)
+		{
+			bool found = false;
+			for(it_listA = lstA->begin(); it_listA != lstA->end(); it_listA++)
+			{
+				if(strcmp(it_listA->getName(),it_listB->getName()) == 0)
+					found = true;	
+			}
+			
+			if(!found)
+			{
+				fname = it_listB->getName();
+
+				if(it_listB->getType() == 'd')
+				{
+					DirectoryVersion* dir_version;
+					if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionB))
+						break;
+
+					cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
+					" usuario: "<<dir_version->getUser()<<" agregado"<<endl;
+
+					delete dir_version;					
+				}
+				else
+				{
+					FileVersion* file_version;
+					int bloque;
+							
+					if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
+						break;
+					
+					cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
+					" usuario: "<<file_version->getUser()<<" agregado"<<endl;	
+
+					delete file_version;
+				}
+			}
+		}
+		
+		delete versionDirectorioA;
+		delete versionDirectorioB;
+		return ret;	
+	}
+
+	return false;
+}
+
 
 
 bool VersionManager::getDiffByDate(std::ifstream& is, const string& a_Date)
