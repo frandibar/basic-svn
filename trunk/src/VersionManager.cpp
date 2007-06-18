@@ -284,7 +284,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 					
 					cout<<"El directorio: "<<a_Directoryname<<" no existe"<<endl;
 					return false;
-  	 	  }
+		  }
 
 		  //obtengo una lista con todos los nombres de los archivos/directorios pertenecientes al directorio que quiero agregar
 		  list<string> fileIncludedLst;
@@ -375,7 +375,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 			  }
 			
 		  if(result)
-		  		result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque); 							
+				result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque);								
 
 		  delete nuevaVersion;
 			
@@ -392,7 +392,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 					
 					cout<<"El directorio: "<<a_Directoryname<<" no existe"<<endl;
 					return false;
-  	 	  }
+		  }
 
 		  //obtengo una lista con todos los nombres de los archivos/directorios pertenecientes al directorio que quiero agregar
 		  list<string> fileIncludedLst;
@@ -552,7 +552,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 		
 		else
 		{	
-			ret = addRec(a_Target, componenteALeer + 1, pathActual + "//" + componente, repositoryName, repositoryVersion, cantComponentesPath, a_Username, 						a_Date, a_Type);
+			ret = addRec(a_Target, componenteALeer + 1, pathActual + "//" + componente, repositoryName, repositoryVersion, cantComponentesPath, a_Username,							a_Date, a_Type);
 			
 			if(ret)
 			{		
@@ -582,7 +582,7 @@ bool VersionManager::create()
     debug("creating VersionManager for Repositorio '" + _repository + "' in Almacen '" + _almacen + "'\n");
     string path = _almacen + "//" + _repository + "//";
     _isOpen = (_fileIndex      .create((path + FILE_INDEX_FILENAME)  .c_str()) &&
-	           _fileVersions   .create((path + FILE_VERSION_FILENAME).c_str()) &&
+		   _fileVersions   .create((path + FILE_VERSION_FILENAME).c_str()) &&
                _textContainer  .create((path + TXT_DIFFS_FILENAME)   .c_str()) &&
                _binaryContainer.create((path + BIN_DIFFS_FILENAME)   .c_str()) &&
                _dirIndex       .create((path + DIR_INDEX_FILENAME)   .c_str()) &&
@@ -631,7 +631,7 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 				fileToCheck.open((a_TargetDir + "//" + path).c_str());
 				fileToCheck.close();
 				if(fileToCheck.fail())	//si el archivo no existia lo escribo
-            	return (buildVersion(versionsList, a_TargetDir + "//" + path));
+		return (buildVersion(versionsList, a_TargetDir + "//" + path));
 				else
 				{
 					do{
@@ -642,7 +642,7 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 					}while( (option != 'N') && (option != 'S') );
 					
 					if(option == 'S')
-            		return (buildVersion(versionsList, a_TargetDir + "//" + path));
+			return (buildVersion(versionsList, a_TargetDir + "//" + path));
 					else
 						return true;
 				}
@@ -658,13 +658,13 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 		  fileToCheck.close();
 		  if(fileToCheck.fail())	//si el archivo no existia lo escribo
 		  {
-	        std::ofstream os((a_TargetDir + "//" + path).c_str());
-	        if (!os.is_open())
-	            return false;
-	        if (!_binaryContainer.get(offset, os))
-	            return false;
-	        os.close();
-	        return true;
+		std::ofstream os((a_TargetDir + "//" + path).c_str());
+		if (!os.is_open())
+		    return false;
+		if (!_binaryContainer.get(offset, os))
+		    return false;
+		os.close();
+		return true;
 		   }
 			else	//si el archivo ya existia pregunto si hay que sobreescribirlo
 			{
@@ -677,13 +677,13 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 				
 				if(option == 'S')
 				{	//sobreescribo el archivo
-		       	std::ofstream os((a_TargetDir + "//" + path).c_str());
-		        	if (!os.is_open())
-		         	return false;
-		        	if (!_binaryContainer.get(offset, os))
-		            return false;
-		        	os.close();
-		        	return true;
+			std::ofstream os((a_TargetDir + "//" + path).c_str());
+				if (!os.is_open())
+				return false;
+				if (!_binaryContainer.get(offset, os))
+			    return false;
+				os.close();
+				return true;
 				}
 				
 				else
@@ -695,72 +695,68 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
 
 bool VersionManager::getDirectory(const string& a_TargetDir,const string& pathToFile, const string& a_Path, const string& a_DirName, const string& a_Version,const string& repositoryName)
 {
-	
-	string fullDirName = a_Path + "//" + a_DirName;
-    if (!_isOpen)
-        return false;
+        string fullDirName = a_Path + "//" + a_DirName;
+        if (!_isOpen)
+                return false;
 
-    DirectoryVersion* versionBuscada;
-    int bloque;
-	 int lastVersion;
+        DirectoryVersion* versionBuscada;
+        if(!getDirVersion(&versionBuscada,fullDirName, a_Version))
+                return false;
 
-	 if(!getDirVersion(&versionBuscada,fullDirName, a_Version))
-		return false;
+        if(versionBuscada->getType() == DirectoryVersion::BORRADO)
+        {	//no puedo recuperar una version de borrado
+                delete versionBuscada;
+                return false;
+        }
 
-	 if(versionBuscada->getType() == DirectoryVersion::BORRADO)
-	 {	//no puedo recuperar una version de borrado
-		delete versionBuscada;
-		return false;
-	 }
+        bool ret = true;	//el valor que voy a devolver
 
-	 bool ret = true;	//el valor que voy a devolver
-	 
-	 //obtengo la lista de archivos/directorios del directorio que quiero obtener
-	 list<File>* filesLst = versionBuscada->getFilesList();	
-	 list<File>::iterator it;
+        //obtengo la lista de archivos/directorios del directorio que quiero obtener
+        list<File>* filesLst = versionBuscada->getFilesList();	
+        list<File>::iterator it;
 
-	 //si el directorio que voy a obtener no esta creado en el destino --> lo creo
-	 bool creado = false;
-	 
-	 string currentDir = get_current_dir_name();
+        //si el directorio que voy a obtener no esta creado en el destino --> lo creo
+        bool creado = false;
 
-	 if(chdir((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str()) != 0)
-	 {
-			if(mkdir((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str(),0755) != 0)
-			{
-				cout<<"Imposible crear: "<<a_TargetDir << "//" << pathToFile << "//" << a_DirName<<endl;
-				delete versionBuscada;				 
-				return false;
-			}	
-			
-			else
-			{
-				creado = true;
-				chdir(currentDir.c_str());
-			}
-	 }
-		
-	 for(it = filesLst->begin(); it != filesLst->end(); it++)
-	 {
-		string FName = it->getName();
-		string version_number = toString<int>(it->getVersion());
-		
-		if(it->getType() != 'd')
-			ret = ret && getFile(a_TargetDir, fullDirName + "//" + FName, version_number, repositoryName);
-		else
-			ret = ret && getDirectory(a_TargetDir,pathToFile + "//" + a_DirName, fullDirName, FName, version_number, repositoryName);
+        string currentDir = get_current_dir_name();
 
-	 }
-	
-	 //si fallo la recuperacion y cree un directorio --> lo elimino
-	 if((ret == false) && (creado == true))
-		remove((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str());
+        if(chdir((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str()) != 0)
+        {
+                if(mkdir((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str(),0755) != 0)
+                {
+                        cout<<"Imposible crear: "<<a_TargetDir << "//" << pathToFile << "//" << a_DirName<<endl;
+                        delete versionBuscada;				 
+                        return false;
+                }	
 
-	 delete versionBuscada;
+                else
+                {
+                        creado = true;
+                        chdir(currentDir.c_str());
+                }
+        }
 
-	 chdir(currentDir.c_str());
-		
-    return ret;
+        for(it = filesLst->begin(); it != filesLst->end(); it++)
+        {
+                string FName = it->getName();
+                string version_number = toString<int>(it->getVersion());
+
+                if(it->getType() != 'd')
+                        ret = ret && getFile(a_TargetDir, fullDirName + "//" + FName, version_number, repositoryName);
+                else
+                        ret = ret && getDirectory(a_TargetDir,pathToFile + "//" + a_DirName, fullDirName, FName, version_number, repositoryName);
+
+        }
+
+        //si fallo la recuperacion y cree un directorio --> lo elimino
+        if((ret == false) && (creado == true))
+                remove((a_TargetDir + "//" + pathToFile + "//" + a_DirName).c_str());
+
+        delete versionBuscada;
+
+        chdir(currentDir.c_str());
+
+        return ret;
 }
 
 bool VersionManager::get(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny)
@@ -770,7 +766,6 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
 
 	 // voy a tener que la version del directorio que contiene a ese archivo/directorio para cotejar que existe la version que estoy buscando
     DirectoryVersion* versionDirectorioContenedor;
-    int bloque;
 
 	 //tengo que armar el path del directorio contenerdor al archivo/directorio que estoy buscando
 	 //para todos los casos el directorio raiz es el repositorio por lo tanto todos los paths de los archivos empiezan con:
@@ -779,11 +774,11 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
 	 string searchingPath = repositoryName;
 
     //voy agregando componente a componente para saber donde debo buscar
- 	 for(int i = 1; i < countComponents(a_Target);i++)
+	 for(int i = 1; i < countComponents(a_Target);i++)
 		searchingPath = searchingPath + "//" + getComponent(a_Target,i);
-	 	
+		
 	 //obtengo la version del directorio que contiene al archivo/directorio objetivo con el mismo nro de version que deseo que tenga el 
- 	 //archivo/directorio si es que voy a querer una version en particular o la ultima version del directorio que contiene al archivo/ 
+	 //archivo/directorio si es que voy a querer una version en particular o la ultima version del directorio que contiene al archivo/ 
 	 //directorio si esa que no especifique ninguna
 	if(!getDirVersion(&versionDirectorioContenedor, searchingPath,a_Version))
 		return false;
@@ -935,20 +930,15 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
     if (!_isOpen)
         return false;
 
-    int bloque;
-    int nroNuevoBloque;
-    string key;
-	
-	key = repositoryName;
+    string key = repositoryName;
+    for(int i = 1; i <= countComponents(a_Filename); ++i)
+	    key = key + "//" + getComponent(a_Filename,i);
 
-	for(int i = 1; i <= countComponents(a_Filename); ++i)
-		key = key + "//" + getComponent(a_Filename,i);
-	
-	debug("clave a borrar: "+key+"\n");
+    debug("clave a borrar: "+key+"\n");
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el archivo
-    bloque = _fileIndex.searchFile(key.c_str());
+    int bloque = _fileIndex.searchFile(key.c_str());
 
     if (bloque >= 0) { // el archivo esta en el indice, entonces, se puede borrar
         FileVersion* ultimaVersion;
@@ -970,7 +960,7 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
 		}
 	
 	debug("bloque < 0 \n");	
-		        	
+				
 	return false;
 }
 
@@ -980,19 +970,15 @@ bool VersionManager::removeDirectory(int repositoryVersion, const string& reposi
     if (!_isOpen)
         return false;
 
-    int bloque;
-    int nroNuevoBloque;
-    string key;
-	 DirectoryVersion* nuevaVersion;
-	
-	key = repositoryName;
+    DirectoryVersion* nuevaVersion;
+    string key = repositoryName;
 
-	for(int i = 1; i <= countComponents(a_Directoryname); ++i)
-		key = key + "//" + getComponent(a_Directoryname,i);
+    for(int i = 1; i <= countComponents(a_Directoryname); ++i)
+	    key = key + "//" + getComponent(a_Directoryname,i);
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el directorio
-    bloque = _dirIndex.searchFile(key.c_str());
+    int bloque = _dirIndex.searchFile(key.c_str());
 
     if (bloque >= 0) { // el directorio esta en el indice
         DirectoryVersion* ultimaVersion;
@@ -1115,13 +1101,13 @@ bool VersionManager::indexAFile(int repositoryVersion, const string& key, const 
 
 	FileVersionsFile::t_status status = _fileVersions.insertVersion(repositoryVersion, a_User.c_str(), *date, offset, a_Type, a_VersionType, bloque, &nroNuevoBloque);
 	switch (status) {
-   	case FileVersionsFile::OK :
-      	return true;
+	case FileVersionsFile::OK :
+	return true;
          break;
    case FileVersionsFile::OVERFLOW :
-   	// tengo que generar la clave a partir de a_File y repositoryVersion
-   	newKey = key + zeroPad(repositoryVersion, VERSION_DIGITS);
-   	return _fileIndex.insert(newKey.c_str(), nroNuevoBloque);
+	// tengo que generar la clave a partir de a_File y repositoryVersion
+	newKey = key + zeroPad(repositoryVersion, VERSION_DIGITS);
+	return _fileIndex.insert(newKey.c_str(), nroNuevoBloque);
 		break;
    default:
       return false;
@@ -1493,12 +1479,12 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
 	 string searchingPath = repositoryName;
 
     //voy agregando componente a componente para saber donde debo buscar
- 	 for(int i = 1; i < countComponents(a_Target);i++)
+	 for(int i = 1; i < countComponents(a_Target);i++)
 		searchingPath = searchingPath + "//" + getComponent(a_Target,i);
 
     DirectoryVersion* versionDirectorioA;
     DirectoryVersion* versionDirectorioB;
-	 	
+		
 	if(!getDirVersion(&versionDirectorioA, searchingPath,a_VersionA))
 		return false;
 
