@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <sys/stat.h>
+#include <unistd.h>
 
 using std::cout;
 using std::endl;
@@ -231,12 +232,23 @@ bool Almacen::removeUser(const string& a_Reposit, const string& a_Username) thro
 
 bool Almacen::add(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password)
 {
+    const int MAX_WAIT = 1000;
+    int ntries = 0;
+
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
-    bool ret = rep->open();
-    ret = ret && rep->add(a_Target, a_Username, a_Password);
-    ret = ret && rep->close();
+
+    bool ret = false;
+    if (rep->open()) {
+        while (!getLock(a_Target) && (ntries < MAX_WAIT))
+            ntries++;                       // perform active wait, could be improved!
+        if (ntries == MAX_WAIT)
+            return false;       // could not get lock!
+        ret = rep->add(a_Target, a_Username, a_Password);
+        releaseLock(a_Target);
+        rep->close();
+    }
     return ret;
 }
 
@@ -303,5 +315,71 @@ bool Almacen::getDiff(std::ifstream& is, const string& a_Username, const string&
     ret = ret && rep->getDiff(is, a_Username, a_Password, a_VersionA, a_VersionB, a_Filename);
     ret = ret && rep->close();
     return ret;
+}
+
+bool Almacen::getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Date)
+{
+    Repositorio* rep = getRepository(a_Reposit);
+    if (rep == NULL)
+        return false;
+
+    bool ret = rep->open();
+    ret = ret && rep->getDiffByDate(is, a_Username, a_Password, a_Date);
+    ret = ret && rep->close();
+    return ret;
+}
+
+bool Almacen::getHistory(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
+{    
+    Repositorio* rep = getRepository(a_Reposit);
+    if (rep == NULL)
+        return false;
+
+    bool ret = rep->open();
+    ret = ret && rep->getHistory(is, a_Username, a_Password, a_Filename);
+    ret = ret && rep->close();
+    return ret;
+}
+
+bool Almacen::changePassword(const string& a_Reposit, const string& a_Username, const string& a_NewPassword)
+{
+    Repositorio* rep = getRepository(a_Reposit);
+    if (rep == NULL)
+        return false;
+
+    try {
+        // initialize xerces
+        xercesc::XMLPlatformUtils::Initialize();
+        
+        if (!_config->changePassword(a_Reposit, a_Username, a_NewPassword)) 
+            return false;
+        _config->commit();
+
+        // terminate xerces
+        xercesc::XMLPlatformUtils::Terminate();
+    }
+    catch (...) {
+        return false;
+    }
+    return false;
+}
+
+bool Almacen::getLock(const string& a_Name) const
+{
+    string filename = "." + a_Name;
+    std::ifstream is(filename.c_str());
+    if (is.is_open())
+        return false;
+
+    std::ofstream os(filename.c_str());
+    os.close();
+    return true;
+}
+
+bool Almacen::releaseLock(const string& a_Name) const
+{
+    string filename = "." + a_Name;
+    std::remove(filename.c_str());
+    return true;            
 }
 

@@ -1338,3 +1338,18 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
     }
     return false;
 }
+
+
+bool VersionManager::getDiffByDate(std::ifstream& is, const string& a_Date)
+{
+    // TODO
+    return false;
+}
+
+bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
+{
+    // TODO
+    return false;
+
+}
+
