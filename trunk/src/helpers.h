@@ -33,6 +33,9 @@ int countComponents(const std::string& a_Target);
 
 std::string getComponent(const std::string& a_Target,int component);
 
+bool isEmptyFile(const std::string& a_Filename);
+
+bool areDifferentFiles(const std::string& f1, const std::string& f2);
 
 #endif
 

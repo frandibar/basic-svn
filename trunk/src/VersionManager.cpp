@@ -2,6 +2,7 @@
 
 #include "VersionManager.h"
 #include "debug.h"
+#include "helpers.h"
 #include <fstream>
 #include <list>
 #include <iterator>
@@ -189,20 +190,37 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
                 if (system(cmd.c_str()) == -1)
                     return false;
 
-                std::ifstream is(tmpDiffFilename.c_str());
-                offset = _textContainer.append(is);
-                is.close();
-
+                bool empty = isEmptyFile(tmpDiffFilename);
+                if (!empty) {
+                    std::ifstream is(tmpDiffFilename.c_str());
+                    offset = _textContainer.append(is);
+                    is.close();
+                }
                 // remove temporary files
                 remove(tmpVersionFilename.c_str());
                 remove(tmpDiffFilename.c_str());
+
+                if (empty)
+                    return false;
             }
-            return indexAFile(repositoryVersion, key, a_User, date, offset, a_Type, FileVersion::MODIFICACION,bloque);
+            return indexAFile(repositoryVersion, key, a_User, date, offset, a_Type, FileVersion::MODIFICACION, bloque);
         }
         else if (a_Type == 'b') {
             std::ifstream is(a_Filename.c_str());
             if (!is) 
                 return false;
+
+            // check if versions differ
+            FileVersion* ultimaVersion;
+            _fileVersions.getLastVersion(&ultimaVersion, bloque);
+            if (ultimaVersion->getVersionType() != FileVersion::BORRADO) { 
+                string tmpVersion = randomFilename("tmp_");
+                ofstream os(tmpVersion.c_str());   
+                _binaryContainer.get(offset, os);
+                os.close();
+                if (!areDifferentFiles(tmpVersion, a_Filename))
+                    return false;
+            } 
             offset = _binaryContainer.append(is);
             is.close();
             if (offset == -1) 
@@ -256,7 +274,8 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
     // busco en el indice a ver si esta el directorio
     int bloque = _dirIndex.searchFile(key.c_str());
 
-    if (bloque >= 0) { // el directorio esta en el indice
+    if (bloque >= 0) { 
+        // el directorio esta en el indice
         DirectoryVersion* ultimaVersion;
         int lastVersion  = _dirVersions.getLastVersionNumber(bloque); //obtengo el numero de la ultima version
 
@@ -279,7 +298,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
         list<string> fileIncludedLst;
         while ((myDirent = readdir(dir)) != NULL) {
             string filename = myDirent->d_name;
-            if( (filename.compare(".") != 0) && (filename.compare("..") != 0) )
+            if ((filename.compare(".") != 0) && (filename.compare("..") != 0))
                 fileIncludedLst.push_back(filename);
         }
 
@@ -292,22 +311,24 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
         bool result = true;
 
         if (ultimaVersion->getType() != DirectoryVersion::BORRADO) {     
-            // ahora debo si hay algun borrado y luego generar la version del archivo
+            // ahora debo cotejar si hay algun borrado y luego generar la version del archivo
 
-            list<File> filesErased; //lista con los nombres de los archivos/directorios que fueron borrados
+            list<File> filesErased; // lista con los nombres de los archivos/directorios que fueron borrados
 
-            for(it_oldFiles = filesLst->begin(); it_oldFiles != filesLst->end(); it_oldFiles++) {
+            for (it_oldFiles = filesLst->begin(); it_oldFiles != filesLst->end(); ++it_oldFiles) {
                 string fname = it_oldFiles->getName();
                 bool included = false;
 
-                for(it_newFiles = fileIncludedLst.begin();it_newFiles != fileIncludedLst.end(); it_newFiles++)
-                    if(fname.compare(*it_newFiles)==0)
+                for (it_newFiles = fileIncludedLst.begin();it_newFiles != fileIncludedLst.end(); ++it_newFiles)
+                    if (fname.compare(*it_newFiles) == 0)
                         included = true;
 
                 if (!included) {
-                    File* file = new File(it_oldFiles->getName(), it_oldFiles->getVersion(),it_oldFiles->getType());
+                    File* file = new File(it_oldFiles->getName(), it_oldFiles->getVersion(), it_oldFiles->getType());
                     filesErased.push_back(*file);
                 }              
+                else
+                    nuevaVersion->addFile(it_oldFiles->getName(), it_oldFiles->getVersion(), it_oldFiles->getType());
             }
 
             list<File>::iterator it_erasedFiles;
@@ -323,41 +344,64 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
             filesErased.clear();      
         }
 
-        delete ultimaVersion; //elimino la ultima version, ya no la voy a necesitar
+        delete ultimaVersion; // elimino la ultima version, ya no la voy a necesitar
 
         list<string>::iterator it_includedFiles;
 
         if (result)
-            for(it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); it_includedFiles++) { 
+            for (it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); ++it_includedFiles) { 
                 // versiono todos los archivos/directorios que pertenecen al directorio
                 string fname = a_Directoryname + "/" + *it_includedFiles;
 
                 t_filetype ftype = getFiletype(fname);
                 char type;
 
-                if(ftype == DIRECTORY) {
-                    type = 'd';
-                    result = result && addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+                if (nuevaVersion->searchFile(it_includedFiles->c_str())) {
+                    bool modified = false;
+                    if (ftype == DIRECTORY) {
+                        type = 'd';
+                        modified = addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+                    }
+                    else if (ftype == TEXT) {
+                        type = 't';
+                        modified = addFile(repositoryVersion, repositoryName, fname, a_User, a_Date, type);
+                    }
+                    else if (ftype == BINARY) {
+                        type = 'b';
+                        modified = addFile(repositoryVersion, repositoryName, fname, a_User, a_Date, type);
+                    }
+                    if (modified) {
+                        nuevaVersion->update((*it_includedFiles).c_str(), repositoryVersion, type);
+                    }
                 }
-                else if((ftype == TEXT)||(ftype == BINARY)) {
-                    type = (ftype == TEXT ? 't' : 'b');
-                    result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date,type);
+                else {                    
+                    if (ftype == DIRECTORY) {
+                        type = 'd';
+                        result = result && addDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+                    }
+                    else if (ftype == TEXT) {
+                        type = 't';
+                        result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date, type);
+                    }
+                    else if (ftype == BINARY) {
+                        type = 'b';
+                        result = result && addFile(repositoryVersion, repositoryName, fname, a_User, a_Date, type);
+                    }
+                    else result = false;
+
+                    if (result)  // agrego el archivo al directorio
+                        nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion, type);                                     
                 }
-
-                else result = false;
-
-                if (result)  // agrego el archivo al directorio
-                    nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion,type);                                     
             }
 
-        if(result)
+        if (result)
             result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque);                             
 
         delete nuevaVersion;
         return result;
     }
 
-    else {   // es la 1º vez que se va a agregar el directorio, por lo tanto, no debo cotejar los cambios
+    else {   // es la 1ra vez que se va a agregar el directorio, por lo tanto, no debo cotejar los cambios
           nuevaVersion = new DirectoryVersion(repositoryVersion,a_User.c_str(),*date,DirectoryVersion::MODIFICACION);
 
           if ((dir = opendir(a_Directoryname.c_str())) == NULL) {
@@ -366,11 +410,11 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
               return false;
           }
 
-          //obtengo una lista con todos los nombres de los archivos/directorios pertenecientes al directorio que quiero agregar
+          // obtengo una lista con todos los nombres de los archivos/directorios pertenecientes al directorio que quiero agregar
           list<string> fileIncludedLst;
           while((myDirent = readdir(dir)) != NULL) {
               string filename = myDirent->d_name;
-              if( (filename.compare(".") != 0) && (filename.compare("..") != 0) )
+              if ((filename.compare(".") != 0) && (filename.compare("..") != 0))
                   fileIncludedLst.push_back(filename);          
           }
             
@@ -379,7 +423,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
           list<string>::iterator it_includedFiles;
           bool result = true;
 
-          for (it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); it_includedFiles++) {  
+          for (it_includedFiles = fileIncludedLst.begin(); it_includedFiles != fileIncludedLst.end(); ++it_includedFiles) {  
               // versiono todos los archivos/directorios que pertenecen al directorio
               string fname = a_Directoryname + "/" + *it_includedFiles;
 
@@ -425,14 +469,15 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 
     string finalPath = repositoryName;
 
-    for(int i = 1; i <= countComponents(a_Target); ++i)
+    for (int i = 1; i <= countComponents(a_Target); ++i)
         finalPath = finalPath + "//" + getComponent(a_Target,i);
 
-    if(pathActual.compare(finalPath) == 0) {   
-        if((a_Type == BINARY) || (a_Type == TEXT))      
+    if (pathActual.compare(finalPath) == 0) {   
+        if ((a_Type == BINARY) || (a_Type == TEXT))      
             ret = addFile(repositoryVersion,repositoryName, a_Target, a_Username, a_Date, (a_Type == TEXT ? 't' : 'b'));
         else    
             ret = addDirectory(repositoryVersion,repositoryName, a_Target, a_Username,a_Date);
+        return ret;
     }
     else {
         // identifico si hay alguna version del directorio actual (por el que voy siguiendo el camino hasta target)
@@ -449,11 +494,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 
         // defino el tipo de archivo que es la componente leida
         char tipoArchivo;
-
-        int nuevoBloque;
-
         string caminoRecorrido = pathActual + "//" + componente;
-                        
         if (caminoRecorrido.compare(finalPath) == 0) {
             if (a_Type == TEXT) 
                 tipoArchivo = 't';
@@ -482,7 +523,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
 
                     debug("comienzo a copiar la lista");
                     //copio los archivos que tenia en la version anterior a la nueva para luego actualizarlos
-                    for(it = lst->begin();it != lst->end();it++)    
+                    for (it = lst->begin();it != lst->end(); ++it)    
                         nuevaVersion->addFile(it->getName(), it->getVersion(), it->getType());
 
                     debug("termine de copiar la lista");
@@ -498,10 +539,10 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
                 }                                       
             }           
         }
-        
         else {   
             ret = addRec(a_Target, componenteALeer + 1, pathActual + "//" + componente, repositoryName, repositoryVersion, cantComponentesPath, a_Username,                         a_Date, a_Type);
             if (ret) {       
+                int nuevoBloque;
                 nuevaVersion->addFile(componente.c_str(), repositoryVersion, tipoArchivo);
                 _dirVersions.insertVersion(nuevaVersion,&nuevoBloque);
 
@@ -515,7 +556,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
         return ret;     
     }
 
-    return ret; //never gets here
+    return ret; // never gets here
 }
 
 bool VersionManager::create()
@@ -545,13 +586,11 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
     FileVersion* versionBuscada;
     int bloque;
 
-     if(!getFileVersionAndBlock(&bloque, &versionBuscada, a_Filename, a_Version))
+     if (!getFileVersionAndBlock(&bloque, &versionBuscada, a_Filename, a_Version))
         return false;   
 
      int RepNameEnd = a_Filename.find_first_not_of(repositoryName + "//");
-    
      string path = a_Filename;
-    
      path.erase(0,RepNameEnd);
 
      if (versionBuscada->getVersionType() == FileVersion::BORRADO) { // si la version buscada es una version de borrado entonces no hago nada
@@ -598,8 +637,7 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
         //chequeo si el archivo ya existe o no. Si ya existe, debo preguntar si lo reescribo o no.
         fileToCheck.open((a_TargetDir + "//" + path).c_str());
         fileToCheck.close();
-        if(fileToCheck.fail())    //si el archivo no existia lo escribo
-        {
+        if (fileToCheck.fail()) {  //si el archivo no existia lo escribo
             std::ofstream os((a_TargetDir + "//" + path).c_str());
             if (!os.is_open())
                 return false;
@@ -608,7 +646,7 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
             os.close();
             return true;
         }
-        else {  //si el archivo ya existia pregunto si hay que sobreescribirlo
+        else {  // si el archivo ya existia pregunto si hay que sobreescribirlo
             do {
                 // TODO: desde aca interaccion con usuario!?
                 cerr << "El archivo: " << a_TargetDir << "/" << path << " ya existe. Desea sobreescribirlo? S/N" << endl;
@@ -627,7 +665,6 @@ bool VersionManager::getFile(const string& a_TargetDir, const string& a_Filename
                 os.close();
                 return true;
             }
-
             else
                 return true;
         }
@@ -674,7 +711,7 @@ bool VersionManager::getDirectory(const string& a_TargetDir,const string& pathTo
             }
         }
 
-        for(it = filesLst->begin(); it != filesLst->end(); it++) {
+        for(it = filesLst->begin(); it != filesLst->end(); ++it) {
             string FName = it->getName();
             string version_number = toString<int>(it->getVersion());
 
@@ -745,7 +782,7 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
             // si el directorio destion no existe -> vuelvo al directorio de trabajo actual y elimino las referencias que tengo en memoria
             chdir(currentDirectory.c_str());
             delete versionDirectorioContenedor;
-            cout<<"El directorio elegido como destino no existe"<<endl;
+            cout << "El directorio elegido como destino no existe"<<endl;
             return false;       
         }
 
@@ -770,7 +807,7 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
                 //si no existe el directorio lo creo
                 if(chdir(pathAuxiliar.c_str()) != 0) {                       
                     if(mkdir(pathAuxiliar.c_str(),0755) != 0)
-                        cout<<"error al crear: "<<pathAuxiliar<<endl;
+                        cout << "error al crear: " << pathAuxiliar << endl;
                 }
                 else {
                     existentes++;
@@ -803,7 +840,7 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
         list<File>* filesLst = versionDirectorioContenedor->getFilesList();
         list<File>::iterator it_files;
         string fname;
-        for(it_files = filesLst->begin(); it_files != filesLst->end(); it_files++) {
+        for(it_files = filesLst->begin(); it_files != filesLst->end(); ++it_files) {
             fname = it_files->getName();
             if(it_files->getType() == 'd')
                 ret = ret && getDirectory(a_TargetDestiny, "" , searchingPath, fname, a_Version, repositoryName);
@@ -812,7 +849,7 @@ bool VersionManager::get(const string& a_Version, const string& a_Target,const s
         }
 
         if (!ret) {
-            for(it_files = filesLst->begin(); it_files != filesLst->end(); it_files++) {
+            for(it_files = filesLst->begin(); it_files != filesLst->end(); ++it_files) {
                 fname = it_files->getName();
                 remove((a_TargetDestiny + "/" + fname).c_str());
             }
@@ -845,10 +882,8 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
 
     if (bloque >= 0) { // el archivo esta en el indice, entonces, se puede borrar
         FileVersion* ultimaVersion;
-          
         _fileVersions.getLastVersion(&ultimaVersion, bloque);
-
-        if(ultimaVersion->getVersionType() == FileVersion::BORRADO) { 
+        if (ultimaVersion->getVersionType() == FileVersion::BORRADO) { 
             // si ya esta borrado no puedo volver a borrarlo             
             delete ultimaVersion;
             return false;
@@ -903,7 +938,7 @@ bool VersionManager::removeDirectory(int repositoryVersion, const string& reposi
 
         list<File>::iterator it_filesToRemove;
         // a cada archivo/directorio de la version anterior les debo hacer un borrado
-        for(it_filesToRemove = filesLst->begin();it_filesToRemove != filesLst->end(); it_filesToRemove++) {
+        for(it_filesToRemove = filesLst->begin();it_filesToRemove != filesLst->end(); ++it_filesToRemove) {
 
             string fname = it_filesToRemove->getName();
             string fullPath = a_Directoryname + "/" + fname;
@@ -1145,7 +1180,7 @@ bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, co
 bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_VersionA, const string& a_VersionB, int tabs)
 {
     string espacio;
-    for(int i = 1; i <= tabs; i++)
+    for(int i = 1; i <= tabs; ++i)
         espacio = espacio + "\t";
 
     string dirname = a_DirName;
@@ -1224,10 +1259,10 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                             break;
                         }
 
-                        cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                            " usuario: "<<dir_version->getUser()<<"\t";
-                        cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                            " usuario: "<<file_version->getUser()<<endl;
+                        cout << espacio + "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                            " usuario: " << dir_version->getUser() << "\t";
+                        cout << espacio + "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                            " usuario: " << file_version->getUser() << endl;
 
                         delete file_version;
                         delete dir_version;
@@ -1245,10 +1280,10 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                             break;
                         }
 
-                        cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                            " usuario: "<<file_version->getUser()<<"\t";
-                        cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                            " usuario: "<<dir_version->getUser()<<endl;
+                        cout << espacio + "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                            " usuario: " << file_version->getUser() << "\t";
+                        cout << espacio + "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                            " usuario: " << dir_version->getUser() << endl;
 
                         delete file_version;
                         delete dir_version;
@@ -1259,20 +1294,20 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                     FileVersion* file_version;
                     int bloque;
 
-                    if (it_listA->getType() != 'd') {
+                    if (it_listA->getType() == 'd') {
                         if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionA))
                             break;
 
-                        cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                            " usuario: "<<dir_version->getUser()<<endl;
+                        cout << espacio + "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                            " usuario: " << dir_version->getUser() << endl;
 
                         delete dir_version;         
                     }                       
                     else {
                         if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionB))
                             break;
-                        cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                            " usuario: "<<file_version->getUser()<<endl;
+                        cout << espacio + "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                            " usuario: " << file_version->getUser() << endl;
 
                         delete file_version;                    
                     }
@@ -1286,8 +1321,8 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                 if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionA))
                     break;
 
-                cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                    " usuario: "<<dir_version->getUser()<<" borrado"<<endl;
+                cout << espacio + "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                    " usuario: " << dir_version->getUser() << " borrado" << endl;
 
                 delete dir_version;                 
             }
@@ -1298,15 +1333,15 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                 if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionA))
                     break;
 
-                cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                    " usuario: "<<file_version->getUser()<<" borrado"<<endl;    
+                cout << espacio + "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                    " usuario: " << file_version->getUser() << " borrado" << endl;    
 
                 delete file_version;
             }
         }           
     }
 
-    for(it_listB = lstB->begin(); it_listB != lstB->end(); ++it_listB) {
+    for (it_listB = lstB->begin(); it_listB != lstB->end(); ++it_listB) {
         bool found = false;
         for(it_listA = lstA->begin(); it_listA != lstA->end(); ++it_listA) {
             if(strcmp(it_listA->getName(),it_listB->getName()) == 0)
@@ -1321,9 +1356,10 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                 if(!getDirVersion(&dir_version, a_DirName + "//" + fname, a_VersionB))
                     break;
 
-                cout<<espacio + "\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                    " usuario: "<<dir_version->getUser()<<" agregado"<<endl;
+                cout << espacio + "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                    " usuario: " << dir_version->getUser() << " agregado" << endl;
 
+                showAddedDirectory(dir_version, a_DirName + "//" + fname, tabs + 1);
                 delete dir_version;                 
             }
             else {
@@ -1333,8 +1369,8 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
                 if(!getFileVersionAndBlock(&bloque, &file_version, a_DirName + "//" + fname, a_VersionB))
                     break;
 
-                cout<<espacio + "\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                    " usuario: "<<file_version->getUser()<<" agregado"<<endl;   
+                cout << espacio + "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                    " usuario: " << file_version->getUser() << " agregado" << endl;   
 
                 delete file_version;
             }
@@ -1354,7 +1390,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
     string searchingPath = repositoryName;
 
     // voy agregando componente a componente para saber donde debo buscar
-    for(int i = 1; i < countComponents(a_Target);i++)
+    for (int i = 1; i < countComponents(a_Target); ++i)
         searchingPath = searchingPath + "//" + getComponent(a_Target,i);
 
     DirectoryVersion* versionDirectorioA;
@@ -1368,20 +1404,20 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
         return false;
     }
 
-    bool ret;
+    bool ret = false;
 
     if (a_Target != "") {
         if (versionDirectorioA->getType() == DirectoryVersion::BORRADO) {
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout<<"No existe la version: "<<a_VersionA<<" de "<<searchingPath<<endl;
+            cout << "No existe la version: " << a_VersionA << " de " << searchingPath << endl;
             return false;
         }
 
         if (versionDirectorioB->getType() == DirectoryVersion::BORRADO) {
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout<<"No existe la version: "<<a_VersionB<<" de "<<searchingPath<<endl;
+            cout << "No existe la version: " << a_VersionB << " de " << searchingPath << endl;
             return false;
         }
 
@@ -1391,7 +1427,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
         if(!versionDirectorioA->searchFile(filename.c_str(),&fileA)) {   
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout<<"No existe la version: "<<a_VersionA<<" de "<<searchingPath<<"//"<<filename<<endl;
+            cout << "No existe la version: " << a_VersionA << " de " << searchingPath << "//" << filename << endl;
             return false;
         }
 
@@ -1400,7 +1436,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
             delete fileA;   
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout<<"No existe la version: "<<a_VersionB<<" de "<<searchingPath<<"//"<<filename<<endl;
+            cout << "No existe la version: " << a_VersionB << " de " << searchingPath << "//" << filename << endl;
             return false;
         }
 
@@ -1409,7 +1445,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
             delete fileB;   
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout<<"Las versiones "<<a_VersionA<<" y "<<a_VersionB<<" de "<<filename<<" son tipos de archivos diferentes"<<endl;
+            cout << "Las versiones " << a_VersionA << " y " << a_VersionB << " de " << filename << " son tipos de archivos diferentes" << endl;
             return false;
         }
 
@@ -1436,7 +1472,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
         string fname;
 
         ret = true;
-        cout<<repositoryName<<endl;
+        cout << repositoryName << endl;
 
         for (it_listA = lstA->begin(); it_listA != lstA->end(); ++it_listA) {
             bool found = false;
@@ -1462,10 +1498,10 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                                 break;
                             }                                                                                   
 
-                            cout<<"\t"<<fname<<" version: "<<file_versionA->getNroVersion()<<" tipo: "<<file_versionA->getTipo()<<
-                                " usuario: "<<file_versionA->getUser()<<"\t";
-                            cout<<"\t"<<fname<<" version: "<<file_versionB->getNroVersion()<<" tipo: "<<file_versionB->getTipo()<<
-                                " usuario: "<<file_versionB->getUser()<<endl;
+                            cout << "\t" << fname << " version: " << file_versionA->getNroVersion() << " tipo: " << file_versionA->getTipo() << 
+                                " usuario: " << file_versionA->getUser() << "\t";
+                            cout << "\t" << fname << " version: " << file_versionB->getNroVersion() << " tipo: " << file_versionB->getTipo() << 
+                                " usuario: " << file_versionB->getUser() << endl;
 
                             delete file_versionA;
                             delete file_versionB;
@@ -1487,10 +1523,10 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                                 break;
                             }
 
-                            cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                                " usuario: "<<dir_version->getUser()<<"\t";
-                            cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                                " usuario: "<<file_version->getUser()<<endl;
+                            cout << "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                                " usuario: " << dir_version->getUser() << "\t";
+                            cout << "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                                " usuario: " << file_version->getUser() << endl;
 
                             delete file_version;
                             delete dir_version;
@@ -1508,10 +1544,10 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                                 break;
                             }
 
-                            cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                                " usuario: "<<file_version->getUser()<<"\t";
-                            cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                                " usuario: "<<dir_version->getUser()<<endl;
+                            cout << "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                                " usuario: " << file_version->getUser() << "\t";
+                            cout << "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                                " usuario: " << dir_version->getUser() << endl;
 
                             delete file_version;
                             delete dir_version;
@@ -1526,16 +1562,16 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                             if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
                                 break;
 
-                            cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                                " usuario: "<<dir_version->getUser()<<endl;
+                            cout << "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                                " usuario: " << dir_version->getUser() << endl;
 
                             delete dir_version;         
                         }                       
                         else {
                             if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
                                 break;
-                            cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                                " usuario: "<<file_version->getUser()<<endl;
+                            cout << "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                                " usuario: " << file_version->getUser() << endl;
 
                             delete file_version;                    
                         }
@@ -1549,8 +1585,8 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
                         break;
 
-                    cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                        " usuario: "<<dir_version->getUser()<<" borrado"<<endl;
+                    cout << "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                        " usuario: " << dir_version->getUser() << " borrado" << endl;
 
                     delete dir_version;                 
                 }
@@ -1561,17 +1597,17 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionA))
                         break;
 
-                    cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                        " usuario: "<<file_version->getUser()<<" borrado"<<endl;    
+                    cout << "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                        " usuario: " << file_version->getUser() << " borrado" << endl;    
 
                     delete file_version;
                 }
             }           
         }
 
-        for (it_listB = lstB->begin(); it_listB != lstB->end(); it_listB++) {
+        for (it_listB = lstB->begin(); it_listB != lstB->end(); ++it_listB) {
             bool found = false;
-            for(it_listA = lstA->begin(); it_listA != lstA->end(); it_listA++) {
+            for(it_listA = lstA->begin(); it_listA != lstA->end(); ++it_listA) {
                 if(strcmp(it_listA->getName(),it_listB->getName()) == 0)
                     found = true;   
             }
@@ -1584,9 +1620,10 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionB))
                         break;
 
-                    cout<<"\t"<<fname<<" version: "<<dir_version->getNroVersion()<<" tipo: "<<"d"<<
-                        " usuario: "<<dir_version->getUser()<<" agregado"<<endl;
+                    cout << "\t" << fname << " version: " << dir_version->getNroVersion() << " tipo: " << "d" << 
+                        " usuario: " << dir_version->getUser() << " agregado" << endl;
 
+                    showAddedDirectory(dir_version, searchingPath + "//" + fname, 1);
                     delete dir_version;                 
                 }
                 else {
@@ -1596,8 +1633,8 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
                         break;
 
-                    cout<<"\t"<<fname<<" version: "<<file_version->getNroVersion()<<" tipo: "<<file_version->getTipo()<<
-                        " usuario: "<<file_version->getUser()<<" agregado"<<endl;   
+                    cout << "\t" << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                        " usuario: " << file_version->getUser() << " agregado" << endl;   
 
                     delete file_version;
                 }
@@ -1621,7 +1658,61 @@ bool VersionManager::getDiffByDate(std::ifstream& is, const string& a_Date)
 
 bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
 {
-    // TODO
+    if (!_isOpen)
+        return false;
+
+    //DirectoryVersion* versionDirectorioContenedor;
+    //string searchingPath = _repository;
+    //for(int i = 1; i < countComponents(a_Filename); ++i)
+        //searchingPath = searchingPath + "//" + getComponent(a_Target, i);
+
+    //if (!getDirVersion(&versionDirectorioContenedor, searchingPath, a_Version))
+        //return false;
+
+    //if (!a_Filename.empty()) {
+        //File* pfile;
+
+    //}
+    //else {
+
+    //}
     return false;
 }
 
+void VersionManager::showAddedDirectory(DirectoryVersion* dirVersion, const string& path, int tabs)
+{
+    string espacio;
+    for(int i = 1; i <= tabs; ++i)
+        espacio = espacio + "   ";
+
+    list<File>* filesLst = dirVersion->getFilesList();
+    list<File>::iterator it_files;
+
+    for(it_files = filesLst->begin(); it_files != filesLst->end(); ++it_files) {
+        string fname = it_files->getName();
+
+        if(it_files->getType() != 'd')
+        { FileVersion* fileVersion;
+            int bloque;
+
+            if(!getFileVersionAndBlock(&bloque, &fileVersion, path + "//" + fname,toString<int>(it_files->getVersion()) ) )
+                break;
+
+            cout << espacio + "   " << fname << " version: " << fileVersion->getNroVersion() << " tipo: " << fileVersion->getTipo() << " usuario: " << 
+                fileVersion->getUser() << " agregado" << endl;
+
+            delete fileVersion;
+        }
+        else {
+            DirectoryVersion* dirVersion;
+            if(!getDirVersion(&dirVersion, path + "//" + fname, toString<int>(it_files->getVersion()) ) )
+                break;
+
+            cout << espacio + "   " << fname << " version: " << dirVersion->getNroVersion() << " tipo: " << "d" << " usuario: " << dirVersion->getUser() << 
+                " agregado" << endl;
+
+            showAddedDirectory(dirVersion,path + "//" + fname, tabs + 1);
+            delete dirVersion;
+        }      
+    }
+}

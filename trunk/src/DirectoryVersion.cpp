@@ -17,17 +17,12 @@ DirectoryVersion::DirectoryVersion()
 DirectoryVersion::DirectoryVersion(int NroVersion,const char* User,tm Date,t_versionType Type)
 {
 	_fileLst.clear();
-	
 	int tam = strlen(User);
-
 	_nroVersion = NroVersion;
-
 	_user = new char[(tam + 1) * sizeof(char)];
 	memcpy(_user,User,tam);
 	_user[tam] = 0;
-
 	_date = Date;
-
 	_type = Type;
 }
 
@@ -35,7 +30,7 @@ DirectoryVersion::~DirectoryVersion()
 {
 	_fileLst.clear();
 	
-	if(_user)
+	if (_user)
 		delete _user;
 }
 
@@ -72,8 +67,7 @@ void DirectoryVersion::write(char* buffer)
 
 	int offset = 0;
 
-	for(it = _fileLst.begin();it != _fileLst.end();it++)
-	{
+	for (it = _fileLst.begin();it != _fileLst.end(); ++it) {
 		it->write(buffer + offset);	// each file
 		offset += it->getTamanioEnDisco();
 	}
@@ -108,12 +102,9 @@ void DirectoryVersion::read(char** buffer)
 	memcpy(&files,*buffer,sizeof(int));				//cantidad de archivos
 	*buffer += sizeof(int);
 
-	for(int i = 0; i < files;i++)
-	{
+	for (int i = 0; i < files; ++i) {
 		File* newFile = new File();					//read each file
-
 		newFile->read(buffer);
-
 		_fileLst.push_back(*newFile);
 	}
 }
@@ -123,22 +114,14 @@ long int DirectoryVersion::tamanioEnDisco()
 	long int size = 0;
 
 	size += sizeof(int);	//_versionNumber
-
 	size += sizeof(int);	//el indicador de longitud del usuario
-
 	int length = strlen(_user);
-
 	size += length * sizeof(char);	//_user
-
 	size += sizeof(tm);	//_date
-
 	size += sizeof(t_versionType);	//_type
-
 	size += sizeof(int);	//list size
-	
 	list<File>::iterator it;
-
-	for(it = _fileLst.begin();it != _fileLst.end();it++)
+	for (it = _fileLst.begin();it != _fileLst.end(); ++it)
 		size += it->getTamanioEnDisco();		//each element of the list
 
 	return size;
@@ -150,39 +133,40 @@ void DirectoryVersion::update(const char* fileName, int versionNumber, char type
 
 	bool modified = false;
 
-	for(it = _fileLst.begin();it != _fileLst.end();++it)
-	{
+	for (it = _fileLst.begin(); it != _fileLst.end(); ++it) {
 		int cmp = strcmp(it->getName(),fileName);
-
-		if((cmp == 0) && (it->getType() == type))
-		{
+		if ((cmp == 0) && (it->getType() == type)) {
 			it->setVersion(versionNumber);
 			modified = true;
 		}
 	}
 	
-	if(!modified)
-
-	addFile(fileName, versionNumber, type);
-
-	return;
+	if (!modified)
+        addFile(fileName, versionNumber, type);
 }
 
-bool DirectoryVersion::searchFile(const char* filename,File** file)
+bool DirectoryVersion::searchFile(const char* filename, File** file)
 {
-
 	list<File>::iterator it;
 
-	for(it = _fileLst.begin();it != _fileLst.end();it++)
-	{
-		int cmp = strcmp(filename,it->getName());
-		
-		if(cmp == 0)
-		{
+	for (it = _fileLst.begin(); it != _fileLst.end(); ++it) {
+		int cmp = strcmp(filename, it->getName());
+		if(cmp == 0) {
 			*file = new File(filename, it->getVersion(),it->getType());
 			return true;
 		}
 	}
-	
+	return false;
+}
+
+bool DirectoryVersion::searchFile(const char* filename)
+{
+	list<File>::iterator it;
+
+	for (it = _fileLst.begin(); it != _fileLst.end(); ++it) {
+		int cmp = strcmp(filename, it->getName());
+		if(cmp == 0)
+			return true;
+	}
 	return false;
 }

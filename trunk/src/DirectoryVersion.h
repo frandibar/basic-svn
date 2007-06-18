@@ -38,7 +38,7 @@ public:
 
 	long int tamanioEnDisco();
 
-	bool searchFile(const char* filename,File** file);
+	bool searchFile(const char* filename, File** file);
 	bool searchFile(const char* filename);
 
 private:

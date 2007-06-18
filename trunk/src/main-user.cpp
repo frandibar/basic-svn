@@ -51,7 +51,7 @@ void add(const string& a_Username, const string& a_Password, const string& a_Rep
 }
 
 
-void showHistory(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
+void showHistory(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename = "")
 {
     Almacen almacen;
     if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
@@ -88,6 +88,7 @@ void showDiff(const string& a_Username, const string& a_Password, const string& 
         getline(is, line);
         cout << line << endl;
     } 
+    is.close();
 }
 
 
@@ -108,6 +109,7 @@ void showByDate(const string& a_Username, const string& a_Password, const string
         getline(is, line);
         cout << line << endl;
     } 
+    is.close();
 }
 
 void changePassword(const string& a_Username, const string& a_Password, const string& a_NewPassword, const string& a_Reposit)
@@ -140,11 +142,11 @@ void get(const string& a_Username, const string& a_Password, const string& a_Rep
 
 void showHelp(const char* progname)
 {
-    cout << "uso: " << progname << " usuario contraseña [[-a \"nombre repositorio\" \"nombre archivo/directorio\" |" << endl
-         << "                 [-d \"nombre repositorio\" version_inicial version_final] [\"nombre archivo/directorio\"] |" << endl
-         << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)] | [-h] |" << endl
-         << "                 [-l \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
-         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version] |" << endl
+    cout << "uso: " << progname << " usuario contraseña [[-a \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
+         << "                 [-d \"nombre repositorio\" version_inicial version_final] [\"nombre archivo/directorio\"]] |" << endl
+         << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)]] | [-h] |" << endl
+         << "                 [-l \"nombre repositorio\" [\"nombre archivo/directorio\"]] |" << endl
+         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]] |" << endl
          << "                 [-p nueva \"nombre repositorio\" ]]" << endl
          << "-a, almacenar archivos y directorios." << endl
          << "-d, ver diferencias entre dos versiones." << endl
@@ -204,8 +206,12 @@ int main(int argc, char** argv)
 
             case 'l': // cambios a un archivo
                 // -l "nombre repositorio" "nombre archivo/dir"
-                argsok = (argc == 6);
-                if (argsok) showHistory(user, pass, optarg, argv[optind]);
+                argsok = ((argc == 5) || (argc == 6));
+                if (argsok) 
+                    if (argc == 5)
+                        showHistory(user, pass, optarg, "");
+                    else
+                        showHistory(user, pass, optarg, argv[optind]);
                 break;
 
             case 'o': // obtener archivo
