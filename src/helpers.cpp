@@ -106,3 +106,27 @@ std::string getComponent(const std::string& a_Target,int component)
 }
 
 
+bool isEmptyFile(const std::string& a_Filename)
+{
+    std::ifstream is(a_Filename.c_str());
+    if (!is.is_open())
+        return true;
+
+    std::string line;
+    getline(is, line);
+    if (!is.eof())
+        return false;        
+    return line.empty();
+}
+
+
+bool areDifferentFiles(const std::string& f1, const std::string& f2)
+// returns true if f1 and f2 are different
+// assumes both files exist    
+{
+    std::string tmp = randomFilename("tmp_");
+    system(("diff " + f1 + " " + f2 + " > " + tmp).c_str());
+    bool empty = !isEmptyFile(tmp); 
+    remove(tmp.c_str());
+    return !empty;
+}
