@@ -39,9 +39,9 @@ DirectoryVersion::~DirectoryVersion()
 		delete _user;
 }
 
-void DirectoryVersion::addFile(const char* fileName,int versionNumber,char type)
+void DirectoryVersion::addFile(const char* fileName, int versionNumber,char type)
 {
-	File* newFile = new File(fileName,versionNumber,type);
+	File* newFile = new File(fileName, versionNumber,type);
 
 	_fileLst.push_back(*newFile);
 }
@@ -163,7 +163,7 @@ void DirectoryVersion::update(const char* fileName, int versionNumber, char type
 	
 	if(!modified)
 
-	addFile(fileName,versionNumber,type);
+	addFile(fileName, versionNumber, type);
 
 	return;
 }
@@ -179,7 +179,7 @@ bool DirectoryVersion::searchFile(const char* filename,File** file)
 		
 		if(cmp == 0)
 		{
-			*file = new File(filename,it->getVersion(),it->getType());
+			*file = new File(filename, it->getVersion(),it->getType());
 			return true;
 		}
 	}

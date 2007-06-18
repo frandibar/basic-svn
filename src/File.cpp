@@ -35,7 +35,7 @@ int File::getTamanioEnDisco()
 	int length = strlen(_name);
 	
 	ret += length * sizeof(char);	//el nombre
-
+		
 	ret += sizeof(int);		//version
 	
 	ret += sizeof(char);			//tipo

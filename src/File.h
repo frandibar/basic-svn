@@ -10,13 +10,13 @@ class File
 {
 public:
 	File();
-	File(const char* name,int versionNumber,char type);
+	File(const char* name, int versionNumber,char type);
 
 	~File();
 
-	char*	getName()					{	return	_name;			}
-	int	getVersion()				{	return _versionNumber;	}
-	char	getType()					{	return _type;			}
+	char*	getName()		{	return	_name; }
+	int	getVersion()	{	return _versionNumber;	}
+	char	getType()		{	return _type;	}
 
 	void	setVersion(int Version)	{ _versionNumber = Version; }
 
