@@ -54,18 +54,25 @@ public:
     bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version,const string& repositoryName);
     bool getDirectory(const string& a_TargetDir, const string& pathToFile, const string& a_Path, const string& a_DirName, const string& a_Version,const string& repositoryName);
     bool get(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny);
-    bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
     bool getDiffByDate(std::ifstream& is, const string& a_Date);
     bool getHistory(std::ifstream& is, const string& a_Filename);
 
-    bool removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date);
-    bool removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date);
-    bool removeDirectory(int repositoryVersion, const string& repositoryName, const string& a_Directoryname, const string& a_User, time_t a_Date);
+    bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName);
+	 bool getFileDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
+	 bool getDirectoryDiff(const string& a_DirName, const string& a_VersionA, const string& a_VersionB, int tabs);
+
+	 bool removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date);
+	 bool removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date);
+	 bool removeDirectory(int repositoryVersion, const string& repositoryName, const string& a_Directoryname, const string& a_User, time_t a_Date);
 
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);
-    bool getVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version);
     bool buildTextVersion(int bloque, FileVersion* versionBuscada, const string& a_Filename);
+    bool getFileVersionAndBlock(int* bloque, FileVersion** versionBuscada, const string& a_Filename, const string& a_Version);
+    bool getDirVersion(DirectoryVersion** versionBuscada, const string& a_Dirname, const string& a_Version);
+	bool indexAFile(int repositoryVersion, const string& key, const string& a_User, tm* date, int offset, char a_Type, FileVersion::t_versionType a_VersionType, int bloque);
+
+	bool indexADirectory(int repositoryVersion, const string& key, DirectoryVersion* nuevaVersion,int bloque);
 
 private:
     // member variables
