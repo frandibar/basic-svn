@@ -33,12 +33,13 @@ public:
  	size_t				getCantFile()	{	return	_fileLst.size();}
 	t_versionType		getType()		{	return _type;			}
 
-	void addFile(const char* fileName,int versionNumber,char type);
-	void update(const char* fileName,int versionNumber,char type);
+	void addFile(const char* fileName, int versionNumber,char type);
+	void update(const char* fileName, int versionNumber,char type);
 
 	long int tamanioEnDisco();
 
 	bool searchFile(const char* filename,File** file);
+	bool searchFile(const char* filename);
 
 private:
 	int					_nroVersion;	// version number

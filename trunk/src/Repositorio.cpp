@@ -206,7 +206,7 @@ bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const str
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getDiff(is, a_VersionA, a_VersionB, a_Filename);
+    return _versionManager.getDiff(is, a_VersionA, a_VersionB, a_Filename, _name);
 }
 
 
