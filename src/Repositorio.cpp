@@ -210,3 +210,27 @@ bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const str
 }
 
 
+bool Repositorio::getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Date)
+{
+    if (!_isOpen)
+        return false;
+
+    if (!validateUser(a_Username, a_Password)) 
+        return false;
+
+    return _versionManager.getDiffByDate(is, a_Date);
+}
+
+
+bool Repositorio::getHistory(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Filename)
+{
+    if (!_isOpen)
+        return false;
+
+    if (!validateUser(a_Username, a_Password)) 
+        return false;
+
+    return _versionManager.getHistory(is, a_Filename);
+}
+
+

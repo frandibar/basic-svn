@@ -51,9 +51,23 @@ void add(const string& a_Username, const string& a_Password, const string& a_Rep
 }
 
 
-void showHistory(const string& user, const string& pass, const string& reposit, const string& file)
+void showHistory(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
 {
-    cout << "showHistory" << user << " " << pass << " " << reposit << " " << file << endl;    
+    Almacen almacen;
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
+        return;
+
+    std::ifstream is;
+    if (!almacen.getHistory(is, a_Username, a_Password, a_Reposit, a_Filename)) {
+        cout << "No se pudo obtener la historia del archivo solicitado." << endl;
+        return;
+    }
+
+    string line;
+    while (!is.eof()) {
+        getline(is, line);
+        cout << line << endl;
+    } 
 }
 
 
@@ -77,11 +91,38 @@ void showDiff(const string& a_Username, const string& a_Password, const string& 
 }
 
 
-void showByDate(const string& user, const string& pass, const string& reposit, const string& date)
+void showByDate(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Date)
 {
-    cout << "showByDate " << user << " " << pass << " " << reposit << " " << date << endl;
+    Almacen almacen;
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
+        return;
+
+    std::ifstream is;
+    if (!almacen.getDiffByDate(is, a_Username, a_Password, a_Reposit, a_Date)) {
+        cout << "No se pudieron obtener las versiones solicitadas." << endl;
+        return;
+    }
+
+    string line;
+    while (!is.eof()) {
+        getline(is, line);
+        cout << line << endl;
+    } 
 }
 
+void changePassword(const string& a_Username, const string& a_Password, const string& a_NewPassword, const string& a_Reposit)
+{
+    Almacen almacen;
+    if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
+        return;
+    
+    if (almacen.changePassword(a_Reposit, a_Username, a_NewPassword))
+        cout << "La  contraseña ha sido actualizada exitosamente." << endl;
+    else
+        cout << "La  contraseña no ha podido ser actualizada." << endl;
+
+
+}
 
 void get(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_TargetDir, const string& a_Filename, const string& a_Version)
 {
@@ -103,12 +144,14 @@ void showHelp(const char* progname)
          << "                 [-d \"nombre repositorio\" version_inicial version_final] [\"nombre archivo/directorio\"] |" << endl
          << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)] | [-h] |" << endl
          << "                 [-l \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
-         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]]" << endl
+         << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version] |" << endl
+         << "                 [-p nueva \"nombre repositorio\" ]]" << endl
          << "-a, almacenar archivos y directorios." << endl
          << "-d, ver diferencias entre dos versiones." << endl
          << "-f, ver las actualizaciones en una fecha dada." << endl
          << "-l, ver historial de cambios a un archivo o directorio." << endl
          << "-o, obtener una determinada version de un archivo o directorio." << endl
+         << "-p, cambiar contraseña." << endl
          << endl
          << "-h, mostrar esta ayuda." << endl
          ;
@@ -120,7 +163,7 @@ int main(int argc, char** argv)
     int c; 
     string user, pass;
     bool argsok = false;
-    while ((c = getopt(argc, argv, "-a:d:f:hl:o:")) != -1) {
+    while ((c = getopt(argc, argv, "-a:d:f:hl:o:p:")) != -1) {
         switch (c) {
 
             case 1: // non-option ARGV-elements
@@ -170,12 +213,18 @@ int main(int argc, char** argv)
                 argsok = ((argc == 6) || (argc == 7) || (argc == 8));
                 if (argsok) {
                     if (argc == 6)
-								get(user, pass, optarg, argv[optind], "", ""); 
-						  else if (argc == 7)
+                        get(user, pass, optarg, argv[optind], "", ""); 
+                    else if (argc == 7)
                         get(user, pass, optarg, argv[optind], argv[optind + 1], "");
                     else
                         get(user, pass, optarg, argv[optind], argv[optind + 1], argv[optind + 2]);
                 }
+                break;
+
+            case 'p': // cambiar password
+                // -p nueva "nombre repositorio"
+                argsok = (argc == 6);
+                if (argsok) changePassword(user, pass, optarg, argv[optind]);
                 break;
         }
     }

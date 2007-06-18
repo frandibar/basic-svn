@@ -34,12 +34,18 @@ public:
     bool userExists(const string& a_Reposit, const string& a_Username) const;
     bool validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const;
     std::list<User> getListOfUsers(const string& a_Reposit) const;
+    bool changePassword(const string& a_Reposit, const string& a_Username, const string& a_NewPassword);
 
     bool add(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password);
     bool remove(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password);
     bool get(const string& a_Reposit, const string& a_TargetDestiny, const string& a_Target, const string& a_Version, 
                  const string& a_Username, const string& a_Password) const;
     bool getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_VersionA, const string& a_VersionB, const string& a_Filename = "");
+    bool getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Date);
+    bool getHistory(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename);
+
+    bool getLock    (const string& a_Name) const;
+    bool releaseLock(const string& a_Name) const;
 
     // getters
     string getName() const { return _name; }

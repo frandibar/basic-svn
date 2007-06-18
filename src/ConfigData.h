@@ -137,6 +137,7 @@ public:
     bool removeUser(const string& a_Reposit, const string& a_Username);
     bool userExists(const string& a_Reposit, const string& a_Username);
     bool isPasswordValid(const string& a_Reposit, const string& a_Username, const string& a_Password);
+    bool changePassword (const string& a_Reposit, const string& a_Username, const string& a_NewPassword);
     string getDirAlmacen();
     UsersList getUsersList(const string& a_Reposit);
     RepositoriosList getRepositories() const { return _repositorios; };

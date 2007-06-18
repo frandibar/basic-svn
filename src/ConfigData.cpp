@@ -385,3 +385,25 @@ bool XMLConfigData::isPasswordValid(const string& a_Reposit, const string& a_Use
     return false; // repositorio not found
 
 }
+
+
+bool XMLConfigData::changePassword(const string& a_Reposit, const string& a_Username, const string& a_NewPassword)
+// assumes repository and user exist    
+{
+    RepositoriosList::iterator repIt;
+    // find repository
+    for (repIt = _repositorios.begin(); repIt != _repositorios.end(); ++repIt) {
+        if (repIt->first == a_Reposit) {
+            // check that the user doesn't exist
+            UsersList::iterator usIt;
+            for (usIt = repIt->second.begin(); usIt != repIt->second.end(); ++usIt) {
+                if (usIt->username == a_Username) {
+                    usIt->password = a_NewPassword;
+                    return true;
+                }
+            }
+            return false; // user not found
+        }
+    }
+    return false; // repositorio not found
+}
