@@ -489,3 +489,22 @@ void ArbolBMas::list()
 	}
 	return;
 }
+
+int ArbolBMas::getFirstBlock(const char* key)
+{
+    if(isEmpty())
+      return -1;
+    
+    if((_nodoActual != _raiz) && (_nodoActual != 0)){
+        writeNode(_nodoActual);
+        delete _nodoActual;
+        _nodoActual = _raiz;
+    }
+    
+    while(_nodoActual->getType() != NodoBMas::LEAF){
+        int proximoALeer = (static_cast<NodoBMasIndice*>(_nodoActual)->getFirstOf(key));
+        readNode(proximoALeer,&_nodoActual);
+    }
+
+    return _nodoActual->getFirstOf(key);
+}

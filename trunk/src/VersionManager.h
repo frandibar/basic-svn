@@ -72,6 +72,7 @@ protected:
     bool getDirVersion(DirectoryVersion** versionBuscada, const string& a_Dirname, const string& a_Version);
 	bool indexAFile(int repositoryVersion, const string& key, const string& a_User, tm* date, int offset, char a_Type, FileVersion::t_versionType a_VersionType, int bloque);
     void showAddedDirectory(DirectoryVersion* dirVersion, const string& path, int tabs);
+    void showDirectory(DirectoryVersion* dirVersion, const string& path, int tabs);
 
 	bool indexADirectory(int repositoryVersion, const string& key, DirectoryVersion* nuevaVersion, int bloque);
 

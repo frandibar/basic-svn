@@ -26,6 +26,7 @@ public:
 
     int searchFile(const char* key);
     int searchFileAndVersion(const char* fileName,int version);
+    int getFirstBlock(const char* key);
     bool insert(const char* key,int reference);
     void list();
 

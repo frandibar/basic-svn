@@ -43,6 +43,8 @@ public:
     int getNumero() const           { return _numero;        }
     int getCantidadVersiones()const { return _cantVersiones; }
     
+    bool getHistory(std::ifstream& is);
+
 private:
     int _siguiente;
     int _anterior;
