@@ -1,6 +1,7 @@
 // FileBlock.cpp
 
 #include "FileBlock.h"
+#include "debug.h"
 
 const int FileBlock::TAMANIO_BLOQUE_ARCHIVOS = 1024;
 
@@ -187,4 +188,18 @@ bool FileBlock::hasNext()
 	return (_actualOffset < _used);
 }
 
+bool FileBlock::getHistory(std::ifstream& is)
+{
+    FileVersion* fv = new FileVersion();
+    char* nextByte = _versiones;
+
+    for (int i = 0; i < _cantVersiones; ++i) {
+        fv->read(&nextByte);
+        string tipoVersion = ((fv->getVersionType() == FileVersion::MODIFICACION) ? "modificacion" : "borrado");
+        cout << " version: " << fv->getNroVersion() << ", tipo version: " << tipoVersion << ", usuario: " 
+             << fv->getUser() << ", fecha: " << asctime(&(fv->getFecha()));
+    }
+    delete fv;
+    return true;
+}
 

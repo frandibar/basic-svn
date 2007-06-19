@@ -1,6 +1,7 @@
 // DirectoryBlock.h
 
 #include "DirectoryBlock.h"
+#include "debug.h"
 
 const int DirectoryBlock::TAMANIO_BLOQUE_DIRECTORIOS = 1024;
 
@@ -187,5 +188,22 @@ DirectoryVersion* DirectoryBlock::getNext()
 bool DirectoryBlock::hasNext()
 {
 	return (_actualOffset < _used);
+}
+
+bool DirectoryBlock::getHistory(std::ifstream& is)
+{
+    DirectoryVersion* dv = new DirectoryVersion();
+    char* nextByte = _versiones;
+    
+    for(int i = 0; i < _cantVersiones; ++i)
+    {
+        dv->read(&nextByte);
+        std::string tipoVersion = ((dv->getType() == DirectoryVersion::MODIFICACION) ? "modificacion" : "borrado");
+        cout << " version: " << dv->getNroVersion() << ", tipo version: " << tipoVersion << ", usuario: " 
+             << dv->getUser() << ", fecha: " << asctime(&(dv->getDate()));
+    }
+
+    delete dv;
+    return true;
 }
 

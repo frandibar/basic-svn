@@ -19,6 +19,7 @@ public:
 
     int searchFile(const char* key);
 	int searchFileAndVersion(const char* fileName,int version);
+    int getFirstOf(const char* key);
 
     NodoBMas* split(int Numero, char* arreglo, int bytesArreglo, int clavesArreglo, char** claveAlPadre);
     void promoteRoot(NodoBMas** nodo1, NodoBMas** nodo2, int id1, int id2,

@@ -251,3 +251,11 @@ int DirectoryVersionsFile::getLastVersionNumber(int bloque)
     return ret;
 }
 
+bool DirectoryVersionsFile::getHistory(std::ifstream& is, int block)
+{
+    readBloque(block);
+    do {
+        _bloqueActual->getHistory(is);
+    } while (_bloqueActual->getSiguiente() > 0);
+    return true;
+}

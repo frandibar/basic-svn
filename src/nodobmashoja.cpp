@@ -434,3 +434,53 @@ void NodoBMasHoja::list(){
 	}
 }
 
+int NodoBMasHoja::getFirstOf(const char* key)
+{
+    char* auxKey;
+	char* auxFileName;
+	int longClave;
+    int auxRef;
+    int i = 0;
+	int offsetLectura = 0;
+	int ret = -1;
+
+    while (i < _nclaves) {
+        
+		memcpy(&longClave,_pares + offsetLectura,sizeof(int));
+		offsetLectura += sizeof(int);
+		
+		auxKey = new char[(longClave + 1) * sizeof(char)];
+
+		memcpy(auxKey, 
+               _pares + offsetLectura, 
+               sizeof(char) * longClave);
+		offsetLectura += sizeof(char) * longClave;
+		auxKey[longClave] = 0; // coloco la marca de fin
+
+		// genero el nombre del archivo
+		auxFileName = new char[(longClave - 4) * sizeof(char)];
+		memcpy(auxFileName,auxKey,(longClave - 5));
+		auxFileName[longClave - 5] = 0;
+
+        memcpy(&auxRef, 
+               _pares + offsetLectura, 
+               sizeof(int));
+		offsetLectura += sizeof(int);
+
+        if (strcmp(key, auxFileName) >=  0){
+			i++;
+            ret = auxRef;
+			delete auxKey;
+			delete auxFileName;
+		}
+
+		else{
+			delete auxFileName;
+			delete(auxKey);
+			return ret;
+		}
+
+    }
+	return ret;
+}
+

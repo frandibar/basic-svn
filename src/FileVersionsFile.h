@@ -43,6 +43,7 @@ public:
 	int  getLastOriginalVersionNumber(int bloque);
 	int  getLastVersionNumber(int bloque);
 	bool getLastVersion(FileVersion** version,int bloque);	//devuelve la ultima version del bloque
+    bool getHistory(std::ifstream& is, int block);
 
 protected:
 	bool readBloque(int nroBloque);

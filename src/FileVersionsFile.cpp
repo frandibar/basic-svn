@@ -346,3 +346,12 @@ bool FileVersionsFile::getLastVersion(FileVersion** version, int bloque)
 	}
     return true;
 }
+
+bool FileVersionsFile::getHistory(std::ifstream& is, int block)
+{
+    readBloque(block);
+    do {
+        _bloqueActual->getHistory(is);
+    } while (_bloqueActual->getSiguiente() > 0);
+    return true;
+}

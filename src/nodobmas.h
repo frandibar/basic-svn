@@ -30,7 +30,8 @@ public:
     // - la referencia al nodo siguiente donde buscar si el nodo es indice
     virtual int searchFile(const char* key) = 0; // key = nombre del archivo a buscar
     virtual int searchFileAndVersion(const char* fileName, int version) = 0;
-    
+    virtual int getFirstOf(const char* key) = 0;
+
     t_status insert(const char* key, int ref, int* clavesArreglo, char** arreglo, int* bytesArreglo);
     bool insert(const char* key, int ref) {
         return insertPair(key, ref);

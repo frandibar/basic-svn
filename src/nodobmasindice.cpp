@@ -395,3 +395,54 @@ void NodoBMasIndice::promoteRoot(NodoBMas** nodo1,NodoBMas** nodo2,int id1,int i
     }
 }
 
+int NodoBMasIndice::getFirstOf(const char* key)
+{
+    int ret = _hijoIzquierdo;
+
+    char* auxKey;
+	char* auxFileName;
+    int auxRef;
+	int tamanioClave;
+	int offset = 0;
+
+	if(_nclaves){
+		int i = 0;
+		while (i < _nclaves) {
+      
+			memcpy(&tamanioClave,_pares + offset,sizeof(int));
+			offset += sizeof(int);
+
+			auxKey = new char[(tamanioClave + 1) * sizeof(char)];
+			memcpy(auxKey,
+					_pares + offset,sizeof(char)*tamanioClave);
+			auxKey[tamanioClave] = 0;
+			offset += tamanioClave * sizeof(char);
+
+			auxFileName = new char[(tamanioClave - 4) * sizeof(char)];
+			memcpy(auxFileName,auxKey,(tamanioClave - 5));
+			auxFileName[tamanioClave - 5] = 0;
+
+			memcpy(&auxRef,
+					_pares + offset 
+					,sizeof(int));
+			offset += sizeof(int);
+
+			if(strcmp(key, auxFileName) >= 0){
+				 delete auxKey;
+				 delete auxFileName;
+				 return ret;
+			}
+			
+			else{				
+				ret = auxRef;
+				i++;
+				delete auxKey;
+				delete auxFileName;
+			}
+		}
+
+		return ret;
+	}
+
+	return ret;
+}
