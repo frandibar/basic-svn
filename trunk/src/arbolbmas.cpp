@@ -192,9 +192,10 @@ bool ArbolBMas::close()
         return true;
 
     bool ret = true;
-    debug("closing arbolbmas " + _filename + "\n");
-    if (writeHeader() && writeRoot()) {
-        if (_raiz != _nodoActual)
+    debug("CLOSING ARBOL B MAS " + _filename + "\n");
+    if (writeHeader()) {
+        if((_raiz != 0)  && writeRoot())
+         if (_raiz != _nodoActual)
             ret = writeNode(_nodoActual);
     }
     else 
@@ -202,7 +203,7 @@ bool ArbolBMas::close()
 
     _filestr.close();
     _isOpen = _filestr.is_open();
-    debug("arbolbmas close " + string((!_isOpen && ret) ? "successfull" : "failed") + "\n");
+    debug("ARBOL B MAS CLOSE " + string((!_isOpen && ret) ? "successfull" : "failed") + "\n");
     return (!_isOpen && ret);
 }
 
