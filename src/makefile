@@ -7,7 +7,7 @@ LIBS     = -lxerces-c
 
 TARGETS  = svnadmin svnuser contarComponentes ndxReader versionFileReader DVersionsReader
 
-SRCS_common   = Almacen.cpp arbolbmas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp VersionManager.cpp
+SRCS_common   = Almacen.cpp arbolbmas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp VersionManager.cpp dateindex.cpp datenode.cpp leafdatenode.cpp indexdatenode.cpp datelog.cpp
 SRCS_svnadmin = $(SRCS_common) main-admin.cpp
 SRCS_svnuser  = $(SRCS_common) main-user.cpp
 SRCS_contarComponentes = contarComponentes.cpp

@@ -100,6 +100,8 @@ bool Almacen::addRepository(const string& a_Name) throw()
         Repositorio* rep = new Repositorio(_name, a_Name);
         if (!rep->create())
             return false;
+        if(!rep->close())
+            return false;
         _lReposit.push_back(rep);
         
         // add to config file

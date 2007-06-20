@@ -10,6 +10,8 @@
 #include "FileVersionsFile.h"
 #include "DirectoryVersionsFile.h"
 #include "helpers.h"
+#include "dateindex.h"
+#include "datelog.h"
 
 #include <ctime>
 #include <string>
@@ -32,6 +34,9 @@ public:
     static const string BIN_DIFFS_FILENAME;
 
     static const string DIR_CONTAINER_FILENAME;
+    
+    static const string DATE_INDEX_FILENAME;
+    static const string DATE_LOG_FILENAME;
 
     static const int VERSION_DIGITS;
 
@@ -75,6 +80,8 @@ protected:
     void showDirectory(DirectoryVersion* dirVersion, const string& path, int tabs);
 
 	bool indexADirectory(int repositoryVersion, const string& key, DirectoryVersion* nuevaVersion, int bloque);
+   
+   void log(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date);
 
 private:
     // member variables
@@ -90,6 +97,9 @@ private:
 
     Container        _textContainer;
     Container        _binaryContainer;
+
+    DateIndex        _dateIndex;
+    DateLog          _dateLog;
 };
 
 #endif
