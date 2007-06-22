@@ -69,7 +69,7 @@ long int DateLog::append(const string& a_Username, const string& a_Date, const s
 
 	if (pos < 0) pos = 0;
 
-   _fstream<<a_Date<<" ,"<<a_Filename<<" ,"<<a_Version<<" ,"<<a_Username<<"\n";
+   _fstream<<a_Date<<"\t"<<a_Filename<<"\t"<<a_Version<<"\t"<<a_Username<<"\n";
    
    return pos;
 }
@@ -84,13 +84,15 @@ bool DateLog::showDate(const string& a_Date, int offset)
 
    //comienzo a mostrar, al menos va a haber una linea
    string actualDate;
-   string line;
+   string strLine;
+   char line[1024];
    do{
-      _fstream>>line;
-      actualDate = line.substr(0,10);
+      _fstream.getline(line,1023);
+      strLine = line;
+      actualDate = strLine.substr(0,10);
       
       if(actualDate == a_Date)
-         cout<<line<<endl;
+         cout<<strLine<<endl;
    }while((actualDate == a_Date)&&(!_fstream.eof()));
    
    return true;   
