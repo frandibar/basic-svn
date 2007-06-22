@@ -52,6 +52,10 @@ bool Repositorio::removeFileOrDirectory(const string& a_Target, const string& a_
         return false;
     if (!_versionManager.removeFileOrDirectory(_version + 1, _name, a_Target, a_Username, date))
         return false;
+
+    string action = "eliminar\t" + a_Target;
+    _versionManager.logAction(a_Username, date, action);
+
     if (!_versionManager.close())
         return false;
             
@@ -77,6 +81,10 @@ bool Repositorio::add(const string& a_Target, const string& a_Username, const st
         return false;
     if (!_versionManager.add(_version + 1, _name, a_Target, a_Username, date, ftype))
         return false;
+
+    string action = "agregar/modificar\t" + a_Target;
+    _versionManager.logAction(a_Username, date, action);
+
     if (!_versionManager.close())
         return false;
             
@@ -195,7 +203,15 @@ bool Repositorio::get(const string& a_TargetDestiny, const string& a_Target, con
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.get(a_Version, a_Target, _name, a_TargetDestiny);
+    if(!_versionManager.get(a_Version, a_Target, _name, a_TargetDestiny))
+       return false;
+
+    time_t date;
+    time(&date);
+    string action = "obtener\t" + a_Target + " version " + a_Version + " en " + a_TargetDestiny;
+    _versionManager.logAction(a_Username, date, action);
+
+    return true;
 }
 
 bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
@@ -206,9 +222,16 @@ bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const str
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getDiff(is, a_VersionA, a_VersionB, a_Filename, _name);
-}
+    if(!_versionManager.getDiff(is, a_VersionA, a_VersionB, a_Filename, _name))
+      return false;
 
+    time_t date;
+    time(&date);
+    string action = "get diff\t" + a_Filename + " entre las versiones: " + a_VersionA + " y " + a_VersionB;
+    _versionManager.logAction(a_Username, date, action);
+
+    return true;
+}
 
 bool Repositorio::getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Date)
 {
@@ -218,7 +241,15 @@ bool Repositorio::getDiffByDate(std::ifstream& is, const string& a_Username, con
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getDiffByDate(is, a_Date);
+    if(!_versionManager.getDiffByDate(is, a_Date))
+        return false;
+
+    time_t date;
+    time(&date);
+    string action = "obtener listado del dia: " + a_Date;
+    _versionManager.logAction(a_Username, date, action);
+
+    return true;
 }
 
 
@@ -230,7 +261,15 @@ bool Repositorio::getHistory(std::ifstream& is, const string& a_Username, const 
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getHistory(is, a_Filename);
+    if (!_versionManager.getHistory(is, a_Filename))
+       return false;
+
+    time_t date;
+    time(&date);
+    string action = " obtener modificaciones del archivo: " + a_Filename;
+    _versionManager.logAction(a_Username, date, action);
+
+    return true;    
 }
 
 

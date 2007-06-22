@@ -15,19 +15,23 @@ using std::iterator;
 
 using namespace std;
 
-const string VersionManager::FILE_INDEX_FILENAME    = "file_index.ndx";
-const string VersionManager::FILE_VERSION_FILENAME  = "file_versions.ndx";
+const string VersionManager::FILE_INDEX_FILENAME     = "file_index.ndx";
+const string VersionManager::FILE_VERSION_FILENAME   = "file_versions.ndx";
 
-const string VersionManager::DIR_INDEX_FILENAME     = "dir_index.ndx";
-const string VersionManager::DIR_VERSION_FILENAME   = "dir_versions.ndx";
+const string VersionManager::DIR_INDEX_FILENAME      = "dir_index.ndx";
+const string VersionManager::DIR_VERSION_FILENAME    = "dir_versions.ndx";
 
-const string VersionManager::TXT_DIFFS_FILENAME     = "txt_diffs.dat";
-const string VersionManager::BIN_DIFFS_FILENAME     = "bin_diffs.dat";
+const string VersionManager::TXT_DIFFS_FILENAME      = "txt_diffs.dat";
+const string VersionManager::BIN_DIFFS_FILENAME      = "bin_diffs.dat";
 
-const string VersionManager::DIR_CONTAINER_FILENAME = "bin_diffs.dat";
+const string VersionManager::DIR_CONTAINER_FILENAME  = "bin_diffs.dat";
 
-const string VersionManager::DATE_INDEX_FILENAME = "date_index.ndx";
-const string VersionManager::DATE_LOG_FILENAME =  "date_log.txt";
+const string VersionManager::DATE_INDEX_FILENAME     = "date_index.ndx";
+const string VersionManager::DATE_LOG_FILENAME       =  "date_log.txt";
+
+const string VersionManager::USERS_INDEX_FILENAME    = "users_index.ndx";
+const string VersionManager::USERS_REGISTER_FILENAME = "users_register.ndx";
+const string VersionManager::USERS_LOG_FILENAME      = "users_log.txt";
 
 const int VersionManager::VERSION_DIGITS = 5;
 
@@ -47,7 +51,10 @@ bool VersionManager::destroy()
                  _dirIndex       .destroy() &&
                  _dirVersions    .destroy() &&
                  _dateIndex      .destroy() &&
-                 _dateLog        .destroy();
+                 _dateLog        .destroy() &&
+                 _usersIndex     .destroy() &&
+                 _usersReg       .destroy() &&
+                 _usersLog       .destroy();
 
     debug("VersionManager destroy " + string(ret ? "successfull" : "failed") + "\n");
     return ret;
@@ -60,14 +67,17 @@ bool VersionManager::open()
 
     debug("opening VersionManager\n");
     string path = _almacen + "//" + _repository + "//";
-    _isOpen = (_fileIndex      .open((path + FILE_INDEX_FILENAME)  .c_str()) &&
-               _fileVersions   .open((path + FILE_VERSION_FILENAME).c_str()) &&
-               _textContainer  .open((path + TXT_DIFFS_FILENAME)   .c_str()) &&
-               _binaryContainer.open((path + BIN_DIFFS_FILENAME)   .c_str()) &&
-               _dirIndex       .open((path + DIR_INDEX_FILENAME)   .c_str()) &&
-               _dirVersions    .open((path + DIR_VERSION_FILENAME) .c_str()) &&
-               _dateIndex      .open((path + DATE_INDEX_FILENAME)  .c_str()) &&
-               _dateLog        .open((path + DATE_LOG_FILENAME)    .c_str())
+    _isOpen = (_fileIndex      .open((path + FILE_INDEX_FILENAME)    .c_str()) &&
+               _fileVersions   .open((path + FILE_VERSION_FILENAME)  .c_str()) &&
+               _textContainer  .open((path + TXT_DIFFS_FILENAME)     .c_str()) &&
+               _binaryContainer.open((path + BIN_DIFFS_FILENAME)     .c_str()) &&
+               _dirIndex       .open((path + DIR_INDEX_FILENAME)     .c_str()) &&
+               _dirVersions    .open((path + DIR_VERSION_FILENAME)   .c_str()) &&
+               _dateIndex      .open((path + DATE_INDEX_FILENAME)    .c_str()) &&
+               _dateLog        .open((path + DATE_LOG_FILENAME)      .c_str()) &&
+               _usersIndex     .open((path + USERS_INDEX_FILENAME)   .c_str()) &&
+               _usersReg       .open((path + USERS_REGISTER_FILENAME).c_str()) &&
+               _usersLog       .open((path + USERS_LOG_FILENAME)     .c_str())
               );
 
     debug("VersionManager open " + string(_isOpen ? "successfull" : "failed") + "\n");
@@ -87,7 +97,10 @@ bool VersionManager::close()
                _dirIndex       .close() &&
                _dirVersions    .close() &&
                _dateIndex      .close() &&
-               _dateLog        .close();
+               _dateLog        .close() &&
+               _usersIndex     .close() &&   
+               _usersReg       .close() &&
+               _usersLog       .close();
     debug("VersionManager close " + string((ret) ? "successfull" : "failed") + "\n");
 
     return ret;
@@ -349,6 +362,9 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
                     result = result && removeFile(repositoryVersion, repositoryName, fname, a_User, a_Date);
                 else
                     result = result && removeDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
+                
+                if(result)
+                  logDate(fname, a_User,toString<int>(repositoryVersion),a_Date);
             }
             filesErased.clear();      
         }
@@ -381,7 +397,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
                     }
                     if (modified) {
                         nuevaVersion->update((*it_includedFiles).c_str(), repositoryVersion, type);
-                        log(fname, a_User,toString<int>(repositoryVersion),a_Date);
+                        logDate(fname, a_User,toString<int>(repositoryVersion),a_Date);
                     }
                 }
                 else {                    
@@ -401,7 +417,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 
                     if (result) {  // agrego el archivo al directorio
                         nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion, type);
-                        log(fname, a_User,toString<int>(repositoryVersion),a_Date);
+                        logDate(fname, a_User,toString<int>(repositoryVersion),a_Date);
                      }                                     
                 }
             }
@@ -453,7 +469,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 
               if (result) {  // agrego el archivo al directorio
                   nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion, type);
-                  log(fname, a_User,toString<int>(repositoryVersion), a_Date);
+                  logDate(fname, a_User,toString<int>(repositoryVersion), a_Date);
                }                  
           }
 
@@ -493,7 +509,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
             ret = addDirectory(repositoryVersion,repositoryName, a_Target, a_Username,a_Date);
 
         if(ret)
-            log(a_Target, a_Username, toString<int>(repositoryVersion), a_Date);
+            logDate(a_Target, a_Username, toString<int>(repositoryVersion), a_Date);
         return ret;
     }
     else {
@@ -569,7 +585,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
             }           
         }
         if(ret)
-            log(pathActual, a_Username,toString<int>(repositoryVersion), a_Date);
+            logDate(pathActual, a_Username,toString<int>(repositoryVersion), a_Date);
         delete nuevaVersion;
         return ret;     
     }
@@ -584,14 +600,17 @@ bool VersionManager::create()
 
     debug("creating VersionManager for Repositorio '" + _repository + "' in Almacen '" + _almacen + "'\n");
     string path = _almacen + "//" + _repository + "//";
-    _isOpen = (_fileIndex      .create((path + FILE_INDEX_FILENAME)  .c_str()) &&
-               _fileVersions   .create((path + FILE_VERSION_FILENAME).c_str()) &&
-               _textContainer  .create((path + TXT_DIFFS_FILENAME)   .c_str()) &&
-               _binaryContainer.create((path + BIN_DIFFS_FILENAME)   .c_str()) &&
-               _dirIndex       .create((path + DIR_INDEX_FILENAME)   .c_str()) &&
-               _dirVersions    .create((path + DIR_VERSION_FILENAME) .c_str()) &&
-               _dateIndex      .create((path + DATE_INDEX_FILENAME)  .c_str()) &&
-               _dateLog        .create((path + DATE_LOG_FILENAME)    .c_str())
+    _isOpen = (_fileIndex      .create((path + FILE_INDEX_FILENAME)     .c_str()) &&
+               _fileVersions   .create((path + FILE_VERSION_FILENAME)   .c_str()) &&
+               _textContainer  .create((path + TXT_DIFFS_FILENAME)      .c_str()) &&
+               _binaryContainer.create((path + BIN_DIFFS_FILENAME)      .c_str()) &&
+               _dirIndex       .create((path + DIR_INDEX_FILENAME)      .c_str()) &&
+               _dirVersions    .create((path + DIR_VERSION_FILENAME)    .c_str()) &&
+               _dateIndex      .create((path + DATE_INDEX_FILENAME)     .c_str()) &&
+               _dateLog        .create((path + DATE_LOG_FILENAME)       .c_str()) &&
+               _usersIndex     .create((path + USERS_INDEX_FILENAME)    .c_str()) &&
+               _usersReg       .create((path + USERS_REGISTER_FILENAME) .c_str()) &&
+               _usersLog       .create((path + USERS_LOG_FILENAME)      .c_str())
               );
    
     debug("VersionManager creation " + string(_isOpen ? "successfull" : "failed") + "\n");
@@ -913,7 +932,7 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
         char tipoArchivo = ultimaVersion->getTipo();
 
         delete ultimaVersion;
-        log(a_Filename, a_User,toString<int>(repositoryVersion), a_Date);
+        logDate(a_Filename, a_User,toString<int>(repositoryVersion), a_Date);
         return indexAFile(repositoryVersion, key, a_User, date, -1, tipoArchivo, FileVersion::BORRADO, bloque);        
     }
     debug("bloque < 0 \n"); 
@@ -987,7 +1006,7 @@ bool VersionManager::removeDirectory(int repositoryVersion, const string& reposi
         result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque);
 
         if(result)
-            log(a_Directoryname, a_User,toString<int>(repositoryVersion), a_Date);
+            logDate(a_Directoryname, a_User,toString<int>(repositoryVersion), a_Date);
         delete nuevaVersion;
         return result;
     }
@@ -1802,7 +1821,7 @@ void VersionManager::showDirectory(DirectoryVersion* dirVersion, const string& p
     }
 }
 
-void VersionManager::log(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date)
+void VersionManager::logDate(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date)
 {
    tm* date = localtime(&a_Date);
    int anio = date->tm_year + 1900;
@@ -1816,4 +1835,40 @@ void VersionManager::log(const string& a_Filename, const string& a_Username, con
       _dateIndex.insert(fecha.c_str(),offset);
 
    return;
+}
+
+void VersionManager::logAction(const string& a_Username, time_t a_Date, const string& a_Action)
+{
+   int nuevoBloque;
+   string key;
+
+   int offset = _usersLog.append(a_Username, a_Date, a_Action);
+   
+   int ref = _usersIndex.search(a_Username.c_str());
+
+   if(ref < 0)
+   {
+      _usersReg.insertRef(offset, &nuevoBloque);
+      key = a_Username + zeroPad(nuevoBloque,VERSION_DIGITS);
+      _usersIndex.insert(key.c_str(),nuevoBloque);
+      
+      return;
+   }
+
+   UsersRegisterFile::t_status status = _usersReg.insertRef(offset, ref, &nuevoBloque);
+   switch (status) {
+      case UsersRegisterFile::OK :
+         return;
+         break;
+       case UsersRegisterFile::OVERFLOW :
+         // tengo que generar la clave a partir de a_Directoryname y repositoryVersion
+         key = a_Username + zeroPad(nuevoBloque, VERSION_DIGITS);
+         _usersIndex.insert(key.c_str(), nuevoBloque);
+         return;
+         break;
+
+        default:
+            return;
+            break;
+    }
 }
