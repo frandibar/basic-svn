@@ -12,6 +12,9 @@
 #include "helpers.h"
 #include "dateindex.h"
 #include "datelog.h"
+#include "userindex.h"
+#include "UsersRegisterFile.h"
+#include "UserLog.h"
 
 #include <ctime>
 #include <string>
@@ -37,6 +40,10 @@ public:
     
     static const string DATE_INDEX_FILENAME;
     static const string DATE_LOG_FILENAME;
+
+    static const string USERS_INDEX_FILENAME;
+    static const string USERS_REGISTER_FILENAME;
+    static const string USERS_LOG_FILENAME;
 
     static const int VERSION_DIGITS;
 
@@ -70,6 +77,8 @@ public:
     bool removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date);
     bool removeDirectory(int repositoryVersion, const string& repositoryName, const string& a_Directoryname, const string& a_User, time_t a_Date);
 
+    void logAction(const string& a_Username, time_t a_Date, const string& a_Action);
+
 protected:
     bool buildVersion(std::list<FileVersion>& lstVersions, const string& a_Filename);
     bool buildTextVersion(int bloque, FileVersion* versionBuscada, const string& a_Filename);
@@ -81,25 +90,29 @@ protected:
 
 	bool indexADirectory(int repositoryVersion, const string& key, DirectoryVersion* nuevaVersion, int bloque);
    
-   void log(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date);
+   void logDate(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date);
 
 private:
     // member variables
-    bool      _isOpen;
-    string    _almacen;
-    string    _repository;
+    bool                   _isOpen;
+    string                 _almacen;
+    string                 _repository;
 
-    ArbolBMas        _fileIndex;
-    FileVersionsFile _fileVersions;
+    ArbolBMas              _fileIndex;
+    FileVersionsFile       _fileVersions;
 
-    ArbolBMas             _dirIndex;
-    DirectoryVersionsFile _dirVersions;
+    ArbolBMas              _dirIndex;
+    DirectoryVersionsFile  _dirVersions;
 
-    Container        _textContainer;
-    Container        _binaryContainer;
+    Container              _textContainer;
+    Container              _binaryContainer;
 
-    DateIndex        _dateIndex;
-    DateLog          _dateLog;
+    DateIndex              _dateIndex;
+    DateLog                _dateLog;
+
+    UsersRegisterFile      _usersReg;
+    UserIndex              _usersIndex;
+    UserLog                _usersLog;
 };
 
 #endif

@@ -1,16 +1,18 @@
-// datelog.cpp
+// userlog.cpp
 
-#include "datelog.h"
+#include "UserLog.h"
 #include "debug.h"
+#include <time.h>
+#include "helpers.h"
 
 using std::ios;
 
-bool DateLog::create(const string& a_Filename)
+bool UserLog::create(const string& a_Filename)
 {
     if (_isOpen)
         return false;
 
-    debug("creating DateLog in '" + a_Filename + "'\n");
+    debug("creating UserLog in '" + a_Filename + "'\n");
     _fstream.open(a_Filename.c_str(), ios::out | ios::in | ios::binary);
 
 	if (!_fstream) {
@@ -20,32 +22,32 @@ bool DateLog::create(const string& a_Filename)
 	}
 
     _isOpen = _fstream.is_open();
-    debug("DateLog creation " + string(_isOpen ? "successfull" : "failed") + "\n");
+    debug("UserLog creation " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
 
-bool DateLog::destroy()
+bool UserLog::destroy()
 {
-    debug("destroying DateLog in '" + _filename + "'\n");
+    debug("destroying UserLog in '" + _filename + "'\n");
     int ret = remove(_filename.c_str());
-    debug("DateLog destroy " + string((ret == 0) ? "successfull" : "failed") + "\n");
+    debug("UserLog destroy " + string((ret == 0) ? "successfull" : "failed") + "\n");
     return ret == 0;
 }
 
-bool DateLog::open(const string& a_Filename)
+bool UserLog::open(const string& a_Filename)
 {
     if (_isOpen)
         return false;
 
-    debug("opening DateLog in '" + a_Filename + "'\n");
+    debug("opening UserLog in '" + a_Filename + "'\n");
     _fstream.open(a_Filename.c_str(), ios::binary | ios::in | ios::out);
     _isOpen = _fstream.is_open();
     _filename = a_Filename;
-    debug("DateLog open " + string(_isOpen ? "successfull" : "failed") + "\n");
+    debug("UserLog open " + string(_isOpen ? "successfull" : "failed") + "\n");
     return _isOpen;
 }
 
-bool DateLog::close()
+bool UserLog::close()
 {
     if (!_isOpen)
         return true;
@@ -55,7 +57,7 @@ bool DateLog::close()
     return !_isOpen;
 }
 
-long int DateLog::append(const string& a_Username, const string& a_Date, const string& a_Version, const string& a_Filename)
+long int UserLog::append(const string& a_Username,time_t a_Date, const string& a_Action)
 // returns the offset where is was written    
 {
     if (!_fstream.is_open())
@@ -68,13 +70,20 @@ long int DateLog::append(const string& a_Username, const string& a_Date, const s
    long int pos = _fstream.tellp();
 
 	if (pos < 0) pos = 0;
+   
+   tm* date = localtime(&a_Date);
+   int anio = date->tm_year + 1900;
+   int mes = date->tm_mon + 1;
+   int dia = date->tm_mday;
 
-   _fstream<<a_Date<<"\t"<<a_Filename<<"\t"<<a_Version<<"\t"<<a_Username<<"\n";
+   string fecha = toString<int>(anio) + "/" + zeroPad(mes,2) + "/" + zeroPad(dia,2);
+
+   _fstream<<a_Username<<"\t"<<fecha<<"\t"<<a_Action<<"\n";
    
    return pos;
 }
 
-bool DateLog::showDate(const string& a_Date, int offset)
+bool UserLog::showAction(int offset)
 {
    if(!_fstream.is_open())
       return false;
@@ -86,15 +95,16 @@ bool DateLog::showDate(const string& a_Date, int offset)
    string actualDate;
    string strLine;
    char line[1024];
-   do{
+   
+   if(!_fstream.fail())
+   {
       _fstream.getline(line,1023);
       strLine = line;
-      actualDate = strLine.substr(0,10);
-      
-      if(actualDate == a_Date)
-         cout<<strLine<<endl;
-   }while((actualDate == a_Date)&&(!_fstream.eof()));
-   
-   return true;   
+      cout<<strLine<<endl;
+
+      return true;
+   }
+
+   return false;         
 }
 
