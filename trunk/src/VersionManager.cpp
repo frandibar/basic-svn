@@ -1674,8 +1674,14 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
 
 bool VersionManager::getDiffByDate(std::ifstream& is, const string& a_Date)
 {
-    // TODO
-    return false;
+   if(!_isOpen)      
+      return false;
+
+   int offset = _dateIndex.search(a_Date.c_str());
+   if(offset < 0)
+      return false;
+
+   return _dateLog.showDate(a_Date,offset);      
 }
 
 bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
@@ -1803,7 +1809,7 @@ void VersionManager::log(const string& a_Filename, const string& a_Username, con
    int mes = date->tm_mon;
    int dia = date->tm_mday;
 
-   string fecha = toString<int>(anio) + "/" + zeroPad(mes,2) + "/" + zeroPad(dia,2);
+   string fecha = toString<int>(anio) + "/" + zeroPad(mes + 1,2) + "/" + zeroPad(dia,2);
 
    int offset = _dateLog.append(a_Username, fecha, a_Version, a_Filename);   
    if(_dateIndex.search(fecha.c_str()) < 0)

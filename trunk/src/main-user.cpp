@@ -144,7 +144,7 @@ void showHelp(const char* progname)
 {
     cout << "uso: " << progname << " usuario contraseña [[-a \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
          << "                 [-d \"nombre repositorio\" version_inicial version_final] [\"nombre archivo/directorio\"]] |" << endl
-         << "                 [-f usuario \"nombre repositorio\" fecha(dd/mm/aa)]] | [-h] |" << endl
+         << "                 [-f \"nombre repositorio\" fecha(aaaa/mm/dd)]] | [-h] |" << endl
          << "                 [-l \"nombre repositorio\" [\"nombre archivo/directorio\"]] |" << endl
          << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]] |" << endl
          << "                 [-p nueva \"nombre repositorio\" ]]" << endl
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 
             case 'f': // mostrar cambios en determinada fecha
                 // -f usuario "nombre repositorio" fecha
-                argsok = (argc == 7);
+                argsok = (argc == 6);
                 if (argsok) showByDate(user, pass, optarg, argv[optind]);
                 break;
 
