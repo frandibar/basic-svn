@@ -140,18 +140,41 @@ void get(const string& a_Username, const string& a_Password, const string& a_Rep
 }
 
 
+void showChanges(const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Num = "")
+{
+    Almacen almacen;
+    if (!almacen.exists()) {
+        cout << "No existe un almacen que contenga el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+    
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "No existe el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+
+    std::ifstream is;
+    almacen.getListOfChanges(is, a_Reposit, a_Username, a_Password, fromString<int>(a_Num), false);
+    cout << "Lista de ultimas modificaciones al repositorio '" << a_Reposit << "':" << endl
+         << "[usuario] [nombre completo]" << endl;
+    //cout << is.str() << endl;
+}
+
+
 void showHelp(const char* progname)
 {
     cout << "uso: " << progname << " usuario contraseña [[-a \"nombre repositorio\" \"nombre archivo/directorio\"] |" << endl
          << "                 [-d \"nombre repositorio\" version_inicial version_final] [\"nombre archivo/directorio\"]] |" << endl
          << "                 [-f \"nombre repositorio\" fecha(aaaa/mm/dd)]] | [-h] |" << endl
          << "                 [-l \"nombre repositorio\" [\"nombre archivo/directorio\"]] |" << endl
+         << "                 [-m \"nombre repositorio\" [cantidad]] |" << endl
          << "                 [-o \"nombre repositorio\" \"nombre directorio destino\" \"nombre archivo/directorio\" [version]] |" << endl
          << "                 [-p nueva \"nombre repositorio\" ]]" << endl
          << "-a, almacenar archivos y directorios." << endl
          << "-d, ver diferencias entre dos versiones." << endl
          << "-f, ver las actualizaciones en una fecha dada." << endl
          << "-l, ver historial de cambios a un archivo o directorio." << endl
+         << "-m, obtener listado de ultimos cambios efectuados por un usuario." << endl
          << "-o, obtener una determinada version de un archivo o directorio." << endl
          << "-p, cambiar contraseña." << endl
          << endl
@@ -165,7 +188,7 @@ int main(int argc, char** argv)
     int c; 
     string user, pass;
     bool argsok = false;
-    while ((c = getopt(argc, argv, "-a:d:f:hl:o:p:")) != -1) {
+    while ((c = getopt(argc, argv, "-a:d:f:hl:m:o:p:")) != -1) {
         switch (c) {
 
             case 1: // non-option ARGV-elements
@@ -212,6 +235,17 @@ int main(int argc, char** argv)
                         showHistory(user, pass, optarg, "");
                     else
                         showHistory(user, pass, optarg, argv[optind]);
+                break;
+
+            case 'm': // listar cambios de usuario
+                // -m rep [cant]
+                argsok = ((argc == 5) || (argc == 6));
+                if (argsok) { 
+                    if (argc == 5)
+                        showChanges(user, pass, optarg);
+                    else
+                        showChanges(user, pass, optarg, argv[optind]);
+                }
                 break;
 
             case 'o': // obtener archivo

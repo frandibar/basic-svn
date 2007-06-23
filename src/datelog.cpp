@@ -98,3 +98,37 @@ bool DateLog::showDate(const string& a_Date, int offset)
    return true;   
 }
 
+bool DateLog::show(int offset)
+{
+    if(!_fstream.is_open())
+        return false;
+
+    _fstream.seekg(offset,ios::beg);
+    _fstream.seekp(offset,ios::beg);
+
+    char line[1024];
+    _fstream.getline(line,1023);
+
+    if(_fstream.fail())
+        return false;
+
+    cout<<line<<endl;
+    return true;
+}
+
+bool DateLog::showAll()
+{
+    if(!_fstream.is_open())
+        return false;
+
+    _fstream.seekg(0,ios::beg);
+    _fstream.seekp(0,ios::beg);
+
+    char line[1024];
+    while(!_fstream.eof()) {
+        _fstream.getline(line,1023);             
+        cout<<line<<endl;
+    }
+
+    return true;
+}

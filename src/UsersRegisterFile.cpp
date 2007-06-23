@@ -247,3 +247,35 @@ list<int> UsersRegisterFile::getReferences(int bloque, int cant)
 
    return ret;
 }
+
+list<int> UsersRegisterFile::getAllReferences(int bloque)
+{
+    list<int> ret;
+
+    int ref_a_insertar;
+
+    readBloque(bloque);
+
+    while(_bloqueActual->getAnterior() >= 0)
+        readBloque(_bloqueActual->getAnterior());
+
+    bool fin = false;
+
+    do {
+        _bloqueActual->moveFirst();
+
+        while(_bloqueActual->hasNext())
+        {
+            int ref_a_insertar = _bloqueActual->getNext();
+            ret.push_back(ref_a_insertar);
+        }
+
+        if(_bloqueActual->getSiguiente() < 0)
+            fin = true;
+
+        else
+            readBloque(_bloqueActual->getSiguiente());
+    } while(!fin);
+
+    return ret;
+}

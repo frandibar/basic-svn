@@ -39,6 +39,7 @@ public:
 	bool insertRef(int reference, int* nroBloqueNuevo);
 	
    list<int> getReferences(int bloque, int cant);
+   list<int> getAllReferences(int bloque);
 
 protected:
 	bool readBloque(int nroBloque);
