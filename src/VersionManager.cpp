@@ -31,7 +31,6 @@ const string VersionManager::DATE_LOG_FILENAME       =  "date_log.txt";
 
 const string VersionManager::USERS_INDEX_FILENAME    = "users_index.ndx";
 const string VersionManager::USERS_REGISTER_FILENAME = "users_register.ndx";
-const string VersionManager::USERS_LOG_FILENAME      = "users_log.txt";
 
 const int VersionManager::VERSION_DIGITS = 5;
 
@@ -53,8 +52,7 @@ bool VersionManager::destroy()
                  _dateIndex      .destroy() &&
                  _dateLog        .destroy() &&
                  _usersIndex     .destroy() &&
-                 _usersReg       .destroy() &&
-                 _usersLog       .destroy();
+                 _usersReg       .destroy();
 
     debug("VersionManager destroy " + string(ret ? "successfull" : "failed") + "\n");
     return ret;
@@ -76,8 +74,7 @@ bool VersionManager::open()
                _dateIndex      .open((path + DATE_INDEX_FILENAME)    .c_str()) &&
                _dateLog        .open((path + DATE_LOG_FILENAME)      .c_str()) &&
                _usersIndex     .open((path + USERS_INDEX_FILENAME)   .c_str()) &&
-               _usersReg       .open((path + USERS_REGISTER_FILENAME).c_str()) &&
-               _usersLog       .open((path + USERS_LOG_FILENAME)     .c_str())
+               _usersReg       .open((path + USERS_REGISTER_FILENAME).c_str())
               );
 
     debug("VersionManager open " + string(_isOpen ? "successfull" : "failed") + "\n");
@@ -99,8 +96,7 @@ bool VersionManager::close()
                _dateIndex      .close() &&
                _dateLog        .close() &&
                _usersIndex     .close() &&   
-               _usersReg       .close() &&
-               _usersLog       .close();
+               _usersReg       .close();
     debug("VersionManager close " + string((ret) ? "successfull" : "failed") + "\n");
 
     return ret;
@@ -364,7 +360,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
                     result = result && removeDirectory(repositoryVersion, repositoryName, fname, a_User, a_Date);
                 
                 if(result)
-                  logDate(fname, a_User,toString<int>(repositoryVersion),a_Date);
+                  log(fname, a_User,toString<int>(repositoryVersion),a_Date);
             }
             filesErased.clear();      
         }
@@ -397,7 +393,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
                     }
                     if (modified) {
                         nuevaVersion->update((*it_includedFiles).c_str(), repositoryVersion, type);
-                        logDate(fname, a_User,toString<int>(repositoryVersion),a_Date);
+                        log(fname, a_User,toString<int>(repositoryVersion),a_Date);
                     }
                 }
                 else {                    
@@ -417,7 +413,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 
                     if (result) {  // agrego el archivo al directorio
                         nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion, type);
-                        logDate(fname, a_User,toString<int>(repositoryVersion),a_Date);
+                        log(fname, a_User,toString<int>(repositoryVersion),a_Date);
                      }                                     
                 }
             }
@@ -469,7 +465,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 
               if (result) {  // agrego el archivo al directorio
                   nuevaVersion->addFile((*it_includedFiles).c_str(), repositoryVersion, type);
-                  logDate(fname, a_User,toString<int>(repositoryVersion), a_Date);
+                  log(fname, a_User,toString<int>(repositoryVersion), a_Date);
                }                  
           }
 
@@ -509,7 +505,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
             ret = addDirectory(repositoryVersion,repositoryName, a_Target, a_Username,a_Date);
 
         if(ret)
-            logDate(a_Target, a_Username, toString<int>(repositoryVersion), a_Date);
+            log(a_Target, a_Username, toString<int>(repositoryVersion), a_Date);
         return ret;
     }
     else {
@@ -585,7 +581,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
             }           
         }
         if(ret)
-            logDate(pathActual, a_Username,toString<int>(repositoryVersion), a_Date);
+            log(pathActual, a_Username,toString<int>(repositoryVersion), a_Date);
         delete nuevaVersion;
         return ret;     
     }
@@ -609,8 +605,7 @@ bool VersionManager::create()
                _dateIndex      .create((path + DATE_INDEX_FILENAME)     .c_str()) &&
                _dateLog        .create((path + DATE_LOG_FILENAME)       .c_str()) &&
                _usersIndex     .create((path + USERS_INDEX_FILENAME)    .c_str()) &&
-               _usersReg       .create((path + USERS_REGISTER_FILENAME) .c_str()) &&
-               _usersLog       .create((path + USERS_LOG_FILENAME)      .c_str())
+               _usersReg       .create((path + USERS_REGISTER_FILENAME) .c_str())
               );
    
     debug("VersionManager creation " + string(_isOpen ? "successfull" : "failed") + "\n");
@@ -932,7 +927,7 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
         char tipoArchivo = ultimaVersion->getTipo();
 
         delete ultimaVersion;
-        logDate(a_Filename, a_User,toString<int>(repositoryVersion), a_Date);
+        log(a_Filename, a_User,toString<int>(repositoryVersion), a_Date);
         return indexAFile(repositoryVersion, key, a_User, date, -1, tipoArchivo, FileVersion::BORRADO, bloque);        
     }
     debug("bloque < 0 \n"); 
@@ -1006,7 +1001,7 @@ bool VersionManager::removeDirectory(int repositoryVersion, const string& reposi
         result = indexADirectory(repositoryVersion, key, nuevaVersion, bloque);
 
         if(result)
-            logDate(a_Directoryname, a_User,toString<int>(repositoryVersion), a_Date);
+            log(a_Directoryname, a_User,toString<int>(repositoryVersion), a_Date);
         delete nuevaVersion;
         return result;
     }
@@ -1712,7 +1707,7 @@ bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
 
     if(!a_Filename.empty()) {
         for(int i = 1; i <= countComponents(a_Filename); ++i)
-            searchingPath += getComponent(a_Filename, i);
+            searchingPath += "//" + getComponent(a_Filename, i);
 
         int bloque = _dirIndex.getFirstBlock(searchingPath.c_str());
 
@@ -1821,7 +1816,7 @@ void VersionManager::showDirectory(DirectoryVersion* dirVersion, const string& p
     }
 }
 
-void VersionManager::logDate(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date)
+void VersionManager::log(const string& a_Filename, const string& a_Username, const string& a_Version, time_t a_Date)
 {
    tm* date = localtime(&a_Date);
    int anio = date->tm_year + 1900;
@@ -1831,39 +1826,29 @@ void VersionManager::logDate(const string& a_Filename, const string& a_Username,
    string fecha = toString<int>(anio) + "/" + zeroPad(mes + 1,2) + "/" + zeroPad(dia,2);
 
    int offset = _dateLog.append(a_Username, fecha, a_Version, a_Filename);   
+   
+   //indexo la fecha en el indice por fechas   
    if(_dateIndex.search(fecha.c_str()) < 0)
       _dateIndex.insert(fecha.c_str(),offset);
 
-   return;
-}
-
-void VersionManager::logAction(const string& a_Username, time_t a_Date, const string& a_Action)
-{
-   int nuevoBloque;
-   string key;
-
-   int offset = _usersLog.append(a_Username, a_Date, a_Action);
-   
+   //indexo el usuario en el indice por usuario
    int ref = _usersIndex.search(a_Username.c_str());
-
+   int nuevoBloque;
    if(ref < 0)
    {
       _usersReg.insertRef(offset, &nuevoBloque);
-      key = a_Username + zeroPad(nuevoBloque,VERSION_DIGITS);
-      _usersIndex.insert(key.c_str(),nuevoBloque);
+      _usersIndex.insert((a_Username + zeroPad(nuevoBloque,VERSION_DIGITS)).c_str(),nuevoBloque);
       
       return;
    }
-
+   
    UsersRegisterFile::t_status status = _usersReg.insertRef(offset, ref, &nuevoBloque);
    switch (status) {
       case UsersRegisterFile::OK :
          return;
          break;
        case UsersRegisterFile::OVERFLOW :
-         // tengo que generar la clave a partir de a_Directoryname y repositoryVersion
-         key = a_Username + zeroPad(nuevoBloque, VERSION_DIGITS);
-         _usersIndex.insert(key.c_str(), nuevoBloque);
+         _usersIndex.insert((a_Username + zeroPad(nuevoBloque, VERSION_DIGITS)).c_str(), nuevoBloque);
          return;
          break;
 
@@ -1871,4 +1856,7 @@ void VersionManager::logAction(const string& a_Username, time_t a_Date, const st
             return;
             break;
     }
+    
+   return;
 }
+
