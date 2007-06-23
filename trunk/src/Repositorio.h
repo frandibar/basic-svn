@@ -36,6 +36,7 @@ public:
     bool getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_VersionA, const string& a_VersionB, const string& a_Filename = "");
     bool getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Date);
     bool getHistory(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Filename);
+    bool getListOfChanges(std::ifstream& is, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin);
 
     // getters
     string getName() const { return _name; }

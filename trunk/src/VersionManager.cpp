@@ -1860,3 +1860,37 @@ void VersionManager::log(const string& a_Filename, const string& a_Username, con
    return;
 }
 
+
+bool VersionManager::getListOfChanges(std::ifstream& is, const string& a_Username, int a_Num)
+{
+    if(!a_Username.empty())
+    {
+        int ref = _usersIndex.search(a_Username.c_str());
+
+        if(ref < 0) return false;
+
+        list<int> lstChanges;
+        if(a_Num > 0)
+           lstChanges = _usersReg.getReferences(ref,a_Num);
+        else
+           lstChanges = _usersReg.getAllReferences(ref);
+        
+        list<int>::iterator it;
+
+        for(it = lstChanges.begin(); it != lstChanges.end(); ++it)
+        {
+            if(!_dateLog.show(*it))
+                return false;
+        }
+        
+        return true;
+    }
+
+    else
+    {
+       if(! _dateLog.showAll())
+           return false;
+
+       return true;
+    }
+}

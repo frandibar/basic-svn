@@ -70,6 +70,7 @@ public:
     bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName);
     bool getFileDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
     bool getDirectoryDiff(const string& a_DirName, const string& a_VersionA, const string& a_VersionB, int tabs);
+    bool getListOfChanges(std::ifstream& is, const string& a_Username, int a_Num);
 
     bool removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date);
     bool removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date);

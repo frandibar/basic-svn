@@ -19,7 +19,8 @@ public:
     
     long int append(const string& a_Username, const string& a_Date, const string& a_Version, const string&  a_Filename);
     bool showDate(const string& a_Date, int offset);
-
+    bool show(int offset);
+    bool showAll();
 private:
     bool    _isOpen;
     fstream _fstream;

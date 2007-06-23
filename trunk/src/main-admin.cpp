@@ -131,12 +131,15 @@ void removeUser(const string& a_Reposit, const string& a_Username)
 void showHelp(const char* progname)
 {
     cout << "uso: " << progname << " [[-a \"nombre repositorio\"] | [-c \"nombre repositorio\"] |" << endl
-         << "                 [-e usuario \"nombre repositorio\"] | [-h] | [-o \"nombre repositorio\"] |" << endl
+         << "                 [-e usuario \"nombre repositorio\"] | [-h] | " << endl
+         << "                 [-m \"nombre repositorio\" [[\"nombre usuario\"] [cantidad]]] |" << endl
+         << "                 [-o \"nombre repositorio\"] |" << endl
          << "                 [-r \"nombre repositorio\"] |" << endl
          << "                 [-u usuario password \"nombre usuario\" \"nombre repositorio\"]]" << endl
          << "-a, crear almacen de repositorios." << endl
          << "-c, crear repositorio." << endl
          << "-e, eliminar usuario." << endl
+         << "-m, obtener listado de ultimos cambios efectuados por un usuario." << endl
          << "-o, obtener listado de usuarios." << endl
          << "-r, eliminar repositorio." << endl
          << "-u, agregar usuario." << endl
@@ -168,11 +171,32 @@ void showUsers(const string& a_Reposit)
 }
 
 
+void showChanges(const string& a_Reposit, const string& a_Username, const string& a_Num = "")
+{
+    Almacen almacen;
+    if (!almacen.exists()) {
+        cout << "No existe un almacen que contenga el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+    
+    if (!almacen.repositoryExists(a_Reposit)) {
+        cout << "No existe el repositorio '" << a_Reposit << "'" << endl;
+        return;
+    }
+
+    std::ifstream is;
+    almacen.getListOfChanges(is, a_Reposit, a_Username, "", fromString<int>(a_Num), true);
+    cout << "Lista de ultimas modificaciones al repositorio '" << a_Reposit << "':" << endl
+         << "[usuario] [nombre completo]" << endl;
+    //cout << is.str() << endl;
+}
+
+
 int main(int argc, char** argv)
 {
     int c; 
     bool argsok = false;
-    while ((c = getopt(argc, argv, "-a:c:e:ho:r:u:")) != -1) {
+    while ((c = getopt(argc, argv, "-a:c:e:hm:o:r:u:")) != -1) {
         switch (c) {
             case 'a': // crear almacen de repositorios
                 // -a "nombre directorio"
@@ -195,6 +219,19 @@ int main(int argc, char** argv)
             case 'h': // mostrar ayuda
                 showHelp(argv[0]);
                 argsok = true;
+                break;
+
+            case 'm': // listar cambios de usuario
+                // -m rep [["usuario"] [cant]]
+                argsok = ((argc == 3) || (argc == 4) || (argc == 5));
+                if (argsok) { 
+                    if (argc == 3)
+                        showChanges(optarg, "");
+                    else if (argc == 4)
+                        showChanges(optarg, argv[optind]);
+                    else
+                        showChanges(optarg, argv[optind], argv[optind + 1]);
+                }
                 break;
 
             case 'o': // obtener listado de usuarios

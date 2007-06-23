@@ -235,3 +235,18 @@ bool Repositorio::getHistory(std::ifstream& is, const string& a_Username, const 
 }
 
 
+bool Repositorio::getListOfChanges(std::ifstream& is, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin)
+{
+    if (!_isOpen)
+        return false;
+
+    if (isAdmin) {
+        if (!userExists(a_Username)) 
+            return false;
+    }
+    else if (!validateUser(a_Username, a_Password)) 
+        return false;
+
+    return _versionManager.getListOfChanges(is, a_Username, a_Num);
+}
+

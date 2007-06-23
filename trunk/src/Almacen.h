@@ -33,7 +33,8 @@ public:
     bool removeUser(const string& a_Reposit, const string& a_Username) throw();
     bool userExists(const string& a_Reposit, const string& a_Username) const;
     bool validatePassword(const string& a_Reposit, const string& a_Username, const string& a_Password) const;
-    std::list<User> getListOfUsers(const string& a_Reposit) const;
+    std::list<User>   getListOfUsers(const string& a_Reposit) const;
+    bool getListOfChanges(std::ifstream& is, const string& a_Reposit, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin);
     bool changePassword(const string& a_Reposit, const string& a_Username, const string& a_NewPassword);
 
     bool add(const string& a_Reposit, const string& a_Target, const string& a_Username, const string& a_Password);

@@ -385,3 +385,15 @@ bool Almacen::releaseLock(const string& a_Name) const
     return true;            
 }
 
+bool Almacen::getListOfChanges(std::ifstream& is, const string& a_Reposit, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin)
+{
+    Repositorio* rep = getRepository(a_Reposit);
+    if (rep == NULL)
+        return false;
+
+    bool ret = rep->open();
+    ret = ret && rep->getListOfChanges(is, a_Username, a_Password, a_Num, isAdmin);
+    ret = ret && rep->close();
+    return ret;
+}
+
