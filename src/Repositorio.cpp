@@ -241,7 +241,7 @@ bool Repositorio::getListOfChanges(std::ifstream& is, const string& a_Username, 
         return false;
 
     if (isAdmin) {
-        if (!userExists(a_Username)) 
+        if (!a_Username.empty() && !userExists(a_Username)) 
             return false;
     }
     else if (!validateUser(a_Username, a_Password)) 

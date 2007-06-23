@@ -184,10 +184,9 @@ void showChanges(const string& a_Reposit, const string& a_Username, const string
         return;
     }
 
+    cout << "Lista de ultimas modificaciones al repositorio '" << a_Reposit << "':" << endl;
     std::ifstream is;
     almacen.getListOfChanges(is, a_Reposit, a_Username, "", fromString<int>(a_Num), true);
-    cout << "Lista de ultimas modificaciones al repositorio '" << a_Reposit << "':" << endl
-         << "[usuario] [nombre completo]" << endl;
     //cout << is.str() << endl;
 }
 

@@ -3,6 +3,13 @@
 #include "FileBlock.h"
 #include "debug.h"
 
+#include <iostream>
+
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
+
 const int FileBlock::TAMANIO_BLOQUE_ARCHIVOS = 1024;
 
 FileBlock::FileBlock(int Numero,int Anterior,int Siguiente)

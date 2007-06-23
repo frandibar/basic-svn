@@ -2,10 +2,15 @@
 
 #include "UserLog.h"
 #include "debug.h"
-#include <time.h>
 #include "helpers.h"
 
+#include <ctime>
+#include <iostream>
+
 using std::ios;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 bool UserLog::create(const string& a_Filename)
 {

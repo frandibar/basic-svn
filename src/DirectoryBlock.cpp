@@ -3,6 +3,12 @@
 #include "DirectoryBlock.h"
 #include "debug.h"
 
+#include <iostream>
+
+using std::cout;
+using std::cerr;
+using std::endl;
+
 const int DirectoryBlock::TAMANIO_BLOQUE_DIRECTORIOS = 1024;
 
 DirectoryBlock::DirectoryBlock(int Numero,int Anterior,int Siguiente)

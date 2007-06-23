@@ -3,7 +3,12 @@
 #include "datelog.h"
 #include "debug.h"
 
+#include <iostream>
+
 using std::ios;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 bool DateLog::create(const string& a_Filename)
 {
@@ -92,7 +97,7 @@ bool DateLog::showDate(const string& a_Date, int offset)
       actualDate = strLine.substr(0,10);
       
       if(actualDate == a_Date)
-         cout<<strLine<<endl;
+         cout << strLine << endl;
    }while((actualDate == a_Date)&&(!_fstream.eof()));
    
    return true;   
@@ -100,34 +105,35 @@ bool DateLog::showDate(const string& a_Date, int offset)
 
 bool DateLog::show(int offset)
 {
-    if(!_fstream.is_open())
+    if (!_fstream.is_open())
         return false;
 
-    _fstream.seekg(offset,ios::beg);
-    _fstream.seekp(offset,ios::beg);
+    _fstream.seekg(offset, ios::beg);
+    _fstream.seekp(offset, ios::beg);
 
-    char line[1024];
-    _fstream.getline(line,1023);
+    string line;
+    getline(_fstream, line);
 
-    if(_fstream.fail())
+    if (_fstream.fail())
         return false;
 
-    cout<<line<<endl;
+    cout << line << endl;
     return true;
 }
 
 bool DateLog::showAll()
 {
-    if(!_fstream.is_open())
+    if (!_fstream.is_open())
         return false;
 
-    _fstream.seekg(0,ios::beg);
-    _fstream.seekp(0,ios::beg);
+    _fstream.seekg(0, ios::beg);
+    _fstream.seekp(0, ios::beg);
 
-    char line[1024];
-    while(!_fstream.eof()) {
-        _fstream.getline(line,1023);             
-        cout<<line<<endl;
+    string line;
+    getline(_fstream, line);
+    while (!_fstream.eof()) {
+        cout << line << endl;
+        getline(_fstream, line);
     }
 
     return true;
