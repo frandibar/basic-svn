@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# test de creacion y eliminacion de repositorios
+
+# crear almacen
+./svnadmin -a "Mi almacen"
+
+# crear repositorio
+./svnadmin -c rep
+
+# crear usuarios
+./svnadmin -u fran dib "Francisco Dibar" rep
+./svnadmin -u rod ben "Rodrigo Bengoechea" rep
+
+# eliminar usuarios
+./svnadmin -e rod rep
+./svnadmin -e fran rep
+
+
+

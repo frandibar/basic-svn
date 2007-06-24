@@ -31,28 +31,91 @@ El segundo es utilizado por los usuarios para almacenar y recuperar su trabajo.
 
 Como instalar y compilar
 ------------------------
-Descomprimir
-YO
+- Descomprimir el archivo svngrupo.tar.gz en un directorio destino
+- Ejecutar make
+
+Dependencias:
+- Xerces (libxerces27)
+Es necesario tener esta libreria instalada para poder parsear y generar los archivos xml.
+
+
+Descripcion de los comandos
+---------------------------
+
+svnadmin
+
+Como crear el almacen de repositorios:
+./svnadmin -a "nombre del almacen"
+Este comando genera un directorio llamado "nombre del almacen" donde se almacenaran los archivos correspondientes al mismo.
+A su vez, se genera un archivo llamado ~/.svn_grupo_config donde se guarda la configuracion del mismo en formato xml.
+
+Como crear un repositorio:
+./svnadmin -c "nombre del repositorio"
+Este comando genera un directorio llamado "nombre del repositorio" dentro del directorio del almacen, donde se almacenaran los archivos correspondientes al mismo.
+
+Como eliminar un repositorio:
+./svnadmin -r "nombre del repositorio"
+Este comando ademas elimina todos los usuarios pertenecientes al repositorio.
+
+Como agregar un usuario:
+./svnadmin -u usuario password "nombre del usuario" "nombre del repositorio"
+
+Como eliminar un usuario:
+./svnadmin -e usuario "nombre del repositorio"
+
+Como obtener ayuda:
+./svnadmin -h
+
+Como obtener el listado de usuarios:
+./svnadmin -o "nombre del repositorio"
+
+Como obtener el listado de los ultimos cambios efectuados por un usuario:
+./svnadmin -m "nombre del repositorio" [["nombre del usuario"] [nro de cambios]]
+
+
+svnuser
+
+Como almacenar archivos y directorios:
+./svnuser usuario contraseña -a "nombre del repositorio" "nombre del archivo o directorio"
+Los archivos se identifican de la misma manera en que fueron ingresados, o sea, el archivo ~/f1 es distinto a /home/user/f1
+
+Como ver diferencias entre dos versiones del repositorio:
+./svnuser usuario contraseña -d "nombre del repositorio" version_inicial version_final
+
+Como ver las actualizaciones en una fecha dada:
+./svnuser usuario contraseña -f "nombre del repositorio" fecha (aaaa/mm/dd)
+
+Como obtener ayuda:
+./svnuser -h
+
+Como ver el historial de cambios a un archivo o directorio:
+./svnuser usuario contraseña -l "nombre del repositorio" "nombre del archivo o directorio"
+
+Como ver el listado de los ultimos cambios efectuados por un usuario:
+./svnuser usuario contraseña -m "nombre del repositorio" [cantidad]
+donde 'cantidad' indica los ultimos 'cantidad' de cambios.
+
+Como obtener una determinada version de un archivo o directorio:
+./svnuser usuario contraseña -o "nombre del repositorio" "nombre del directorio destino" "nombre del archivo o directorio" [version]
+Si no se indica la version, entonces se obtiene la ultima.
+
+Como cambiar la contraseña:
+./svnuser usuario contraseña -p nueva "nombre del repositorio"
+
 
 Diagrama de clases
 ------------------
 RODRIGO
-
-Bugs conocidos
---------------
-
-#1 Archivos sin modificacion alteran el nro de version del repositorio al ser comiteados.
-Al comitear un archivo identico (nombre y contenido) a uno ya existente en el repositorio, el mismo actualiza el nro de version del repositorio, en vez de ignorarse.
 
 
 Estructura logica y fisica
 --------------------------
 MASTO
 
-Descripcion de los comandos
----------------------------
-YO
 
-explicar cuando se comitea con path completo
+Bugs conocidos
+--------------
 
+#1 Archivos sin modificacion alteran el nro de version del repositorio al ser comiteados.
+Al comitear un archivo identico (nombre y contenido) a uno ya existente en el repositorio, el mismo actualiza el nro de version del repositorio, en vez de ignorarse.
 
