@@ -7,6 +7,7 @@
 #include <fstream>
 #include <sys/stat.h>
 
+const string Repositorio::VERSION_FILENAME = "version";
 
 // constructor
 Repositorio::Repositorio(const string& a_Almacen, const string& a_Name) :
@@ -134,6 +135,9 @@ bool Repositorio::destroy()
         _isOpen = open();
 
     bool ret = _isOpen && _versionManager.destroy();
+    // remove version file
+    ret = ret && (remove((_almacen + "//" + _name + "//" + VERSION_FILENAME).c_str()) == 0);
+    // remove repository directory
     ret = ret && (remove((_almacen + "//" + _name).c_str()) == 0);
     debug("Repositorio destroy " + string(ret ? "successfully" : "failed") + "\n");
     return ret;
@@ -168,7 +172,7 @@ bool Repositorio::saveVersion()
 {
     // saves a file named "version" containing the repository version
     debug("saving repository version to " + toString(_version) + "\n");
-    string filename = _almacen + "//" + _name + "//version"; 
+    string filename = _almacen + "//" + _name + "//" + VERSION_FILENAME; 
     std::ofstream os(filename.c_str());
     if (!os.is_open()) return false;
     os << _version << std::endl;
@@ -180,7 +184,7 @@ bool Repositorio::loadVersion()
 {
     debug("loading repository version\n");
     // saves a file named "version" containing the repository version
-    string filename = _almacen + "//" + _name + "//version"; 
+    string filename = _almacen + "//" + _name + "//" + VERSION_FILENAME; 
     std::ifstream is(filename.c_str());
     if (!is.is_open()) return false;
     is >> _version;
