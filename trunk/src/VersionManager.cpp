@@ -123,7 +123,7 @@ bool VersionManager::buildVersion(std::list<FileVersion>& lstVersions, const str
             osdiff.close();
 
             // apply diff to last version
-            string cmd = "ed -s " + a_Filename + " < " + tmpFilename;
+            string cmd = "ed -s " + systemFilename(a_Filename) + " < " + tmpFilename;
             if (system(cmd.c_str()) != 0)
                 return false;
             cmd = "rm -f " + tmpFilename;
@@ -200,7 +200,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
                 // now we need to generate a diff between the file being commited and the last version
 
                 string tmpDiffFilename = randomFilename(".tmp_");
-                string cmd = "diff -e " + tmpVersionFilename + " " + a_Filename + " > " + tmpDiffFilename;
+                string cmd = "diff -e " + tmpVersionFilename + " " + systemFilename(a_Filename) + " > " + tmpDiffFilename;
                 if (system(cmd.c_str()) == -1)
                     return false;
                 cmd = "echo w >> " + tmpDiffFilename;

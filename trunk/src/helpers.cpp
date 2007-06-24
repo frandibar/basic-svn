@@ -1,4 +1,3 @@
-// helpers.cpp
 
 #include "helpers.h"
 
@@ -19,6 +18,7 @@ std::string zeroPad(int number, int ndigits)
     return ret;
 }
 
+
 std::string randomFilename(const std::string& prefix)
 // returns a string with a random integer following the prefix    
 {
@@ -28,6 +28,7 @@ std::string randomFilename(const std::string& prefix)
     int i = rand();
     return filename + toString(i);
 }
+
 
 t_filetype getFiletype(const std::string& filename)
 {
@@ -56,6 +57,7 @@ t_filetype getFiletype(const std::string& filename)
     return (nChars > nNonchars) ? TEXT : BINARY;
 }
 
+
 int countComponents(const std::string& a_Target)
 {
   int cantComponentes = 0;
@@ -73,24 +75,19 @@ int countComponents(const std::string& a_Target)
   return cantComponentes;
 }
 
+
 std::string getComponent(const std::string& a_Target,int component)
 {
 	int cantidadComponentes = countComponents(a_Target);
-	
 	std::string res;	
-
-	if(component > cantidadComponentes)
+	if (component > cantidadComponentes)
  		res = "";
-	
-	else
-	{
+	else {
 		int componenteLeida = 0;
 		unsigned int comienzo = 0;
 		unsigned int fin = 0;
 	
-
-		while(componenteLeida != component)
-		{
+		while(componenteLeida != component) {
 			comienzo = fin;
 			fin = a_Target.find_first_of("/",fin);
 			componenteLeida++;
@@ -98,10 +95,8 @@ std::string getComponent(const std::string& a_Target,int component)
 			if(fin < a_Target.length())
 				fin++;
 		}
-
 		res = a_Target.substr(comienzo,fin - comienzo - 1);		
 	}
-
 	return res;	
 }
 
@@ -125,8 +120,22 @@ bool areDifferentFiles(const std::string& f1, const std::string& f2)
 // assumes both files exist    
 {
     std::string tmp = randomFilename(".tmp_");
-    system(("diff " + f1 + " " + f2 + " > " + tmp).c_str());
+    system(("diff " + systemFilename(f1) + " " + systemFilename(f2) + " > " + tmp).c_str());
     bool empty = !isEmptyFile(tmp); 
     remove(tmp.c_str());
     return !empty;
+}
+
+
+std::string systemFilename(const std::string& a_Filename)
+// prepends spaces in a_Filename with '\'
+{
+    std::string ret;
+    for (int i = 0; i < (int)a_Filename.length(); ++i) {
+        if (a_Filename[i] == ' ')
+            ret += "\\ ";
+        else
+            ret += a_Filename[i];
+    }
+    return ret;
 }

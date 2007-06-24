@@ -1,4 +1,3 @@
-// helpers.h
 
 #ifndef HELPERS_H_INCLUDED
 #define HELPERS_H_INCLUDED
@@ -8,6 +7,9 @@
 
 std::string zeroPad(int number, int ndigits);
 std::string randomFilename(const std::string& prefix);
+std::string systemFilename(const std::string& a_Filename);
+bool isEmptyFile(const std::string& a_Filename);
+bool areDifferentFiles(const std::string& f1, const std::string& f2);
 
 enum t_filetype { INVALID = -1, DIRECTORY = 0, TEXT, BINARY };
 t_filetype getFiletype(const std::string& filename);
@@ -30,12 +32,7 @@ T fromString(const std::string& s)
 }
 
 int countComponents(const std::string& a_Target);
-
-std::string getComponent(const std::string& a_Target,int component);
-
-bool isEmptyFile(const std::string& a_Filename);
-
-bool areDifferentFiles(const std::string& f1, const std::string& f2);
+std::string getComponent(const std::string& a_Target, int component);
 
 #endif
 
