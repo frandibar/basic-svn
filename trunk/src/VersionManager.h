@@ -1,4 +1,3 @@
-// VersionManager.h
 
 #ifndef VERSION_MANAGER_H_INCLUDED
 #define VERSION_MANAGER_H_INCLUDED
@@ -64,13 +63,13 @@ public:
     bool getFile(const string& a_TargetDir, const string& a_Filename, const string& a_Version,const string& repositoryName);
     bool getDirectory(const string& a_TargetDir, const string& pathToFile, const string& a_Path, const string& a_DirName, const string& a_Version,const string& repositoryName);
     bool get(const string& a_Version, const string& a_Target,const string& repositoryName, const string& a_TargetDestiny);
-    bool getDiffByDate(std::ifstream& is, const string& a_Date);
-    bool getHistory(std::ifstream& is, const string& a_Filename);
+    bool getDiffByDate(std::ostream& os, const string& a_Date);
+    bool getHistory(std::ostream& is, const string& a_Filename);
 
-    bool getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName);
-    bool getFileDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
+    bool getDiff(std::ostream& os, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName);
+    bool getFileDiff(std::ostream& os, const string& a_VersionA, const string& a_VersionB, const string& a_Filename);
     bool getDirectoryDiff(const string& a_DirName, const string& a_VersionA, const string& a_VersionB, int tabs);
-    bool getListOfChanges(std::ifstream& is, const string& a_Username, int a_Num);
+    bool getListOfChanges(std::ostream& os, const string& a_Username, int a_Num);
 
     bool removeFileOrDirectory(int repositoryVersion, const string& repositoryName, const string& pathActual, const string& a_User, time_t a_Date);
     bool removeFile(int repositoryVersion, const string& repositoryName, const string& a_Filename, const string& a_User, time_t a_Date);

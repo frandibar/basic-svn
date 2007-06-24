@@ -1,4 +1,3 @@
-// Almacen.cpp
 
 #include "Almacen.h"
 #include "debug.h"
@@ -307,38 +306,38 @@ bool Almacen::get(const string& a_Reposit, const string& a_TargetDestiny, const 
     return ret;
 }
 
-bool Almacen::getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+bool Almacen::getDiff(std::ostream& os, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
 {
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
 
     bool ret = rep->open();
-    ret = ret && rep->getDiff(is, a_Username, a_Password, a_VersionA, a_VersionB, a_Filename);
+    ret = ret && rep->getDiff(os, a_Username, a_Password, a_VersionA, a_VersionB, a_Filename);
     ret = ret && rep->close();
     return ret;
 }
 
-bool Almacen::getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Date)
+bool Almacen::getDiffByDate(std::ostream& os, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Date)
 {
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
 
     bool ret = rep->open();
-    ret = ret && rep->getDiffByDate(is, a_Username, a_Password, a_Date);
+    ret = ret && rep->getDiffByDate(os, a_Username, a_Password, a_Date);
     ret = ret && rep->close();
     return ret;
 }
 
-bool Almacen::getHistory(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
+bool Almacen::getHistory(std::ostream& os, const string& a_Username, const string& a_Password, const string& a_Reposit, const string& a_Filename)
 {    
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
 
     bool ret = rep->open();
-    ret = ret && rep->getHistory(is, a_Username, a_Password, a_Filename);
+    ret = ret && rep->getHistory(os, a_Username, a_Password, a_Filename);
     ret = ret && rep->close();
     return ret;
 }
@@ -385,14 +384,14 @@ bool Almacen::releaseLock(const string& a_Name) const
     return true;            
 }
 
-bool Almacen::getListOfChanges(std::ifstream& is, const string& a_Reposit, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin)
+bool Almacen::getListOfChanges(std::ostream& os, const string& a_Reposit, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin)
 {
     Repositorio* rep = getRepository(a_Reposit);
     if (rep == NULL)
         return false;
 
     bool ret = rep->open();
-    ret = ret && rep->getListOfChanges(is, a_Username, a_Password, a_Num, isAdmin);
+    ret = ret && rep->getListOfChanges(os, a_Username, a_Password, a_Num, isAdmin);
     ret = ret && rep->close();
     return ret;
 }

@@ -196,16 +196,12 @@ list<int> UsersRegisterFile::getReferences(int bloque, int cant)
    list<int> ret;
 
    readBloque(bloque);
-   
-   int ref_a_insertar;
 
-   if(_bloqueActual->getCantidadReferencias() >= cant)
-   {
+   if(_bloqueActual->getCantidadReferencias() >= cant) {
       _bloqueActual->moveTo(_bloqueActual->getCantidadReferencias() - cant);
       
-      while(_bloqueActual->hasNext())
-      {
-         ref_a_insertar = _bloqueActual->getNext();
+      while(_bloqueActual->hasNext()) {
+         int ref_a_insertar = _bloqueActual->getNext();
          ret.push_back(ref_a_insertar);
       }
       
@@ -229,21 +225,20 @@ list<int> UsersRegisterFile::getReferences(int bloque, int cant)
          proximo_a_leer = _bloqueActual->getAnterior();
    }
 
-   do{   
+   do {   
       _bloqueActual->moveTo(indice);
    
-      while(_bloqueActual->hasNext())
-      {
-         ref_a_insertar = _bloqueActual->getNext();
+      while(_bloqueActual->hasNext()) {
+         int ref_a_insertar = _bloqueActual->getNext();
          ret.push_back(ref_a_insertar);
       }
       
       proximo_a_leer = _bloqueActual->getSiguiente();
-      if(proximo_a_leer >= 0)
+      if (proximo_a_leer >= 0)
          readBloque(proximo_a_leer);
       
       indice = 1;
-   }while(proximo_a_leer >= 0);
+   } while (proximo_a_leer >= 0);
 
    return ret;
 }
@@ -251,31 +246,24 @@ list<int> UsersRegisterFile::getReferences(int bloque, int cant)
 list<int> UsersRegisterFile::getAllReferences(int bloque)
 {
     list<int> ret;
-
-    int ref_a_insertar;
-
     readBloque(bloque);
 
     while(_bloqueActual->getAnterior() >= 0)
         readBloque(_bloqueActual->getAnterior());
 
-    bool fin = false;
-
-    do {
+    while (true) {
         _bloqueActual->moveFirst();
 
-        while(_bloqueActual->hasNext())
-        {
+        while(_bloqueActual->hasNext()) {
             int ref_a_insertar = _bloqueActual->getNext();
             ret.push_back(ref_a_insertar);
         }
 
         if(_bloqueActual->getSiguiente() < 0)
-            fin = true;
-
+            break;
         else
             readBloque(_bloqueActual->getSiguiente());
-    } while(!fin);
+    }
 
     return ret;
 }

@@ -124,7 +124,7 @@ bool areDifferentFiles(const std::string& f1, const std::string& f2)
 // returns true if f1 and f2 are different
 // assumes both files exist    
 {
-    std::string tmp = randomFilename("tmp_");
+    std::string tmp = randomFilename(".tmp_");
     system(("diff " + f1 + " " + f2 + " > " + tmp).c_str());
     bool empty = !isEmptyFile(tmp); 
     remove(tmp.c_str());

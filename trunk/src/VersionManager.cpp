@@ -1,4 +1,3 @@
-// VersionManager.cpp
 
 #include "VersionManager.h"
 #include "debug.h"
@@ -118,7 +117,7 @@ bool VersionManager::buildVersion(std::list<FileVersion>& lstVersions, const str
         ++it;
         for ( ; it != lstVersions.end(); ++it) {
             // save diff into a temporary file
-            string tmpFilename = randomFilename("tmp_");
+            string tmpFilename = randomFilename(".tmp_");
             std::ofstream osdiff(tmpFilename.c_str());
             _textContainer.get(it->getOffset(), osdiff);
             osdiff.close();
@@ -195,12 +194,12 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
                     return false;
             }
             else {
-                string tmpVersionFilename = randomFilename("tmp_");
+                string tmpVersionFilename = randomFilename(".tmp_");
                 buildVersion(lstVersions, tmpVersionFilename);
                 // fsVersion contains the file up to version
                 // now we need to generate a diff between the file being commited and the last version
 
-                string tmpDiffFilename = randomFilename("tmp_");
+                string tmpDiffFilename = randomFilename(".tmp_");
                 string cmd = "diff -e " + tmpVersionFilename + " " + a_Filename + " > " + tmpDiffFilename;
                 if (system(cmd.c_str()) == -1)
                     return false;
@@ -232,7 +231,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
             FileVersion* ultimaVersion;
             _fileVersions.getLastVersion(&ultimaVersion, bloque);
             if (ultimaVersion->getVersionType() != FileVersion::BORRADO) { 
-                string tmpVersion = randomFilename("tmp_");
+                string tmpVersion = randomFilename(".tmp_");
                 ofstream os(tmpVersion.c_str());   
                 _binaryContainer.get(offset, os);
                 os.close();
@@ -1120,17 +1119,14 @@ bool VersionManager::buildTextVersion(int bloque, FileVersion* versionBuscada, c
     return false;
 }
 
-bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+bool VersionManager::getFileDiff(std::ostream& os, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
 {
     if (!_isOpen)
         return false;
 
     FileVersion* versionBuscadaA;
-    int bloqueA;
-
     FileVersion* versionBuscadaB;
-    int bloqueB;
-
+    int bloqueA, bloqueB;
      
     if (!getFileVersionAndBlock(&bloqueA, &versionBuscadaA, a_Filename, a_VersionA))
         return false;
@@ -1145,9 +1141,9 @@ bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, co
     if (ftypeA != ftypeB)
         return false;
 
-    string tmpA    = randomFilename("tmp_");
-    string tmpB    = randomFilename("tmp_");
-    string tmpDiff = randomFilename("tmp_");
+    string tmpA    = randomFilename(".tmp_");
+    string tmpB    = randomFilename(".tmp_");
+    string tmpDiff = randomFilename(".tmp_");
     if (ftypeA == 't') {
         bool ret = buildTextVersion(bloqueA, versionBuscadaA, tmpA);
         ret = ret && buildTextVersion(bloqueB, versionBuscadaB, tmpB);
@@ -1160,7 +1156,14 @@ bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, co
             if (system(cmd.c_str()) == -1)
                 return false;
 
-            is.open(tmpDiff.c_str());
+            ifstream is(tmpDiff.c_str());
+            string line;
+            getline(is, line);
+            while (!is.eof()) {
+                os << line << endl;
+                getline(is, line);
+            }
+            is.close();
 
             // remove temporary files
             remove(tmpA.c_str());
@@ -1190,7 +1193,7 @@ bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, co
         if (system(cmd.c_str()) == -1)
             return false;
 
-        is.open(tmpDiff.c_str());
+        ifstream is(tmpDiff.c_str());
         int different;
         is >> different;
         is.close();
@@ -1200,7 +1203,15 @@ bool VersionManager::getFileDiff(std::ifstream& is, const string& a_VersionA, co
         else
             os << "Las versiones difieren.\n";
         os.close();
+        
         is.open(tmpDiff.c_str());
+        string line;
+        getline(is, line);
+        while (!is.eof()) {
+            os << line << endl;
+            getline(is, line);
+        }
+        is.close();
 
         // remove temporary files
         remove(tmpA.c_str());
@@ -1418,7 +1429,7 @@ bool VersionManager::getDirectoryDiff(const string& a_DirName, const string& a_V
     return ret; 
 }
 
-bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName)
+bool VersionManager::getDiff(std::ostream& os, const string& a_VersionA, const string& a_VersionB, const string& a_Target, const string& repositoryName)
 {
     if (!_isOpen)
         return false;
@@ -1446,14 +1457,14 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
         if (versionDirectorioA->getType() == DirectoryVersion::BORRADO) {
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout << "No existe la version: " << a_VersionA << " de " << searchingPath << endl;
+            os << "No existe la version: " << a_VersionA << " de " << searchingPath << endl;
             return false;
         }
 
         if (versionDirectorioB->getType() == DirectoryVersion::BORRADO) {
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout << "No existe la version: " << a_VersionB << " de " << searchingPath << endl;
+            os << "No existe la version: " << a_VersionB << " de " << searchingPath << endl;
             return false;
         }
 
@@ -1463,7 +1474,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
         if(!versionDirectorioA->searchFile(filename.c_str(),&fileA)) {   
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout << "No existe la version: " << a_VersionA << " de " << searchingPath << "//" << filename << endl;
+            os << "No existe la version: " << a_VersionA << " de " << searchingPath << "//" << filename << endl;
             return false;
         }
 
@@ -1472,7 +1483,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
             delete fileA;   
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout << "No existe la version: " << a_VersionB << " de " << searchingPath << "//" << filename << endl;
+            os << "No existe la version: " << a_VersionB << " de " << searchingPath << "//" << filename << endl;
             return false;
         }
 
@@ -1481,12 +1492,12 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
             delete fileB;   
             delete versionDirectorioA;
             delete versionDirectorioB;
-            cout << "Las versiones " << a_VersionA << " y " << a_VersionB << " de " << filename << " son tipos de archivos diferentes" << endl;
+            os << "Las versiones " << a_VersionA << " y " << a_VersionB << " de " << filename << " son tipos de archivos diferentes" << endl;
             return false;
         }
 
         if(fileA->getType() != 'd')
-            ret = getFileDiff(is, a_VersionA, a_VersionB,searchingPath + "//" + filename);
+            ret = getFileDiff(os, a_VersionA, a_VersionB,searchingPath + "//" + filename);
 
         else
             ret = getDirectoryDiff(searchingPath + "//" + filename, a_VersionA, a_VersionB,0);
@@ -1508,7 +1519,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
         string fname;
 
         ret = true;
-        cout << repositoryName << endl;
+        os << repositoryName << endl;
 
         for (it_listA = lstA->begin(); it_listA != lstA->end(); ++it_listA) {
             bool found = false;
@@ -1534,9 +1545,9 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                                 break;
                             }                                                                                   
 
-                            cout << "   " << fname << " version: " << file_versionA->getNroVersion() << ", tipo: " << file_versionA->getTipo()
+                            os << "   " << fname << " version: " << file_versionA->getNroVersion() << ", tipo: " << file_versionA->getTipo()
                                  << ", usuario: " << file_versionA->getUser() << "   ";
-                            cout << "   " << fname << " version: " << file_versionB->getNroVersion() << ", tipo: " << file_versionB->getTipo()
+                            os << "   " << fname << " version: " << file_versionB->getNroVersion() << ", tipo: " << file_versionB->getTipo()
                                  << ", usuario: " << file_versionB->getUser() << endl;
 
                             delete file_versionA;
@@ -1559,9 +1570,9 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                                 break;
                             }
 
-                            cout << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
+                            os << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
                                  << ", usuario: " << dir_version->getUser() << "   ";
-                            cout << "   " << fname << " version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
+                            os << "   " << fname << " version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
                                  << ", usuario: " << file_version->getUser() << endl;
 
                             delete file_version;
@@ -1580,9 +1591,9 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                                 break;
                             }
 
-                            cout << "   " << fname << ", version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
+                            os << "   " << fname << ", version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
                                  << " usuario: " << file_version->getUser() << "   ";
-                            cout << "   " << fname << ", version: " << dir_version->getNroVersion() << ", tipo: d"
+                            os << "   " << fname << ", version: " << dir_version->getNroVersion() << ", tipo: d"
                                  << " usuario: " << dir_version->getUser() << endl;
 
                             delete file_version;
@@ -1598,7 +1609,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                             if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
                                 break;
 
-                            cout << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
+                            os << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
                                  << ", usuario: " << dir_version->getUser() << endl;
 
                             delete dir_version;
@@ -1606,7 +1617,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                         else {
                             if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
                                 break;
-                            cout << "   " << fname << " version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
+                            os << "   " << fname << " version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
                                  << ", usuario: " << file_version->getUser() << endl;
 
                             delete file_version;                    
@@ -1621,7 +1632,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionA))
                         break;
 
-                    cout << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
+                    os << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
                          << ", usuario: " << dir_version->getUser() << "-> borrado" << endl;
 
                     delete dir_version;                 
@@ -1633,7 +1644,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionA))
                         break;
 
-                    cout << "   " << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
+                    os << "   " << fname << " version: " << file_version->getNroVersion() << " tipo: " << file_version->getTipo() << 
                         " usuario: " << file_version->getUser() << " borrado" << endl;    
 
                     delete file_version;
@@ -1656,7 +1667,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getDirVersion(&dir_version, searchingPath + "//" + fname, a_VersionB))
                         break;
 
-                    cout << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
+                    os << "   " << fname << " version: " << dir_version->getNroVersion() << ", tipo: d"
                          << " usuario: " << dir_version->getUser() << "-> agregado" << endl;
 
                     showAddedDirectory(dir_version, searchingPath + "//" + fname, 1);
@@ -1669,7 +1680,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
                     if(!getFileVersionAndBlock(&bloque, &file_version, searchingPath + "//" + fname, a_VersionB))
                         break;
 
-                    cout << "   " << fname << " version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
+                    os << "   " << fname << " version: " << file_version->getNroVersion() << ", tipo: " << file_version->getTipo()
                          << ", usuario: " << file_version->getUser() << "-> agregado" << endl;   
 
                     delete file_version;
@@ -1686,7 +1697,7 @@ bool VersionManager::getDiff(std::ifstream& is, const string& a_VersionA, const 
 }
 
 
-bool VersionManager::getDiffByDate(std::ifstream& is, const string& a_Date)
+bool VersionManager::getDiffByDate(std::ostream& os, const string& a_Date)
 {
    if(!_isOpen)      
       return false;
@@ -1698,7 +1709,7 @@ bool VersionManager::getDiffByDate(std::ifstream& is, const string& a_Date)
    return _dateLog.showDate(a_Date,offset);      
 }
 
-bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
+bool VersionManager::getHistory(std::ostream& os, const string& a_Filename)
 {
     if (!_isOpen)
         return false;
@@ -1713,7 +1724,7 @@ bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
 
         if (bloque >= 0) {
             cout << a_Filename << endl;
-            _dirVersions.getHistory(is, bloque);
+            _dirVersions.getHistory(os, bloque);
             return true;
         }
         else {
@@ -1722,7 +1733,7 @@ bool VersionManager::getHistory(std::ifstream& is, const string& a_Filename)
                 return false;
 
             cout << a_Filename << endl;
-            _fileVersions.getHistory(is, bloque);
+            _fileVersions.getHistory(os, bloque);
             return true;
         }
     }
@@ -1861,7 +1872,7 @@ void VersionManager::log(const string& a_Filename, const string& a_Username, con
 }
 
 
-bool VersionManager::getListOfChanges(std::ifstream& is, const string& a_Username, int a_Num)
+bool VersionManager::getListOfChanges(std::ostream& os, const string& a_Username, int a_Num)
 {
     if (!a_Username.empty()) {
         int ref = _usersIndex.search(a_Username.c_str());

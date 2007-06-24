@@ -195,7 +195,7 @@ bool FileBlock::hasNext()
 	return (_actualOffset < _used);
 }
 
-bool FileBlock::getHistory(std::ifstream& is)
+bool FileBlock::getHistory(std::ostream& os)
 {
     FileVersion* fv = new FileVersion();
     char* nextByte = _versiones;
@@ -203,8 +203,8 @@ bool FileBlock::getHistory(std::ifstream& is)
     for (int i = 0; i < _cantVersiones; ++i) {
         fv->read(&nextByte);
         string tipoVersion = ((fv->getVersionType() == FileVersion::MODIFICACION) ? "modificacion" : "borrado");
-        cout << " version: " << fv->getNroVersion() << ", tipo version: " << tipoVersion << ", usuario: " 
-             << fv->getUser() << ", fecha: " << asctime(&(fv->getFecha()));
+        os << " version: " << fv->getNroVersion() << ", tipo version: " << tipoVersion << ", usuario: " 
+           << fv->getUser() << ", fecha: " << asctime(&(fv->getFecha()));
     }
     delete fv;
     return true;
