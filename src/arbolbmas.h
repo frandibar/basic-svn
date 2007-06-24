@@ -3,9 +3,9 @@
 #ifndef ARBOLBMAS_H_INCLUDED
 #define ARBOLBMAS_H_INCLUDED
 
-#include "nodobmas.h"
-#include "nodobmashoja.h"
-#include "nodobmasindice.h"
+#include "filedirnode.h"
+#include "filedirleafnode.h"
+#include "filedirindexnode.h"
 
 #include <fstream>
 #include <string>
@@ -38,8 +38,8 @@ protected:
     bool readRoot();
     bool writeRoot();
     
-    bool readNode(int id, NodoBMas** node);
-    bool writeNode(NodoBMas* nodo);
+    bool readNode(int id, FileDirNode** node);
+    bool writeNode(FileDirNode* nodo);
 
     // devuelve el nro de nodo hoja donde debemos insertar key
     int searchPlace(const char* key);
@@ -51,14 +51,14 @@ protected:
     void insertarEnPadre(int NroNodoPadre, int NroNodoHijo, char* claveAlPadre);
 
     // metodo que actualiza el puntero al padre de los nodos apuntados por padre
-    bool actualizarPadre(NodoBMasIndice* padre);
+    bool actualizarPadre(FileDirIndexNode* padre);
 
     bool isEmpty() const { return _raiz == 0; }
    
 private: 
     // member variables
-    NodoBMas*    _raiz;         // nodo raiz del arbol
-    NodoBMas*    _nodoActual;   // nodo actual del arbol
+    FileDirNode*    _raiz;         // nodo raiz del arbol
+    FileDirNode*    _nodoActual;   // nodo actual del arbol
     int          _nNodos;       // cantidad de nodos del archivo
     char*        _buffer;
     std::fstream _filestr;      // file stream para poder ir leyendo de archivo los nodos

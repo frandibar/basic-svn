@@ -3,9 +3,9 @@
 #ifndef USERINDEX_H_INCLUDED
 #define USERINDEX_H_INCLUDED
 
-#include "usernode.h"
-#include "leafusernode.h"
-#include "indexusernode.h"
+#include "varlennode.h"
+#include "varlenleafnode.h"
+#include "varlenindexnode.h"
 
 #include <fstream>
 #include <string>
@@ -35,8 +35,8 @@ protected:
     bool readRoot();
     bool writeRoot();
     
-    bool readNode(int id, UserNode** node);
-    bool writeNode(UserNode* nodo);
+    bool readNode(int id, VarLenNode** node);
+    bool writeNode(VarLenNode* nodo);
 
     // devuelve el nro de nodo hoja donde debemos insertar key
     int searchPlace(const char* key);
@@ -48,14 +48,14 @@ protected:
     void insertarEnPadre(int NroNodoPadre, int NroNodoHijo, char* claveAlPadre);
 
     // metodo que actualiza el puntero al padre de los nodos apuntados por padre
-    bool actualizarPadre(IndexUserNode* padre);
+    bool actualizarPadre(VarLenIndexNode* padre);
 
     bool isEmpty() const { return _raiz == 0; }
    
 private: 
     // member variables
-    UserNode*    _raiz;         // nodo raiz del arbol
-    UserNode*    _nodoActual;   // nodo actual del arbol
+    VarLenNode*  _raiz;         // nodo raiz del arbol
+    VarLenNode*  _nodoActual;   // nodo actual del arbol
     int          _nNodos;       // cantidad de nodos del archivo
     char*        _buffer;
     std::fstream _filestr;      // file stream para poder ir leyendo de archivo los nodos
