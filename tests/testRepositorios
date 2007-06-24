@@ -2,15 +2,40 @@
 
 # test de creacion y eliminacion de usuarios
 
+# crear repositorio en un almacen inexistente
+echo Test: crear repositorio \'Mi repositorio\' en un almacen inexistente
+./svnadmin -c "Mi repositorio"
+
 # crear almacen
+echo
+echo Test: crear almacen \'Mi almacen\'
 ./svnadmin -a "Mi almacen"
 
 # crear repositorios
+echo 
+echo Test: crear repositorios \'Mi repositorio\', \'Mi otro repositorio\' y \'Mi ultimo repositorio\'
 ./svnadmin -c "Mi repositorio"
 ./svnadmin -c "Mi otro repositorio"
 ./svnadmin -c "Mi ultimo repositorio"
 
+# crear repositorio ya existente
+echo 
+echo Test: crear repositorio \'Mi repositorio\' ya existente
+./svnadmin -c "Mi repositorio"
+
 # eliminar repositorios
+echo
+echo Test: eliminar repositorios \'Mi repositorio\', \'Mi otro repositorio\' y \'Mi ultimo repositorio\'
 ./svnadmin -r "Mi repositorio"
 ./svnadmin -r "Mi otro repositorio"
 ./svnadmin -r "Mi ultimo repositorio"
+
+# eliminar repositorio inexistente
+echo
+echo Test: eliminar repositorio inexistente \'rep inexistente\'
+./svnadmin -r "rep inexistente"
+
+# eliminar almacen
+echo
+echo Test: eliminar almacen \'Mi almacen\'
+./svnadmin -d

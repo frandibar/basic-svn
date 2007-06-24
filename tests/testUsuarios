@@ -1,20 +1,46 @@
 #!/bin/bash
 
-# test de creacion y eliminacion de repositorios
+# test de creacion y eliminacion de usuarios
 
 # crear almacen
+echo Test: crear almacen \'Mi almacen\'
 ./svnadmin -a "Mi almacen"
 
 # crear repositorio
-./svnadmin -c rep
+echo
+echo Test: crear repositorios rep1 y rep2
+./svnadmin -c rep1
+./svnadmin -c rep2
 
 # crear usuarios
-./svnadmin -u fran dib "Francisco Dibar" rep
-./svnadmin -u rod ben "Rodrigo Bengoechea" rep
+echo
+echo Test: crear usuarios fran y rod de rep1 y juan de rep2
+./svnadmin -u fran dib "Francisco Dibar" rep1
+./svnadmin -u rod ben "Rodrigo Bengoechea" rep1
+./svnadmin -u juan gom "Juan Gomez" rep2
 
-# eliminar usuarios
-./svnadmin -e rod rep
-./svnadmin -e fran rep
+# crear usuarios en repositorio inexistente
+echo
+echo Test: crear usuario fran en repositorio inexistente \'rep inexistente\'
+./svnadmin -u fran dib "Francisco Dibar" 'rep inexistente'
 
+# eliminar usuario de repositorio inexistente
+echo
+echo Test: eliminar usuario fran de repositorio inexistente \'rep inexistente\'
+./svnadmin -u fran dib "Francisco Dibar" 'rep inexistente'
 
+# probar ejecutar accion con usuario invalido
+echo
+echo Test: ejecutar accion con usuario invalido
+./svnuser fran dib -m rep2
+
+# probar ejecutar accion con password invalida
+echo
+echo Test: ejecutar accion con password invalida
+./svnuser fran xxx -m rep1
+
+# eliminar almacen
+echo
+echo Test: eliminar almacen
+./svnadmin -d
 
