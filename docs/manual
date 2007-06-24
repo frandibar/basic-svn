@@ -1,0 +1,58 @@
+
+
+75.06 Organizacion de Datos
+Catedra Servetto
+
+Trabajo Practico Nro 1
+
+Grupo Gordon Moore
+Integrantes:
+- 80784 Rodrigo Bengoechea
+- 74332 Francisco Dibar
+
+--------------------------------------------------------------------------------
+
+SVN - Manual del usuario
+
+
+Introduccion
+------------
+
+SVN es un sistema controlador de versions, es decir, administra archivos y directorios, y los cambios efectuados sobre los mismos a traves del tiempo. Esto permite que un programador pueda recuperar versiones anteriores de su proyecto, o examinar el historial de cambios sobre el mismo.
+
+
+Componentes
+-----------
+
+SVN esta compuesto de 2 componentes (ejecutables): svnadmin y svnuser.
+El primero sirve para la administracion del almacen de repositorios (creacion, eliminacion, etc.), de los repositorios en si y de los usuarios.                 
+El segundo es utilizado por los usuarios para almacenar y recuperar su trabajo.
+
+
+Como instalar y compilar
+------------------------
+Descomprimir
+YO
+
+Diagrama de clases
+------------------
+RODRIGO
+
+Bugs conocidos
+--------------
+
+#1 Archivos sin modificacion alteran el nro de version del repositorio al ser comiteados.
+Al comitear un archivo identico (nombre y contenido) a uno ya existente en el repositorio, el mismo actualiza el nro de version del repositorio, en vez de ignorarse.
+
+
+Estructura logica y fisica
+--------------------------
+MASTO
+
+Descripcion de los comandos
+---------------------------
+YO
+
+explicar cuando se comitea con path completo
+
+
