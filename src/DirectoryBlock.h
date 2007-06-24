@@ -43,7 +43,7 @@ public:
 	DirectoryVersion* getNext();
 	bool hasNext();
 	
-    bool getHistory(std::ifstream& is);
+    bool getHistory(std::ostream& os);
 
 protected:
 	int _siguiente;

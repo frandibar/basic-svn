@@ -1,4 +1,3 @@
-// main-usr.cpp
 
 #include "Almacen.h"
 #include "debug.h"
@@ -57,17 +56,8 @@ void showHistory(const string& a_Username, const string& a_Password, const strin
     if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
-    std::ifstream is;
-    if (!almacen.getHistory(is, a_Username, a_Password, a_Reposit, a_Filename)) {
+    if (!almacen.getHistory(cout, a_Username, a_Password, a_Reposit, a_Filename))
         cout << "No se pudo obtener la historia del archivo solicitado." << endl;
-        return;
-    }
-
-    string line;
-    while (!is.eof()) {
-        getline(is, line);
-        cout << line << endl;
-    } 
 }
 
 
@@ -77,18 +67,10 @@ void showDiff(const string& a_Username, const string& a_Password, const string& 
     if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
-    std::ifstream is;
-    if (!almacen.getDiff(is, a_Username, a_Password, a_Reposit, a_VersionA, a_VersionB, a_Filename)) {
+    if (!almacen.getDiff(cout, a_Username, a_Password, a_Reposit, a_VersionA, a_VersionB, a_Filename)) {
         cout << "No se pudieron obtener las versiones solicitadas." << endl;
         return;
     }
-
-    string line;
-    while (!is.eof()) {
-        getline(is, line);
-        cout << line << endl;
-    } 
-    is.close();
 }
 
 
@@ -98,18 +80,8 @@ void showByDate(const string& a_Username, const string& a_Password, const string
     if (!validateUserAndRepository(&almacen, a_Reposit, a_Username, a_Password))
         return;
 
-    std::ifstream is;
-    if (!almacen.getDiffByDate(is, a_Username, a_Password, a_Reposit, a_Date)) {
+    if (!almacen.getDiffByDate(cout, a_Username, a_Password, a_Reposit, a_Date))
         cout << "No se pudieron obtener las versiones solicitadas." << endl;
-        return;
-    }
-
-    string line;
-    while (!is.eof()) {
-        getline(is, line);
-        cout << line << endl;
-    } 
-    is.close();
 }
 
 void changePassword(const string& a_Username, const string& a_Password, const string& a_NewPassword, const string& a_Reposit)
@@ -154,9 +126,7 @@ void showChanges(const string& a_Username, const string& a_Password, const strin
     }
 
     cout << "Lista de ultimas modificaciones al repositorio '" << a_Reposit << "':" << endl;
-    std::ifstream is;
-    almacen.getListOfChanges(is, a_Reposit, a_Username, a_Password, fromString<int>(a_Num), false);
-    //cout << is.str() << endl;
+    almacen.getListOfChanges(cout, a_Reposit, a_Username, a_Password, fromString<int>(a_Num), false);
 }
 
 

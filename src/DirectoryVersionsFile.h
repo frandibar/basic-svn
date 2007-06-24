@@ -41,7 +41,7 @@ public:
 	bool searchVersion(DirectoryVersion** version, int nroVersion,int bloque);
 	bool getVersion(int versionNumber,int bloque,DirectoryVersion** version);
 	int getLastVersionNumber(int bloque);
-    bool getHistory(std::ifstream& is, int block);
+    bool getHistory(std::ostream& os, int block);
 
 protected:
 	// file descriptor

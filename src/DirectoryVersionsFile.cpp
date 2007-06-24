@@ -242,20 +242,20 @@ bool DirectoryVersionsFile::getVersion(int versionNumber,int bloque,DirectoryVer
 	return true;
 }
 
-int DirectoryVersionsFile::getLastVersionNumber(int bloque)
+int DirectoryVersionsFile::getLastVersionNumber(int block)
 {
-    readBloque(bloque);
+    readBloque(block);
     DirectoryVersion* aux = _bloqueActual->getLastVersion();
     int ret = aux->getNroVersion();
     delete aux;
     return ret;
 }
 
-bool DirectoryVersionsFile::getHistory(std::ifstream& is, int block)
+bool DirectoryVersionsFile::getHistory(std::ostream& os, int block)
 {
     readBloque(block);
     do {
-        _bloqueActual->getHistory(is);
+        _bloqueActual->getHistory(os);
     } while (_bloqueActual->getSiguiente() > 0);
     return true;
 }

@@ -96,7 +96,7 @@ void UserBlock::write(char* buffer)
 
 bool UserBlock::hayLugar()
 {
-	return (_espacioLibre >= sizeof(int));
+	return (_espacioLibre >= (int)sizeof(int));
 }
 
 void UserBlock::moveFirst()

@@ -1,4 +1,3 @@
-// Repositorio.cpp
 
 #include "Repositorio.h"
 #include "debug.h"
@@ -204,7 +203,7 @@ bool Repositorio::get(const string& a_TargetDestiny, const string& a_Target, con
     return _versionManager.get(a_Version, a_Target, _name, a_TargetDestiny);
 }
 
-bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
+bool Repositorio::getDiff(std::ostream& os, const string& a_Username, const string& a_Password, const string& a_VersionA, const string& a_VersionB, const string& a_Filename)
 {
     if (!_isOpen)
         return false;
@@ -212,10 +211,10 @@ bool Repositorio::getDiff(std::ifstream& is, const string& a_Username, const str
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getDiff(is, a_VersionA, a_VersionB, a_Filename, _name);
+    return _versionManager.getDiff(os, a_VersionA, a_VersionB, a_Filename, _name);
 }
 
-bool Repositorio::getDiffByDate(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Date)
+bool Repositorio::getDiffByDate(std::ostream& os, const string& a_Username, const string& a_Password, const string& a_Date)
 {
     if (!_isOpen)
         return false;
@@ -223,11 +222,11 @@ bool Repositorio::getDiffByDate(std::ifstream& is, const string& a_Username, con
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getDiffByDate(is, a_Date);
+    return _versionManager.getDiffByDate(os, a_Date);
 }
 
 
-bool Repositorio::getHistory(std::ifstream& is, const string& a_Username, const string& a_Password, const string& a_Filename)
+bool Repositorio::getHistory(std::ostream& os, const string& a_Username, const string& a_Password, const string& a_Filename)
 {
     if (!_isOpen)
         return false;
@@ -235,11 +234,11 @@ bool Repositorio::getHistory(std::ifstream& is, const string& a_Username, const 
     if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getHistory(is, a_Filename);
+    return _versionManager.getHistory(os, a_Filename);
 }
 
 
-bool Repositorio::getListOfChanges(std::ifstream& is, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin)
+bool Repositorio::getListOfChanges(std::ostream& os, const string& a_Username, const string& a_Password, int a_Num, bool isAdmin)
 {
     if (!_isOpen)
         return false;
@@ -251,6 +250,6 @@ bool Repositorio::getListOfChanges(std::ifstream& is, const string& a_Username, 
     else if (!validateUser(a_Username, a_Password)) 
         return false;
 
-    return _versionManager.getListOfChanges(is, a_Username, a_Num);
+    return _versionManager.getListOfChanges(os, a_Username, a_Num);
 }
 
