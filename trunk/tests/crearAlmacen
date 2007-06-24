@@ -1,4 +1,0 @@
-#!/bin/bash
-
-./svnadmin -a "Mi almacen"
-

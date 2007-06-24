@@ -1,0 +1,15 @@
+#!/bin/bash
+
+# crear almacen
+echo Test: crear almacen "Mi almacen"
+./svnadmin -a "Mi almacen"
+
+# eliminar almacen
+echo
+echo Test: eliminar almacen
+./svnadmin -d
+
+# eliminar almacen inexistente
+echo
+echo Test: eliminar almacen inexistente
+./svnadmin -d
