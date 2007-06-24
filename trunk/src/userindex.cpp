@@ -7,7 +7,7 @@ using std::ios;
 // constructor
 UserIndex::UserIndex() : _raiz(0), _nodoActual(0), _nNodos(0), _isOpen(false)
 {
-    _buffer = new char[UserNode::NODE_SIZE];
+    _buffer = new char[VarLenNode::VARLEN_NODE_SIZE];
 }
 
 UserIndex::~UserIndex()
@@ -22,7 +22,7 @@ bool UserIndex::readHeader()
     if (_filestr.is_open()) {
         char* nextByte = _buffer;
         _filestr.seekg(0, ios::beg);
-        _filestr.read(_buffer, UserNode::NODE_SIZE);
+        _filestr.read(_buffer, VarLenNode::VARLEN_NODE_SIZE);
         // leo la cantidad de nodos
         memcpy(&_nNodos, nextByte, sizeof(int));
         return true;
@@ -33,13 +33,13 @@ bool UserIndex::readHeader()
 bool UserIndex::readRoot()
 {
     if (_filestr.is_open()) {
-        _filestr.seekg(UserNode::NODE_SIZE, ios::beg);
-        _filestr.read(_buffer, UserNode::NODE_SIZE);
+        _filestr.seekg(VarLenNode::VARLEN_NODE_SIZE, ios::beg);
+        _filestr.read(_buffer, VarLenNode::VARLEN_NODE_SIZE);
 
         if (_nNodos > 1)
-            _raiz = new IndexUserNode();
+            _raiz = new VarLenIndexNode();
         else
-            _raiz = new LeafUserNode();
+            _raiz = new VarLenLeafNode();
 
         _raiz->read(_buffer);
         return true;
@@ -51,14 +51,14 @@ bool UserIndex::writeHeader()
 {
     if (_filestr.is_open()) {
         // clear buffer
-        memset(_buffer,'\0', UserNode::NODE_SIZE);
+        memset(_buffer,'\0', VarLenNode::VARLEN_NODE_SIZE);
         char* nextByte = _buffer;
         // volcar en _buffer la cantidad de nodos
         memcpy(nextByte, &_nNodos, sizeof(int));
         // volcar al archivo
         _filestr.seekg(0, ios::beg);
         _filestr.seekp(0, ios::beg);
-        _filestr.write(_buffer, UserNode::NODE_SIZE);
+        _filestr.write(_buffer, VarLenNode::VARLEN_NODE_SIZE);
         return true;
     }
     return false;
@@ -73,15 +73,15 @@ bool UserIndex::writeRoot()
         if (_filestr.fail())
             _filestr.clear();
 
-        _filestr.seekg(UserNode::NODE_SIZE, ios::beg);
-        _filestr.seekp(UserNode::NODE_SIZE, ios::beg);
-        _filestr.write(_buffer, UserNode::NODE_SIZE);
+        _filestr.seekg(VarLenNode::VARLEN_NODE_SIZE, ios::beg);
+        _filestr.seekp(VarLenNode::VARLEN_NODE_SIZE, ios::beg);
+        _filestr.write(_buffer, VarLenNode::VARLEN_NODE_SIZE);
         return true;
     }
     return false;
 }
 
-bool UserIndex::readNode(int idNode, UserNode** node)
+bool UserIndex::readNode(int idNode, VarLenNode** node)
 {
     if (_filestr.is_open()) {
         if ((*node != _raiz) && (*node != 0)) {
@@ -91,16 +91,16 @@ bool UserIndex::readNode(int idNode, UserNode** node)
         else
             *node = 0;
         
-        _filestr.seekg(UserNode::NODE_SIZE * (idNode + 1), ios::beg);
-        _filestr.read(_buffer, UserNode::NODE_SIZE);
+        _filestr.seekg(VarLenNode::VARLEN_NODE_SIZE * (idNode + 1), ios::beg);
+        _filestr.read(_buffer, VarLenNode::VARLEN_NODE_SIZE);
 
         int nivelNodo;
         memcpy(&nivelNodo, _buffer, sizeof(int));
 
         if (nivelNodo != 0)
-            (*node) = new IndexUserNode();
+            (*node) = new VarLenIndexNode();
         else
-            (*node) = new LeafUserNode();
+            (*node) = new VarLenLeafNode();
 
         (*node)->read(_buffer);
         return true;
@@ -108,7 +108,7 @@ bool UserIndex::readNode(int idNode, UserNode** node)
     return false;
 }
 
-bool UserIndex::writeNode(UserNode* nodo)
+bool UserIndex::writeNode(VarLenNode* nodo)
 {
     if (_filestr.is_open()) {
         nodo->write(_buffer);
@@ -116,12 +116,12 @@ bool UserIndex::writeNode(UserNode* nodo)
         if(_filestr.fail())
             _filestr.clear();
 
-        _filestr.seekp(UserNode::NODE_SIZE * (nodo->getId() + 1), ios::beg);
+        _filestr.seekp(VarLenNode::VARLEN_NODE_SIZE * (nodo->getId() + 1), ios::beg);
 
         if (_filestr.fail())
             _filestr.clear();
 
-        _filestr.write(_buffer, UserNode::NODE_SIZE);
+        _filestr.write(_buffer, VarLenNode::VARLEN_NODE_SIZE);
         return true;
     }
     return false;
@@ -210,7 +210,7 @@ int UserIndex::searchPlace(const char* key)
 
 int UserIndex::searchPlaceRec(const char* key)
 {
-    if (_nodoActual->getType() == UserNode::LEAF)
+    if (_nodoActual->getType() == VarLenNode::LEAF)
         return _nodoActual->getId();
     else {
         int indice = _nodoActual->search(key);
@@ -222,7 +222,7 @@ int UserIndex::searchPlaceRec(const char* key)
     }
 }
 
-bool UserIndex::actualizarPadre(IndexUserNode* padre)
+bool UserIndex::actualizarPadre(VarLenIndexNode* padre)
 {
     // le seteo el padre al hijo izquierdo
     readNode(padre->getHijoIzquierdo(), &_nodoActual);
@@ -238,8 +238,8 @@ bool UserIndex::actualizarPadre(IndexUserNode* padre)
 
 void UserIndex::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPadre)
 {
-    IndexUserNode* nuevoIndice = 0;
-    IndexUserNode* nuevoIndice2 = 0;
+    VarLenIndexNode* nuevoIndice = 0;
+    VarLenIndexNode* nuevoIndice2 = 0;
 	char* arreglo;
 	int bytesArreglo;
 	int clavesArreglo;
@@ -251,7 +251,7 @@ void UserIndex::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
 
         if (_nodoActual->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
             // hago el split
-            nuevoIndice = static_cast<IndexUserNode*>((static_cast<LeafUserNode*>(_nodoActual))->split
+            nuevoIndice = static_cast<VarLenIndexNode*>((static_cast<VarLenIndexNode*>(_nodoActual))->split
 									(_nNodos, arreglo, bytesArreglo, clavesArreglo, &claveASubir));
 
 			delete(arreglo);
@@ -281,8 +281,8 @@ void UserIndex::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
     
     if (_raiz->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
 
-        _raiz->promoteRoot( (UserNode**)(&nuevoIndice),
-                            (UserNode**)(&nuevoIndice2),
+        _raiz->promoteRoot( (VarLenNode**)(&nuevoIndice),
+                            (VarLenNode**)(&nuevoIndice2),
                             _nNodos,_nNodos + 1,
 							clavesArreglo,&arreglo,bytesArreglo,&claveARaiz);
 
@@ -296,7 +296,7 @@ void UserIndex::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
         actualizarPadre(nuevoIndice);
         actualizarPadre(nuevoIndice2);
 
-		IndexUserNode* nuevaRaiz = new IndexUserNode(_raiz->getId(),_raiz->getNivel() + 1,_raiz->getPadre(),
+		VarLenIndexNode* nuevaRaiz = new VarLenIndexNode(_raiz->getId(),_raiz->getNivel() + 1,_raiz->getPadre(),
 														nuevoIndice->getId(),claveARaiz,nuevoIndice2->getId());
         
         if (nuevoIndice) delete nuevoIndice;
@@ -312,8 +312,8 @@ void UserIndex::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
 bool UserIndex::insert(const char* key, int reference)
 // returns true if insertion was successfull
 {
-    LeafUserNode* hojaNueva;
-    LeafUserNode* hnoDerecho;
+    VarLenLeafNode* hojaNueva;
+    VarLenLeafNode* hnoDerecho;
 	int bytesArreglo = 0;
 	int clavesArreglo = 0;
 	char* arreglo;
@@ -331,7 +331,7 @@ bool UserIndex::insert(const char* key, int reference)
                 int nroNuevoNodo;
                     
                 // creo una nueva hoja haciendo el split
-                hojaNueva = static_cast<LeafUserNode*>((static_cast<LeafUserNode*> (_nodoActual))->split
+                hojaNueva = static_cast<VarLenLeafNode*>((static_cast<VarLenLeafNode*> (_nodoActual))->split
 									(_nNodos,arreglo,bytesArreglo,clavesArreglo,&claveAlPadre));
 
 				// libero el arreglo
@@ -341,7 +341,7 @@ bool UserIndex::insert(const char* key, int reference)
                 // como su hno izquierdo
                 if (hojaNueva->getHnoDerecho() > 0) {
                     hnoDerecho = 0;
-                    readNode(hojaNueva->getHnoDerecho(), (UserNode**)&hnoDerecho);
+                    readNode(hojaNueva->getHnoDerecho(), (VarLenNode**)&hnoDerecho);
                     hnoDerecho->setHnoIzquierdo(hojaNueva->getId());
                     writeNode(hnoDerecho);
                     delete hnoDerecho;
@@ -366,11 +366,11 @@ bool UserIndex::insert(const char* key, int reference)
             }
         }
         else {
-            IndexUserNode* nuevaRaiz;
+            VarLenIndexNode* nuevaRaiz;
             int idH1;
             int idH2;
-            LeafUserNode* nuevaHoja;
-            LeafUserNode* nuevaHoja2;
+            VarLenLeafNode* nuevaHoja;
+            VarLenLeafNode* nuevaHoja2;
             switch (_raiz->insert(key,reference, &clavesArreglo, &arreglo, &bytesArreglo)) {
             case 1:
                 return true;
@@ -380,8 +380,8 @@ bool UserIndex::insert(const char* key, int reference)
                 nuevaHoja2 = 0;
                 
                 // creo 2 nodos hoja nuevos para hacer el split y hacer que la nueva raiz sea indice
-                _raiz->promoteRoot( (UserNode**)(&nuevaHoja),
-                                    (UserNode**)(&nuevaHoja2),
+                _raiz->promoteRoot( (VarLenNode**)(&nuevaHoja),
+                                    (VarLenNode**)(&nuevaHoja2),
                                     _nNodos, _nNodos + 1,
 									clavesArreglo, &arreglo, bytesArreglo, &claveARaiz);
 
@@ -394,7 +394,7 @@ bool UserIndex::insert(const char* key, int reference)
                 idH1 = nuevaHoja->getId();
                 idH2 = nuevaHoja2->getId();
 
-                nuevaRaiz = new IndexUserNode(_raiz->getId(), _raiz->getNivel() + 1, _raiz->getPadre(),
+                nuevaRaiz = new VarLenIndexNode(_raiz->getId(), _raiz->getNivel() + 1, _raiz->getPadre(),
 											   idH1, claveARaiz, idH2);
 
                 delete _raiz;
@@ -408,7 +408,7 @@ bool UserIndex::insert(const char* key, int reference)
     }
 
     else { 
-        _raiz = new LeafUserNode();
+        _raiz = new VarLenLeafNode();
         _nNodos++;
         _nodoActual = _raiz;
         _raiz->insert(key, reference);
@@ -427,7 +427,7 @@ int UserIndex::search(const char* key)
         _nodoActual = _raiz;
     }
 
-    while (_nodoActual->getType() != UserNode::LEAF) {
+    while (_nodoActual->getType() != VarLenNode::LEAF) {
         int proximoALeer = _nodoActual->search(key);
         readNode(proximoALeer, &_nodoActual);
     }

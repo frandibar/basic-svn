@@ -1,9 +1,9 @@
 #ifndef DATEINDEX_H_INCLUDED
 #define DATEINDEX_H_INCLUDED
 
-#include "datenode.h"
-#include "leafdatenode.h"
-#include "indexdatenode.h"
+#include "fixlennode.h"
+#include "fixlenleafnode.h"
+#include "fixlenindexnode.h"
 
 #include <fstream>
 #include <string>
@@ -34,8 +34,8 @@ protected:
     bool readRoot();
     bool writeRoot();
     
-    bool readNode(int id, DateNode** node);
-    bool writeNode(DateNode* nodo);
+    bool readNode(int id, FixLenNode** node);
+    bool writeNode(FixLenNode* nodo);
 
     // devuelve el nro de nodo hoja donde debemos insertar key
     int searchPlace(const char* key);
@@ -47,14 +47,14 @@ protected:
     void insertarEnPadre(int NroNodoPadre, int NroNodoHijo, const char* claveAlPadre);
 
     // metodo que actualiza el puntero al padre de los nodos apuntados por padre
-    bool actualizarPadre(IndexDateNode* padre);
+    bool actualizarPadre(FixLenIndexNode* padre);
 
     bool isEmpty() const { return _raiz == 0; }
    
 private: 
     // member variables
-    DateNode*    _raiz;         // nodo raiz del arbol
-    DateNode*    _nodoActual;   // nodo actual del arbol
+    FixLenNode*   _raiz;         // nodo raiz del arbol
+    FixLenNode*   _nodoActual;   // nodo actual del arbol
     int          _nNodos;       // cantidad de nodos del archivo
     char*        _buffer;
     std::fstream _filestr;      // file stream para poder ir leyendo de archivo los nodos

@@ -8,7 +8,7 @@ using std::ios;
 // constructor
 ArbolBMas::ArbolBMas() : _raiz(0), _nodoActual(0), _nNodos(0), _isOpen(false)
 {
-    _buffer = new char[NodoBMas::NODE_SIZE];
+    _buffer = new char[FileDirNode::VARLEN_NODE_SIZE];
 }
 
 ArbolBMas::~ArbolBMas()
@@ -23,7 +23,7 @@ bool ArbolBMas::readHeader()
     if (_filestr.is_open()) {
         char* nextByte = _buffer;
         _filestr.seekg(0, ios::beg);
-        _filestr.read(_buffer, NodoBMas::NODE_SIZE);
+        _filestr.read(_buffer, FileDirNode::VARLEN_NODE_SIZE);
         // leo la cantidad de nodos
         memcpy(&_nNodos, nextByte, sizeof(int));
         return true;
@@ -34,13 +34,13 @@ bool ArbolBMas::readHeader()
 bool ArbolBMas::readRoot()
 {
     if (_filestr.is_open()) {
-        _filestr.seekg(NodoBMas::NODE_SIZE, ios::beg);
-        _filestr.read(_buffer, NodoBMas::NODE_SIZE);
+        _filestr.seekg(FileDirNode::VARLEN_NODE_SIZE, ios::beg);
+        _filestr.read(_buffer, FileDirNode::VARLEN_NODE_SIZE);
 
         if (_nNodos > 1)
-            _raiz = new NodoBMasIndice();
+            _raiz = new FileDirIndexNode();
         else
-            _raiz = new NodoBMasHoja();
+            _raiz = new FileDirLeafNode();
 
         _raiz->read(_buffer);
         return true;
@@ -52,14 +52,14 @@ bool ArbolBMas::writeHeader()
 {
     if (_filestr.is_open()) {
         // clear buffer
-        memset(_buffer,'\0', NodoBMas::NODE_SIZE);
+        memset(_buffer,'\0', FileDirNode::VARLEN_NODE_SIZE);
         char* nextByte = _buffer;
         // volcar en _buffer la cantidad de nodos
         memcpy(nextByte, &_nNodos, sizeof(int));
         // volcar al archivo
         _filestr.seekg(0, ios::beg);
         _filestr.seekp(0, ios::beg);
-        _filestr.write(_buffer, NodoBMas::NODE_SIZE);
+        _filestr.write(_buffer, FileDirNode::VARLEN_NODE_SIZE);
         return true;
     }
     return false;
@@ -74,15 +74,15 @@ bool ArbolBMas::writeRoot()
         if (_filestr.fail())
             _filestr.clear();
 
-        _filestr.seekg(NodoBMas::NODE_SIZE, ios::beg);
-        _filestr.seekp(NodoBMas::NODE_SIZE, ios::beg);
-        _filestr.write(_buffer, NodoBMas::NODE_SIZE);
+        _filestr.seekg(FileDirNode::VARLEN_NODE_SIZE, ios::beg);
+        _filestr.seekp(FileDirNode::VARLEN_NODE_SIZE, ios::beg);
+        _filestr.write(_buffer, FileDirNode::VARLEN_NODE_SIZE);
         return true;
     }
     return false;
 }
 
-bool ArbolBMas::readNode(int idNode, NodoBMas** node)
+bool ArbolBMas::readNode(int idNode, FileDirNode** node)
 {
     if (_filestr.is_open()) {
         if ((*node != _raiz) && (*node != 0)) {
@@ -92,16 +92,16 @@ bool ArbolBMas::readNode(int idNode, NodoBMas** node)
         else
             *node = 0;
         
-        _filestr.seekg(NodoBMas::NODE_SIZE * (idNode + 1), ios::beg);
-        _filestr.read(_buffer, NodoBMas::NODE_SIZE);
+        _filestr.seekg(FileDirNode::VARLEN_NODE_SIZE * (idNode + 1), ios::beg);
+        _filestr.read(_buffer, FileDirNode::VARLEN_NODE_SIZE);
 
         int nivelNodo;
         memcpy(&nivelNodo, _buffer, sizeof(int));
 
         if (nivelNodo != 0)
-            (*node) = new NodoBMasIndice();
+            (*node) = new FileDirIndexNode();
         else
-            (*node) = new NodoBMasHoja();
+            (*node) = new FileDirLeafNode();
 
         (*node)->read(_buffer);
         return true;
@@ -109,7 +109,7 @@ bool ArbolBMas::readNode(int idNode, NodoBMas** node)
     return false;
 }
 
-bool ArbolBMas::writeNode(NodoBMas* nodo)
+bool ArbolBMas::writeNode(FileDirNode* nodo)
 {
     if (_filestr.is_open()) {
         nodo->write(_buffer);
@@ -117,12 +117,12 @@ bool ArbolBMas::writeNode(NodoBMas* nodo)
         if(_filestr.fail())
             _filestr.clear();
 
-        _filestr.seekp(NodoBMas::NODE_SIZE * (nodo->getId() + 1), ios::beg);
+        _filestr.seekp(FileDirNode::VARLEN_NODE_SIZE * (nodo->getId() + 1), ios::beg);
 
         if (_filestr.fail())
             _filestr.clear();
 
-        _filestr.write(_buffer, NodoBMas::NODE_SIZE);
+        _filestr.write(_buffer, FileDirNode::VARLEN_NODE_SIZE);
         return true;
     }
     return false;
@@ -220,10 +220,10 @@ int ArbolBMas::searchPlace(const char* key)
 
 int ArbolBMas::searchPlaceRec(const char* key)
 {
-    if (_nodoActual->getType() == NodoBMas::LEAF)
+    if (_nodoActual->getType() == FileDirNode::LEAF)
         return _nodoActual->getId();
     else {
-        int indice = _nodoActual->searchFile(key);
+        int indice = _nodoActual->search(key);
 
         if (readNode(indice, &_nodoActual))
             return searchPlaceRec(key);
@@ -232,7 +232,7 @@ int ArbolBMas::searchPlaceRec(const char* key)
     }
 }
 
-bool ArbolBMas::actualizarPadre(NodoBMasIndice* padre)
+bool ArbolBMas::actualizarPadre(FileDirIndexNode* padre)
 {
     // le seteo el padre al hijo izquierdo
     readNode(padre->getHijoIzquierdo(), &_nodoActual);
@@ -248,38 +248,37 @@ bool ArbolBMas::actualizarPadre(NodoBMasIndice* padre)
 
 void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPadre)
 {
-    NodoBMasIndice* nuevoIndice = 0;
-    NodoBMasIndice* nuevoIndice2 = 0;
+   FileDirIndexNode* nuevoIndice = 0;
+   FileDirIndexNode* nuevoIndice2 = 0;
 	char* arreglo;
 	int bytesArreglo;
 	int clavesArreglo;
 	char* claveASubir;
 	char* claveARaiz;
     
-    if (idNodoPadre != 0) { // el padre es distinto de la raiz
-        readNode(idNodoPadre, &_nodoActual);
+   if (idNodoPadre != 0) { // el padre es distinto de la raiz
+      readNode(idNodoPadre, &_nodoActual);
 
-        if (_nodoActual->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
-            // hago el split
-            nuevoIndice = static_cast<NodoBMasIndice*>((static_cast<NodoBMasHoja*>(_nodoActual))->split
+      if (_nodoActual->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
+         // hago el split
+         nuevoIndice = static_cast<FileDirIndexNode*>((static_cast<FileDirLeafNode*>(_nodoActual))->split
 									(_nNodos, arreglo, bytesArreglo, clavesArreglo, &claveASubir));
 
 			delete(arreglo);
-            _nNodos++;
-            // escribo los nodos en disco
-            writeNode(_nodoActual);
-            writeNode(nuevoIndice);
+         _nNodos++;
+         // escribo los nodos en disco
+         writeNode(_nodoActual);
+         writeNode(nuevoIndice);
 
-            // actualizo el puntero al padre en los hijos del nuevo nodo indice
-            actualizarPadre(nuevoIndice);
+         // actualizo el puntero al padre en los hijos del nuevo nodo indice
+         actualizarPadre(nuevoIndice);
 
-            int referenciaNuevoNodo = nuevoIndice->getId();
-
+         int referenciaNuevoNodo = nuevoIndice->getId();
 			int padreNuevo = nuevoIndice->getPadre();
 
-            delete nuevoIndice; 
+         delete nuevoIndice; 
 
-            insertarEnPadre(padreNuevo, referenciaNuevoNodo, claveASubir);
+         insertarEnPadre(padreNuevo, referenciaNuevoNodo, claveASubir);
 			
 			delete(claveASubir);
             return;
@@ -287,17 +286,11 @@ void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
         return;
     }
 
-    // si llego hasta aca es porque el que esta "rebalsado" es la raiz
-    
+    // si llego hasta aca es porque el que esta "rebalsado" es la raiz    
     if (_raiz->insert(claveAlPadre, idNodoHijo, &clavesArreglo, &arreglo, &bytesArreglo) == 2) {
+        _raiz->promoteRoot( (VarLenNode**)(&nuevoIndice), (VarLenNode**)(&nuevoIndice2), _nNodos,_nNodos + 1,   clavesArreglo,&arreglo,bytesArreglo,&claveARaiz);
 
-        _raiz->promoteRoot( (NodoBMas**)(&nuevoIndice),
-                            (NodoBMas**)(&nuevoIndice2),
-                            _nNodos,_nNodos + 1,
-							clavesArreglo,&arreglo,bytesArreglo,&claveARaiz);
-
-        delete(arreglo);
-        
+        delete(arreglo);        
         writeNode(nuevoIndice);
         writeNode(nuevoIndice2);
 
@@ -306,15 +299,14 @@ void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
         actualizarPadre(nuevoIndice);
         actualizarPadre(nuevoIndice2);
 
-		NodoBMasIndice* nuevaRaiz = new NodoBMasIndice(_raiz->getId(),_raiz->getNivel() + 1,_raiz->getPadre(),
+		  FileDirIndexNode* nuevaRaiz = new FileDirIndexNode(_raiz->getId(),_raiz->getNivel() + 1,_raiz->getPadre(),
 														nuevoIndice->getId(),claveARaiz,nuevoIndice2->getId());
         
         if (nuevoIndice) delete nuevoIndice;
         if (nuevoIndice2) delete nuevoIndice2;
+		  _raiz = nuevaRaiz;
 
-		_raiz = nuevaRaiz;
-
-		delete(claveARaiz);
+		  delete(claveARaiz);
 														
     }
 }
@@ -322,106 +314,92 @@ void ArbolBMas::insertarEnPadre(int idNodoPadre, int idNodoHijo, char* claveAlPa
 bool ArbolBMas::insert(const char* key, int reference)
 // returns true if insertion was successfull
 {
-    NodoBMasHoja* hojaNueva;
-    NodoBMasHoja* hnoDerecho;
+   FileDirLeafNode* hojaNueva;
+   FileDirLeafNode* hnoDerecho;
 	int bytesArreglo = 0;
 	int clavesArreglo = 0;
 	char* arreglo;
 	char* claveARaiz;
 
-    if (_nNodos > 0) {
-        int nodoReceptor = searchPlace(key);
-        if (nodoReceptor) {              // voy a insertar en un nodo != _raiz
+   if (_nNodos > 0) {
+      int nodoReceptor = searchPlace(key);
+      if (nodoReceptor) {              // voy a insertar en un nodo != _raiz
             char* claveAlPadre;
             switch (_nodoActual->insert(key, reference, &clavesArreglo, &arreglo, &bytesArreglo)) {
             case 1:
                 return true;
-
             case 2:                 
-                int nroNuevoNodo;
-                    
+                int nroNuevoNodo;                    
                 // creo una nueva hoja haciendo el split
-                hojaNueva = static_cast<NodoBMasHoja*>((static_cast<NodoBMasHoja*> (_nodoActual))->split
+                hojaNueva = static_cast<FileDirLeafNode*>((static_cast<FileDirLeafNode*> (_nodoActual))->split
 									(_nNodos,arreglo,bytesArreglo,clavesArreglo,&claveAlPadre));
-
-				// libero el arreglo
-				delete(arreglo);
+				    // libero el arreglo
+				    delete(arreglo);
 
                 // tengo que levantar el hno derecho de la nueva hoja y setearle la nueva hoja 
                 // como su hno izquierdo
                 if (hojaNueva->getHnoDerecho() > 0) {
                     hnoDerecho = 0;
-                    readNode(hojaNueva->getHnoDerecho(), (NodoBMas**)&hnoDerecho);
+                    readNode(hojaNueva->getHnoDerecho(), (FileDirNode**)&hnoDerecho);
                     hnoDerecho->setHnoIzquierdo(hojaNueva->getId());
                     writeNode(hnoDerecho);
                     delete hnoDerecho;
                 }
                     
                 // incremento la cantidad de nodos
-                _nNodos++;
-                    
+                _nNodos++;                    
                 nroNuevoNodo = hojaNueva->getId();
-
                 // escribo los dos nodos
                 writeNode(_nodoActual);
                 writeNode(hojaNueva);
 
                 delete hojaNueva;
                 insertarEnPadre(_nodoActual->getPadre(), nroNuevoNodo, claveAlPadre);
-				delete(claveAlPadre);
+				    delete(claveAlPadre);
                 return true;
-
             default:
                 return false;
-            }
-        }
-        else {
-            NodoBMasIndice* nuevaRaiz;
-            int idH1;
-            int idH2;
-            NodoBMasHoja* nuevaHoja;
-            NodoBMasHoja* nuevaHoja2;
-            switch (_raiz->insert(key,reference, &clavesArreglo, &arreglo, &bytesArreglo)) {
-            case 1:
-                return true;
-
-            case 2:
-                nuevaHoja = 0;
-                nuevaHoja2 = 0;
+           }
+     }
+     else {
+      FileDirIndexNode* nuevaRaiz;
+      int idH1;
+      int idH2;
+      FileDirLeafNode* nuevaHoja;
+      FileDirLeafNode* nuevaHoja2;
+      switch (_raiz->insert(key,reference, &clavesArreglo, &arreglo, &bytesArreglo)) {
+         case 1:
+            return true;
+         case 2:
+            nuevaHoja = 0;
+            nuevaHoja2 = 0;
                 
-                // creo 2 nodos hoja nuevos para hacer el split y hacer que la nueva raiz sea indice
-                _raiz->promoteRoot( (NodoBMas**)(&nuevaHoja),
-                                    (NodoBMas**)(&nuevaHoja2),
-                                    _nNodos, _nNodos + 1,
-									clavesArreglo, &arreglo, bytesArreglo, &claveARaiz);
+            // creo 2 nodos hoja nuevos para hacer el split y hacer que la nueva raiz sea indice
+            _raiz->promoteRoot( (VarLenNode**)(&nuevaHoja), (VarLenNode**)(&nuevaHoja2), _nNodos, _nNodos + 1, clavesArreglo, &arreglo,    bytesArreglo, &claveARaiz);
 
-                _nNodos += 2;
+            _nNodos += 2;
+            // escribo las 2 nuevas hojas
+            writeNode(nuevaHoja);
+            writeNode(nuevaHoja2);
 
-                // escribo las 2 nuevas hojas
-                writeNode(nuevaHoja);
-                writeNode(nuevaHoja2);
+            idH1 = nuevaHoja->getId();
+            idH2 = nuevaHoja2->getId();
 
-                idH1 = nuevaHoja->getId();
-                idH2 = nuevaHoja2->getId();
-
-                nuevaRaiz = new NodoBMasIndice(_raiz->getId(), _raiz->getNivel() + 1, _raiz->getPadre(),
-											   idH1, claveARaiz, idH2);
-
-                delete _raiz;
-                _nodoActual = _raiz = nuevaRaiz;
-                return true;
+            nuevaRaiz = new FileDirIndexNode(_raiz->getId(), _raiz->getNivel() + 1, _raiz->getPadre(), idH1, claveARaiz, idH2);
+            delete _raiz;
+            _nodoActual = _raiz = nuevaRaiz;
+            return true;
 
             default:
                 return false;
-            }
-		}
+        }
+	   }
     }
-
-    else { 
-        _raiz = new NodoBMasHoja();
-        _nNodos++;
-        _nodoActual = _raiz;
-        _raiz->insert(key, reference);
+   else { 
+      _raiz = new FileDirLeafNode();
+      _nNodos++;
+      _nodoActual = _raiz;
+      _raiz->insert(key, reference);
     }
     return true;
 }
@@ -437,12 +415,12 @@ int ArbolBMas::searchFile(const char* key)
         _nodoActual = _raiz;
     }
 
-    while (_nodoActual->getType() != NodoBMas::LEAF) {
-        int proximoALeer = _nodoActual->searchFile(key);
+    while (_nodoActual->getType() != FileDirNode::LEAF) {
+        int proximoALeer = _nodoActual->search(key);
         readNode(proximoALeer, &_nodoActual);
     }
 
-    return _nodoActual->searchFile(key);
+    return _nodoActual->search(key);
 }
 
 int ArbolBMas::searchFileAndVersion(const char* fileName, int version)
@@ -456,7 +434,7 @@ int ArbolBMas::searchFileAndVersion(const char* fileName, int version)
         _nodoActual = _raiz;
     }
 
-    while (_nodoActual->getType() != NodoBMas::LEAF) {
+    while (_nodoActual->getType() != FileDirNode::LEAF) {
         int proximoALeer = _nodoActual->searchFileAndVersion(fileName, version);
         readNode(proximoALeer, &_nodoActual);
     }
@@ -473,17 +451,17 @@ void ArbolBMas::list()
         _nodoActual = _raiz;
     }
 
-	while(_nodoActual ->getType() != NodoBMas::LEAF){
-		int proximoALeer = (static_cast<NodoBMasIndice*>(_nodoActual))->getHijoIzquierdo();
+	while(_nodoActual ->getType() != FileDirNode::LEAF){
+		int proximoALeer = (static_cast<FileDirIndexNode*>(_nodoActual))->getHijoIzquierdo();
 		readNode(proximoALeer,&_nodoActual);
 	}
 
 	int hnoALeer = 0;
 	while (hnoALeer != -1) {
 
-		(static_cast<NodoBMasHoja*>(_nodoActual))->list();
+		(static_cast<FileDirLeafNode*>(_nodoActual))->list();
 
-		hnoALeer = (static_cast<NodoBMasHoja*>(_nodoActual))->getHnoDerecho();
+		hnoALeer = (static_cast<FileDirLeafNode*>(_nodoActual))->getHnoDerecho();
 
 		if (hnoALeer >= 0)
 			readNode(hnoALeer,&_nodoActual);
@@ -502,8 +480,8 @@ int ArbolBMas::getFirstBlock(const char* key)
         _nodoActual = _raiz;
     }
     
-    while(_nodoActual->getType() != NodoBMas::LEAF){
-        int proximoALeer = (static_cast<NodoBMasIndice*>(_nodoActual)->getFirstOf(key));
+    while(_nodoActual->getType() != FileDirNode::LEAF){
+        int proximoALeer = (static_cast<FileDirIndexNode*>(_nodoActual)->getFirstOf(key));
         readNode(proximoALeer,&_nodoActual);
     }
 
