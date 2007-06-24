@@ -45,16 +45,35 @@ void createAlmacen(const string& a_Dir)
             cout << "Ya existe un almacen. Desea removerlo y crear uno nuevo? (s/n): ";
             cin >> r;
         } while (r != 'n' && r != 'N' && r != 's' && r != 'S');
-        if (r == 'n' || r == 'n')
-            return;
-        else
+        if (r == 's' || r == 'S')
             almacen.destroy();
+        else
+            return;
     }
 
     if (almacen.create(a_Dir))
         cout << "El almacen '" << a_Dir << "' ha sido creado con exito." << endl;
     else
         cout << "El almacen '" << a_Dir << "' no ha sido creado." << endl;
+}
+
+
+void removeAlmacen() 
+{
+    Almacen almacen;
+    if (almacen.exists()) {
+        char r;
+        do {
+            cout << "Esta seguro que desea remover el almacen '" << almacen.getName() << "'? (s/n): ";
+            cin >> r;
+        } while (r != 'n' && r != 'N' && r != 's' && r != 'S');
+        if (r == 's' || r == 'S') {
+            if (almacen.destroy());
+                cout << "El almacen '" << almacen.getName() << "' ha sido removido con exito." << endl;
+        }
+    }
+    else
+        cout << "No existe ningun almacen de repositorios." << endl;
 }
 
 
@@ -130,7 +149,7 @@ void removeUser(const string& a_Reposit, const string& a_Username)
 
 void showHelp(const char* progname)
 {
-    cout << "uso: " << progname << " [[-a \"nombre almacen\"] | [-c \"nombre repositorio\"] |" << endl
+    cout << "uso: " << progname << " [[-a \"nombre almacen\"] | [-c \"nombre repositorio\"] | [-d] |" << endl
          << "                 [-e usuario \"nombre repositorio\"] | [-h] | " << endl
          << "                 [-m \"nombre repositorio\" [[\"nombre usuario\"] [cantidad]]] |" << endl
          << "                 [-o \"nombre repositorio\"] |" << endl
@@ -138,6 +157,7 @@ void showHelp(const char* progname)
          << "                 [-u usuario password \"nombre usuario\" \"nombre repositorio\"]]" << endl
          << "-a, crear almacen de repositorios." << endl
          << "-c, crear repositorio." << endl
+         << "-d, eliminar almacen de repositorios." << endl
          << "-e, eliminar usuario." << endl
          << "-m, obtener listado de ultimos cambios efectuados por un usuario." << endl
          << "-o, obtener listado de usuarios." << endl
@@ -194,7 +214,7 @@ int main(int argc, char** argv)
 {
     int c; 
     bool argsok = false;
-    while ((c = getopt(argc, argv, "-a:c:e:hm:o:r:u:")) != -1) {
+    while ((c = getopt(argc, argv, "-a:c:de:hm:o:r:u:")) != -1) {
         switch (c) {
             case 'a': // crear almacen de repositorios
                 // -a "nombre directorio"
@@ -206,6 +226,11 @@ int main(int argc, char** argv)
                 // -c "nombre repositorio"
                 argsok = (argc == 3);
                 if (argsok) addRepository(optarg);
+                break;
+
+            case 'd': // eliminar almacen
+                argsok = true;
+                removeAlmacen();
                 break;
 
             case 'e': // eliminar usuario

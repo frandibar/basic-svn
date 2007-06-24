@@ -85,9 +85,12 @@ bool Almacen::load() throw(xercesc::XMLException&)
 bool Almacen::destroy()
 {
     _exists = false;
-    string cmd = "rm -rf " + _name;
-    int ret = system(cmd.c_str());
-    return (ret == 0);
+    string cmd = "rm -rf " + systemFilename(_name);
+    // remove dir Almacen
+    bool ok = (system(cmd.c_str()) != -1);
+    // remove config file
+    ok = ok && (std::remove(CONFIG_FILE.c_str()) == 0);
+    return ok;
 }
 
 bool Almacen::addRepository(const string& a_Name) throw()
