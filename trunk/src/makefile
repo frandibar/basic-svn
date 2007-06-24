@@ -4,8 +4,12 @@ CXX      = g++
 CXXFLAGS = -ggdb -Wall --pedantic --ansi -fexceptions
 INCLUDES = 
 LIBS     = -lxerces-c
+BIN_DIR  = ../bin/
 
-TARGETS  = svnadmin svnuser contarComponentes ndxReader versionFileReader DVersionsReader
+TARGETS         = $(RELEASE_TARGETS)
+#TARGETS         = $(RELEASE_TARGETS) $(DEBUG_TARGETS)
+RELEASE_TARGETS = svnadmin svnuser 
+DEBUG_TARGETS   = contarComponentes ndxReader versionFileReader DVersionsReader
 
 SRCS_common   = Almacen.cpp arbolbmas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp nodobmas.cpp nodobmashoja.cpp nodobmasindice.cpp Repositorio.cpp VersionManager.cpp dateindex.cpp datenode.cpp leafdatenode.cpp indexdatenode.cpp datelog.cpp userindex.cpp usernode.cpp indexusernode.cpp leafusernode.cpp UserBlock.cpp UsersRegisterFile.cpp UserLog.cpp
 SRCS_svnadmin = $(SRCS_common) main-admin.cpp
@@ -23,25 +27,26 @@ DPNDS_svnuser = $(SRCS_svnuser:%.cpp=.depends/%.d)
 OBJS_svnadmin  = $(SRCS_svnadmin:%.cpp=.objects/%.o)
 DPNDS_svnadmin = $(SRCS_svnadmin:%.cpp=.depends/%.d)
 
-OBJS_contarComponentes = $(SRCS_contarComponentes:%.cpp=.objects/%.o)
+OBJS_contarComponentes  = $(SRCS_contarComponentes:%.cpp=.objects/%.o)
 DPNDS_contarComponentes = $(SRCS_contarComponentes:%.cpp=.objects/%.d)
 
-OBJS_ndxReader = $(SRCS_ndxReader:%.cpp=.objects/%.o)
+OBJS_ndxReader  = $(SRCS_ndxReader:%.cpp=.objects/%.o)
 DPNDS_ndxReader = $(SRCS_ndxReader:%.cpp=.objects/%.d)
 
-OBJS_versionFileReader = $(SRCS_versionFileReader:%.cpp=.objects/%.o)
+OBJS_versionFileReader  = $(SRCS_versionFileReader:%.cpp=.objects/%.o)
 DPNDS_versionFileReader = $(SRCS_versionFileReader:%.cpp=.objects/%.d)
 
-OBJS_DVersionsReader = $(SRCS_DVersionsReader:%.cpp=.objects/%.o)
+OBJS_DVersionsReader  = $(SRCS_DVersionsReader:%.cpp=.objects/%.o)
 DPNDS_DVersionsReader = $(SRCS_DVersionsReader:%.cpp=.objects/%.d)
 
-all: 	$(TARGETS)
+all: 	$(TARGETS) 
 
 .SECONDEXPANSION:
 $(TARGETS): 	$$(OBJS_$$@)
+	@@if [ ! -d $(BIN_DIR) ]; then mkdir -p $(BIN_DIR); fi
 	@echo				   
 	@echo Making $@...
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $@ $^
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $(LIBS) -o $(BIN_DIR)$@ $^
 	@echo				   
 	@echo Target $@ completed.												   
 	@echo				   
@@ -56,10 +61,10 @@ $(TARGETS): 	$$(OBJS_$$@)
 
 # TODO: el include esta generando los depends innecesariamente
 clean: 	
-	rm -rf $(TARGETS)
+	rm -rf $(TARGETS:%=$(BIN_DIR)%)
 	rm -rf .depends .objects
 
 tar: 	
-	tar -czf svngrupo.tar.gz *.h *.cpp makefile 
+	tar -czf ../svngrupo.tar.gz *.h *.cpp makefile 
 
 -include $(DPNDS_svnadmin) $(DPNDS_svnuser) $(DPNDS_contarComponentes) $(DPNDS_ndxReader) $(DPNDS_versionFileReader) $(DPNDS_DVersionsReader)
