@@ -130,7 +130,7 @@ void removeUser(const string& a_Reposit, const string& a_Username)
 
 void showHelp(const char* progname)
 {
-    cout << "uso: " << progname << " [[-a \"nombre repositorio\"] | [-c \"nombre repositorio\"] |" << endl
+    cout << "uso: " << progname << " [[-a \"nombre almacen\"] | [-c \"nombre repositorio\"] |" << endl
          << "                 [-e usuario \"nombre repositorio\"] | [-h] | " << endl
          << "                 [-m \"nombre repositorio\" [[\"nombre usuario\"] [cantidad]]] |" << endl
          << "                 [-o \"nombre repositorio\"] |" << endl

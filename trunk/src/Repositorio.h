@@ -14,6 +14,8 @@
 class Repositorio
 {
 public:
+    static const string VERSION_FILENAME;
+
     Repositorio(const string& a_Almacen, const string& a_Name); 
     ~Repositorio() {};
 
