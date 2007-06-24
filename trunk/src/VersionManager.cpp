@@ -1823,19 +1823,19 @@ void VersionManager::log(const string& a_Filename, const string& a_Username, con
    int mes = date->tm_mon;
    int dia = date->tm_mday;
 
-   string fecha = toString<int>(anio) + "/" + zeroPad(mes + 1,2) + "/" + zeroPad(dia,2);
-
+   string fecha = toString<int>(anio) + "/" + zeroPad(mes + 1, 2) + "/" + zeroPad(dia, 2) + " - " 
+                  + toString<int>(date->tm_hour) + ":" + toString<int>(date->tm_min) + ":" + toString<int>(date->tm_sec);
+ 
    int offset = _dateLog.append(a_Username, fecha, a_Version, a_Filename);   
    
-   //indexo la fecha en el indice por fechas   
-   if(_dateIndex.search(fecha.c_str()) < 0)
+   // indexo la fecha en el indice por fechas   
+   if (_dateIndex.search(fecha.c_str()) < 0)
       _dateIndex.insert(fecha.c_str(),offset);
 
-   //indexo el usuario en el indice por usuario
+   // indexo el usuario en el indice por usuario
    int ref = _usersIndex.search(a_Username.c_str());
    int nuevoBloque;
-   if(ref < 0)
-   {
+   if(ref < 0) {
       _usersReg.insertRef(offset, &nuevoBloque);
       _usersIndex.insert((a_Username + zeroPad(nuevoBloque,VERSION_DIGITS)).c_str(),nuevoBloque);
       

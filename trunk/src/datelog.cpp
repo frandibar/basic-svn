@@ -72,9 +72,10 @@ long int DateLog::append(const string& a_Username, const string& a_Date, const s
 	// get the offset where the archive is copied
    long int pos = _fstream.tellp();
 
-	if (pos < 0) pos = 0;
+	if (pos < 0) 
+        pos = 0;
 
-   _fstream<<a_Date<<"\t"<<a_Filename<<"\t"<<a_Version<<"\t"<<a_Username<<"\n";
+   _fstream << a_Date << "\t" << a_Filename << "\t" << a_Version << "\t" << a_Username << "\n";
    
    return pos;
 }
