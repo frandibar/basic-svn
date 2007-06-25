@@ -1,4 +1,3 @@
-
 #include "FixLenIndexNode.h"
 
 const int FixLenIndexNode::BYTESREDONDEO = 4;

@@ -151,7 +151,6 @@ int FileVersion::operator==(const FileVersion &version) const
    return ((this->_nroVersion != version._nroVersion) ? 0 : 1);
 }
 
-
 int FileVersion::operator<(const FileVersion &version) const
 {
    return ((this->_nroVersion < version._nroVersion) ? 1 : 0);
