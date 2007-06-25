@@ -1,8 +1,8 @@
-//varlennode.h
 #ifndef VARLENNODE_H_INCLUDED
 #define VARLENNODE_H_INCLUDED
 
-#include "node.h"
+#include "Node.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <string>

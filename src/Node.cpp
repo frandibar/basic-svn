@@ -1,6 +1,6 @@
-// node.cpp
 
-#include "node.h"
+#include "Node.h"
+
 #include <iostream>
 
 // constructor

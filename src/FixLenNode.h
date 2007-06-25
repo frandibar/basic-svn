@@ -1,9 +1,9 @@
-//fixlennode.h
 
 #ifndef FIXLENNODE_H_INLCUDED
 #define FIXLENNODE_H_INLCUDED
 
-#include "node.h"
+#include "Node.h"
+
 #include <cstdlib>
 #include <iostream>
 #include <string>

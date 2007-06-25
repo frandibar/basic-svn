@@ -1,9 +1,8 @@
-//varlenindexnode.h
 
 #ifndef VARLENINDEXNODE_H_INCLUDED
 #define VARLENINDEXNODE_H_INCLUDED
 
-#include "varlennode.h"
+#include "VarLenNode.h"
 
 class VarLenIndexNode : public VarLenNode
 {

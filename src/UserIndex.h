@@ -2,9 +2,9 @@
 #ifndef USERINDEX_H_INCLUDED
 #define USERINDEX_H_INCLUDED
 
-#include "varlennode.h"
-#include "varlenleafnode.h"
-#include "varlenindexnode.h"
+#include "VarLenNode.h"
+#include "VarLenLeafNode.h"
+#include "VarLenIndexNode.h"
 
 #include <fstream>
 #include <string>

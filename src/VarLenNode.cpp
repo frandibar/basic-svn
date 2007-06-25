@@ -1,6 +1,6 @@
-// varlennode.cpp
 
-#include "varlennode.h"
+#include "VarLenNode.h"
+
 #include <iostream>
 
 const int VarLenNode::VARLEN_NODE_SIZE = 2048;  // arbitrario
