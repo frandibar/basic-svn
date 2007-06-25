@@ -1,10 +1,10 @@
 
-#include "filedirleafnode.h"
+#include "FileDirLeafNode.h"
 
 using std::cout;
 using std::endl;
 
-    FileDirLeafNode::FileDirLeafNode(int id, int padre, int HnoIzquierdo, int HnoDerecho)
+FileDirLeafNode::FileDirLeafNode(int id, int padre, int HnoIzquierdo, int HnoDerecho)
 : FileDirNode(id, 0, padre)
 {
     _hnoIzquierdo = HnoIzquierdo;

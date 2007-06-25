@@ -1,4 +1,3 @@
-//filedirnode.h
 
 #ifndef FILEDIRNODE_H_INCLUDED
 #define FILEDIRNODE_H_INCLUDED
@@ -18,4 +17,6 @@ public:
    virtual int searchFileAndVersion(const char* fileName, int version) = 0;
    virtual int getFirstOf(const char* key) = 0;
 };
+
 #endif
+

@@ -1,5 +1,5 @@
-//filedirindexnode.cpp
-#include "filedirindexnode.h"
+
+#include "FileDirIndexNode.h"
 
 #include <string>
 
