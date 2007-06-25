@@ -147,7 +147,7 @@ bool VersionManager::addFile(int repositoryVersion, const string& repositoryName
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el archivo
-    int bloque = _fileIndex.searchFile(key.c_str());
+    int bloque = _fileIndex.search(key.c_str());
 
     if (bloque >= 0) { // el archivo esta en el indice
         FileVersion* ultimaVersion;
@@ -289,7 +289,7 @@ bool VersionManager::addDirectory(int repositoryVersion, const string& repositor
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el directorio
-    int bloque = _dirIndex.searchFile(key.c_str());
+    int bloque = _dirIndex.search(key.c_str());
 
     if (bloque >= 0) { 
         // el directorio esta en el indice
@@ -509,7 +509,7 @@ bool VersionManager::addRec(const string& a_Target, int componenteALeer, const  
     }
     else {
         // identifico si hay alguna version del directorio actual (por el que voy siguiendo el camino hasta target)
-        int bloque = _dirIndex.searchFile(pathActual.c_str());
+        int bloque = _dirIndex.search(pathActual.c_str());
 
         //obtengo la fecha          
         tm* date = localtime(&a_Date);      
@@ -911,7 +911,7 @@ bool VersionManager::removeFile(int repositoryVersion, const string& repositoryN
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el archivo
-    int bloque = _fileIndex.searchFile(key.c_str());
+    int bloque = _fileIndex.search(key.c_str());
 
     if (bloque >= 0) { // el archivo esta en el indice, entonces, se puede borrar
         FileVersion* ultimaVersion;
@@ -947,7 +947,7 @@ bool VersionManager::removeDirectory(int repositoryVersion, const string& reposi
 
     tm* date = localtime(&a_Date);
     // busco en el indice a ver si esta el directorio
-    int bloque = _dirIndex.searchFile(key.c_str());
+    int bloque = _dirIndex.search(key.c_str());
 
     if (bloque >= 0) { // el directorio esta en el indice
         DirectoryVersion* ultimaVersion;
@@ -1015,7 +1015,7 @@ bool VersionManager::getFileVersionAndBlock(int* bloque, FileVersion** versionBu
         int version = fromString<int>(a_Version);
         *bloque = _fileIndex.searchFileAndVersion(a_Filename.c_str(), version);
         if (!_fileVersions.searchVersion(versionBuscada, version, *bloque)) {
-            *bloque = _fileIndex.searchFile(a_Filename.c_str());
+            *bloque = _fileIndex.search(a_Filename.c_str());
             if (!_fileVersions.getLastVersion(versionBuscada, *bloque))
                 return false;
             else if ((*versionBuscada)->getNroVersion() > version) {
@@ -1024,7 +1024,7 @@ bool VersionManager::getFileVersionAndBlock(int* bloque, FileVersion** versionBu
         }        
     }
     else {
-        *bloque = _fileIndex.searchFile(a_Filename.c_str());
+        *bloque = _fileIndex.search(a_Filename.c_str());
         if (!_fileVersions.getLastVersion(versionBuscada, *bloque))
            return false; 
     }
@@ -1040,7 +1040,7 @@ bool VersionManager::getDirVersion(DirectoryVersion** versionBuscada, const stri
         if (bloque < 0) 
             return false;
         if (!_dirVersions.searchVersion(versionBuscada, version, bloque)) {
-            bloque = _dirIndex.searchFile(a_Dirname.c_str());
+            bloque = _dirIndex.search(a_Dirname.c_str());
             if (bloque < 0) 
                 return false;
             version = _dirVersions.getLastVersionNumber(bloque);
@@ -1053,7 +1053,7 @@ bool VersionManager::getDirVersion(DirectoryVersion** versionBuscada, const stri
         }        
     }
     else {
-        bloque = _dirIndex.searchFile(a_Dirname.c_str());
+        bloque = _dirIndex.search(a_Dirname.c_str());
         if(bloque < 0) return false;
         int lastVersion = _dirVersions.getLastVersionNumber(bloque);
         if (!_dirVersions.getVersion(lastVersion, bloque, versionBuscada))
@@ -1738,7 +1738,7 @@ bool VersionManager::getHistory(std::ostream& os, const string& a_Filename)
         }
     }
     else {
-        int bloque = _dirIndex.searchFile(_repository.c_str());
+        int bloque = _dirIndex.search(_repository.c_str());
         int lastVersion = _dirVersions.getLastVersionNumber(bloque);
         DirectoryVersion* dv;
         if (getDirVersion(&dv, _repository, toString<int>(lastVersion))) {

@@ -11,7 +11,7 @@ TARGETS         = $(RELEASE_TARGETS)
 RELEASE_TARGETS = svnadmin svnuser 
 DEBUG_TARGETS   = contarComponentes ndxReader versionFileReader DVersionsReader
 
-SRCS_common   = Almacen.cpp ArbolBMas.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp Repositorio.cpp VersionManager.cpp DateIndex.cpp DateLog.cpp UserIndex.cpp UserBlock.cpp UsersRegisterFile.cpp UserLog.cpp Node.cpp VarLenNode.cpp FixLenNode.cpp VarLenIndexNode.cpp VarLenLeafNode.cpp FileDirNode.cpp FileDirIndexNode.cpp FileDirLeafNode.cpp FixLenIndexNode.cpp FixLenLeafNode.cpp
+SRCS_common   = Almacen.cpp ConfigData.cpp Container.cpp DirectoryBlock.cpp DirectoryVersion.cpp DirectoryVersionsFile.cpp FileBlock.cpp File.cpp FileVersion.cpp FileVersionsFile.cpp helper-classes.cpp helpers.cpp Repositorio.cpp VersionManager.cpp DateLog.cpp  UserBlock.cpp UsersRegisterFile.cpp Node.cpp VarLenNode.cpp FixLenNode.cpp VarLenIndexNode.cpp VarLenLeafNode.cpp FileDirNode.cpp FileDirIndexNode.cpp FileDirLeafNode.cpp FixLenIndexNode.cpp FixLenLeafNode.cpp bplustree.cpp FixLenBPlusTree.cpp VarLenBPlusTree.cpp FileDirBPlusTree.cpp
 SRCS_svnadmin = $(SRCS_common) main-admin.cpp
 SRCS_svnuser  = $(SRCS_common) main-user.cpp
 SRCS_contarComponentes = contarComponentes.cpp
