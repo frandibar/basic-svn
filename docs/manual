@@ -19,6 +19,7 @@ Introduccion
 ------------
 
 SVN es un sistema controlador de versions, es decir, administra archivos y directorios, y los cambios efectuados sobre los mismos a traves del tiempo. Esto permite que un programador pueda recuperar versiones anteriores de su proyecto, o examinar el historial de cambios sobre el mismo.
+El proyecto se encuentra alojado en http://code.google.com/p/basic-svn, y el codigo fuente se puede consultar en http://basic-svn.googlecode.com/svn/trunk/
 
 
 Componentes
@@ -48,6 +49,9 @@ Como crear el almacen de repositorios:
 ./svnadmin -a "nombre del almacen"
 Este comando genera un directorio llamado "nombre del almacen" donde se almacenaran los archivos correspondientes al mismo.
 A su vez, se genera un archivo llamado ~/.svn_grupo_config donde se guarda la configuracion del mismo en formato xml.
+
+Como eliminar el almacen de repositorios:
+./svnadmin -d
 
 Como crear un repositorio:
 ./svnadmin -c "nombre del repositorio"
