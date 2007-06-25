@@ -1,4 +1,3 @@
-// arbolbmas.cpp
 
 #include "arbolbmas.h"
 #include "debug.h"

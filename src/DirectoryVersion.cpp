@@ -1,4 +1,3 @@
-// DirectoryVersion.cpp
 
 #include "DirectoryVersion.h"
 #include "debug.h"

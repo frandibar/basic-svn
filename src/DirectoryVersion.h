@@ -1,5 +1,3 @@
-// DirectoryVersion.h
-
 #ifndef DIRECTORY_VERSION_H_INCLUDED
 #define DIRECTORY_VERSION_H_INCLUDED
 

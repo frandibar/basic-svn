@@ -1,4 +1,3 @@
-//dateindex.cpp
 
 #include "dateindex.h"
 #include "debug.h"
