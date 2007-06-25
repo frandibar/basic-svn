@@ -1,4 +1,3 @@
-// userindex.h
 
 #ifndef USERINDEX_H_INCLUDED
 #define USERINDEX_H_INCLUDED

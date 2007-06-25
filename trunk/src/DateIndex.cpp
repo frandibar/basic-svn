@@ -1,5 +1,5 @@
 
-#include "dateindex.h"
+#include "DateIndex.h"
 #include "debug.h"
 
 using std::ios;
@@ -366,7 +366,7 @@ bool DateIndex::insert(const char* key, int reference)
                 _raiz->promoteRoot((FixLenNode**)(&nuevaHoja),_nNodos);
 				    nuevaHoja2 = new FixLenLeafNode(_nNodos + 1, _raiz->getId(), nuevaHoja->getId(), -1);
 				    nuevaHoja->setHnoDerecho(nuevaHoja2->getId());
-                //inserto la clave que me genero el overflow en la nueva hoja
+                // inserto la clave que me genero el overflow en la nueva hoja
                 nuevaHoja2->insert(key,reference);
 				
                 _nNodos += 2;

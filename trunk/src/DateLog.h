@@ -7,7 +7,8 @@
 using std::string;
 using std::fstream;
 
-class DateLog { 
+class DateLog 
+{ 
 public:
     DateLog() : _isOpen(false) {};
     
@@ -21,10 +22,12 @@ public:
     bool showDate(const string& a_Date, int offset);
     bool show(int offset);
     bool showAll();
+
 private:
     bool    _isOpen;
     fstream _fstream;
     string  _filename;
 };
+
 #endif
 

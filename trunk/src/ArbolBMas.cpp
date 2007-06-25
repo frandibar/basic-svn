@@ -1,5 +1,5 @@
 
-#include "arbolbmas.h"
+#include "ArbolBMas.h"
 #include "debug.h"
 
 using std::ios;

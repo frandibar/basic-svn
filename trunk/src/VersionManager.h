@@ -2,16 +2,16 @@
 #ifndef VERSION_MANAGER_H_INCLUDED
 #define VERSION_MANAGER_H_INCLUDED
 
-#include "arbolbmas.h"
+#include "ArbolBMas.h"
 #include "Container.h"
 #include "FileVersion.h"
 #include "DirectoryVersion.h"
 #include "FileVersionsFile.h"
 #include "DirectoryVersionsFile.h"
 #include "helpers.h"
-#include "dateindex.h"
-#include "datelog.h"
-#include "userindex.h"
+#include "DateIndex.h"
+#include "DateLog.h"
+#include "UserIndex.h"
 #include "UsersRegisterFile.h"
 
 #include <ctime>

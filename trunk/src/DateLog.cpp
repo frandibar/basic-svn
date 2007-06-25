@@ -1,5 +1,5 @@
 
-#include "datelog.h"
+#include "DateLog.h"
 #include "debug.h"
 
 #include <iostream>
