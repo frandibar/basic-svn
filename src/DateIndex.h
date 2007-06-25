@@ -55,7 +55,7 @@ private:
     // member variables
     FixLenNode*   _raiz;         // nodo raiz del arbol
     FixLenNode*   _nodoActual;   // nodo actual del arbol
-    int          _nNodos;       // cantidad de nodos del archivo
+    int          _nNodos;        // cantidad de nodos del archivo
     char*        _buffer;
     std::fstream _filestr;      // file stream para poder ir leyendo de archivo los nodos
     string       _filename;     // filename storing the tree    

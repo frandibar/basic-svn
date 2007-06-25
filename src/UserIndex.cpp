@@ -1,6 +1,6 @@
 // userindex.cpp
 
-#include "userindex.h"
+#include "UserIndex.h"
 
 using std::ios;
 
