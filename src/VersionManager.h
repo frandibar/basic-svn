@@ -2,16 +2,16 @@
 #ifndef VERSION_MANAGER_H_INCLUDED
 #define VERSION_MANAGER_H_INCLUDED
 
-#include "ArbolBMas.h"
+#include "FileDirBPlusTree.h"
 #include "Container.h"
 #include "FileVersion.h"
 #include "DirectoryVersion.h"
 #include "FileVersionsFile.h"
 #include "DirectoryVersionsFile.h"
 #include "helpers.h"
-#include "DateIndex.h"
+#include "FixLenBPlusTree.h"
 #include "DateLog.h"
-#include "UserIndex.h"
+#include "VarLenBPlusTree.h"
 #include "UsersRegisterFile.h"
 
 #include <ctime>
@@ -94,20 +94,20 @@ private:
     string                 _almacen;
     string                 _repository;
 
-    ArbolBMas              _fileIndex;
+    FileDirBPlusTree       _fileIndex;
     FileVersionsFile       _fileVersions;
 
-    ArbolBMas              _dirIndex;
+    FileDirBPlusTree       _dirIndex;
     DirectoryVersionsFile  _dirVersions;
 
     Container              _textContainer;
     Container              _binaryContainer;
 
-    DateIndex              _dateIndex;
+    FixLenBPlusTree        _dateIndex;
     DateLog                _dateLog;
 
     UsersRegisterFile      _usersReg;
-    UserIndex              _usersIndex;
+    VarLenBPlusTree        _usersIndex;
 };
 
 #endif
