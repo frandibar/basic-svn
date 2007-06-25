@@ -1,6 +1,6 @@
-//fixlennode.cpp
 
-#include "fixlennode.h"
+#include "FixLenNode.h"
+
 #include <iostream>
 
 // CONSTS
@@ -22,7 +22,7 @@ bool FixLenNode::insertPair(const char* key, int ref, int* i, char* auxKey, int*
 
         int cmp = strcmp(key, auxKey);
         if (cmp < 0) {
-            //inserto clave y referencia
+            // inserto clave y referencia
             memcpy(_pares+( (KEY_LENGTH*sizeof(char) + sizeof(int) )* (*i)), key, sizeof(char)*KEY_LENGTH);
             memcpy(_pares+( (KEY_LENGTH*sizeof(char) + sizeof(int) )* (*i) + KEY_LENGTH * sizeof(char) ), &ref, sizeof(int));
             end = true;
@@ -125,8 +125,7 @@ void FixLenNode::writeDatos(char** nextByte)
 
 FixLenNode::t_status FixLenNode::insert(const char* key, int ref)
 {
-   if (_nclaves < MAXKEYS)
-   {
+   if (_nclaves < MAXKEYS) {
       if(insertPair(key,ref))
          return OK;
       

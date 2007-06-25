@@ -1,9 +1,9 @@
 #ifndef DATEINDEX_H_INCLUDED
 #define DATEINDEX_H_INCLUDED
 
-#include "fixlennode.h"
-#include "fixlenleafnode.h"
-#include "fixlenindexnode.h"
+#include "FixLenNode.h"
+#include "FixLenLeafNode.h"
+#include "FixLenIndexNode.h"
 
 #include <fstream>
 #include <string>

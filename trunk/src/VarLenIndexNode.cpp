@@ -1,6 +1,6 @@
-//varlenindexnode.cpp
 
-#include "varlenindexnode.h"
+#include "VarLenIndexNode.h"
+
 #include <string>
 
 const int VarLenIndexNode::BYTESREDONDEO = 2;  // (_hnoIzquierdo + _hnoDerecho) (nodobmashoja) - _hijoIzquierdo (nodobmasindice)

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <string>
 
-#include "varlennode.h"
+#include "VarLenNode.h"
 
 class FileDirNode : public VarLenNode 
 {

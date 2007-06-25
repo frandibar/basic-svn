@@ -1,8 +1,7 @@
-//fixlenindexnode.h
 #ifndef FIXLENINDEXNODE_H_INCLUDED
 #define FIXLENINDEXNODE_H_INCLUDED
 
-#include "fixlennode.h"
+#include "FixLenNode.h"
 
 class FixLenIndexNode : public FixLenNode
 {
