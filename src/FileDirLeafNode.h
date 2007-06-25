@@ -2,8 +2,8 @@
 #ifndef FILEDIRLEAFNODE_H_INCLUDED
 #define FILEDIRLEAFNODE_H_INCLUDED
 
-#include "filedirnode.h"
-#include "filedirindexnode.h"
+#include "FileDirNode.h"
+#include "FileDirIndexNode.h"
 
 class FileDirLeafNode : public FileDirNode
 {

@@ -1,9 +1,8 @@
-//filedirindexnode.h
 
 #ifndef NODOBMASINDICE_H_INCLUDED
 #define NODOBMASINDICE_H_INCLUDED
 
-#include "filedirnode.h"
+#include "FileDirNode.h"
 
 class FileDirIndexNode : public FileDirNode
 {

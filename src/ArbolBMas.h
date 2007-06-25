@@ -1,9 +1,9 @@
 #ifndef ARBOLBMAS_H_INCLUDED
 #define ARBOLBMAS_H_INCLUDED
 
-#include "filedirnode.h"
-#include "filedirleafnode.h"
-#include "filedirindexnode.h"
+#include "FileDirNode.h"
+#include "FileDirLeafNode.h"
+#include "FileDirIndexNode.h"
 
 #include <fstream>
 #include <string>
