@@ -1877,7 +1877,7 @@ bool VersionManager::getListOfChanges(std::ostream& os, const string& a_Username
     if (!a_Username.empty()) {
         int ref = _usersIndex.search(a_Username.c_str());
         if (ref < 0) 
-            return false;
+            return true; // no changes for user a_Username
 
         list<int> lstChanges;
         if (a_Num > 0)
@@ -1890,9 +1890,7 @@ bool VersionManager::getListOfChanges(std::ostream& os, const string& a_Username
             if (!_dateLog.show(*it))
                 return false;
         }
-
         return true;
     }
-
     return (_dateLog.showAll());
 }

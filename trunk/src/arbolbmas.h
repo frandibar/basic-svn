@@ -1,5 +1,3 @@
-// arbolbmas.h
-
 #ifndef ARBOLBMAS_H_INCLUDED
 #define ARBOLBMAS_H_INCLUDED
 

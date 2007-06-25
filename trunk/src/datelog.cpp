@@ -1,4 +1,3 @@
-// datelog.cpp
 
 #include "datelog.h"
 #include "debug.h"

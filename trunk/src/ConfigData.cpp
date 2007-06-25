@@ -1,4 +1,3 @@
-// ConfigData.cpp
 
 #include "ConfigData.h"
 #include "debug.h"

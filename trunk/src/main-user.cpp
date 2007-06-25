@@ -126,7 +126,10 @@ void showChanges(const string& a_Username, const string& a_Password, const strin
     }
 
     cout << "Lista de ultimas modificaciones al repositorio '" << a_Reposit << "':" << endl;
-    almacen.getListOfChanges(cout, a_Reposit, a_Username, a_Password, fromString<int>(a_Num), false);
+    if (!almacen.getListOfChanges(cout, a_Reposit, a_Username, a_Password, fromString<int>(a_Num), false)) {
+        cout << "No se ha podido obtener el listado, verifique que el usuario y contraseña sean validos." << endl;
+        return;
+    }
 }
 
 

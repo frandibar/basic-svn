@@ -1,4 +1,3 @@
-// DirectoryBlock.h
 
 #include "DirectoryBlock.h"
 #include "debug.h"

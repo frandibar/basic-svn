@@ -1,5 +1,3 @@
-// DirectoryBlock.h
-
 #ifndef DIRECTORY_BLOCK_INCLUDED
 #define DIRECTORY_BLOCK_INCLUDED
 

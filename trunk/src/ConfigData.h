@@ -1,5 +1,3 @@
-// ConfigData.h
-
 #ifndef CONFIGDATA_H_INCLUDED
 #define CONFIGDATA_H_INCLUDED
 
